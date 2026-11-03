@@ -82,7 +82,7 @@ class AgentTests(unittest.TestCase):
         return client, report
 
     def test_exact_allowlist_and_no_batch_audit(self):
-        self.assertEqual(set(self.tools.handlers), {'list_customers', 'get_contract', 'get_amendments',
+        self.assertEqual(set(self.tools.handlers), {'screen_customers', 'get_customer_evidence', 'list_customers', 'get_contract', 'get_amendments',
                          'get_invoices', 'get_document', 'calculate_expected', 'compare_invoices',
                          'summarize_pattern', 'submit_finding', 'request_human_review'})
         for name in ('investigate', 'investigate_period', '__getattribute__', 'execute',
@@ -185,7 +185,7 @@ class AgentTests(unittest.TestCase):
         continuation = client.requests[1]['input']
         self.assertTrue(any(item.get('type') == 'function_call_output' for item in continuation))
         self.assertFalse(client.requests[0]['store'])
-        self.assertFalse(client.requests[0]['parallel_tool_calls'])
+        self.assertTrue(client.requests[0]['parallel_tool_calls'])
         self.assertEqual(client.options[0]['max_retries'], 0)
 
     def test_tool_failure_is_not_fabricated_success(self):

@@ -27,6 +27,7 @@ class Limits:
     output_usd_per_million: Decimal = Decimal('4')
     max_output_tokens: int = 4096
     max_responses: int = 600
+    cached_input_usd_per_million: Decimal | None = None
 
     def __post_init__(self):
         if (type(self.max_tool_calls) is not int or self.max_tool_calls < 1
@@ -37,6 +38,22 @@ class Limits:
         for rate in (self.max_cost_usd, self.input_usd_per_million, self.output_usd_per_million):
             if not isinstance(rate, Decimal) or not rate.is_finite() or rate <= 0:
                 raise ValueError('Budget and token prices must be positive finite Decimals')
+
+        cached = self.cached_input_usd_per_million
+        if cached is not None and (not isinstance(cached, Decimal) or not cached.is_finite()
+                                   or cached < 0 or cached > self.input_usd_per_million):
+            raise ValueError('Cached token price must be finite, nonnegative, and no greater than input price')
+
+
+def model_result(name, result):
+    """Avoid re-sending full persisted findings/comparisons; never trim source documents."""
+    if name == 'submit_finding' and 'error' not in result:
+        keys = ('finding_id', 'customer_ids', 'version', 'state', 'evidence_verified', 'evidence_ids',
+                'data_revision', 'model_hypothesis')
+        return {key: result[key] for key in keys}
+    if name == 'summarize_pattern' and 'error' not in result:
+        return {key: value for key, value in result.items() if key != 'comparisons'}
+    return result
 
 
 class Investigator:
@@ -50,12 +67,58 @@ class Investigator:
         cached_input_tokens = reasoning_output_tokens = 0
         cost = Decimal(0)
         cost_complete = True
+        cache_details_complete = True
         reason = 'response_limit'
         instructions = Path(__file__).with_name('INSTRUCTIONS.md').read_text(encoding='utf-8')
         history = [dict(role='user', content=f'Audit period: {self.tools.data.period}\nObjective: {objective}')]
         self.journal.emit('investigation.started', objective=objective, model=self.model,
                           period=self.tools.data.period, data_revision=self.tools.data.revision,
                           limits={k: str(v) if isinstance(v, Decimal) else v for k, v in vars(self.limits).items()})
+
+        def persist(reason):
+            compared = set(self.tools.comparisons)
+            verified = [f for f in self.tools.findings.values() if f['state'] == 'verified'
+                        and f['data_revision'] == self.tools.data.revision]
+            covered = {cid for f in verified for cid in f['customer_ids']}
+            anomalies = {cid for cid, r in self.tools.comparisons.items() if r['status'] != 'clean'}
+            review_required = {f['finding_id'] for f in verified}
+            reviews_pending = {fid for fid, r in self.tools.reviews.items() if r['status'] == 'pending'
+                               and r['finding_version'] == self.tools.findings[fid]['version']}
+            complete = (reason == 'model_finished' and not failures
+                        and compared == set(self.tools.data.customers) and anomalies <= covered
+                        and review_required <= reviews_pending)
+            if reason == 'model_finished' and not complete:
+                reason = 'coverage_evidence_or_review_incomplete' if not failures else 'tool_failures'
+            validated = {cid: self.tools.comparisons[cid] for cid in covered}
+            amounts = [Decimal(r['difference_cad']) for r in validated.values() if r['status'] == 'discrepancy']
+            totals = dict(additional_receivables_cad=str(sum((v for v in amounts if v > 0), Decimal('0.00'))),
+                          potential_credits_cad=str(-sum((v for v in amounts if v < 0), Decimal('0.00'))),
+                          disclaimer='Potential differences only; no cash recovered and no billing records changed')
+            report = dict(run_id=self.journal.run_id, status='completed' if complete else 'incomplete', reason=reason,
+                          period=self.tools.data.period, data_revision=self.tools.data.revision,
+                          customers_compared=sorted(compared),
+                          screening_complete=compared == set(self.tools.data.customers),
+                          customers_with_retrieved_documents=sorted({self.tools.data.documents[did]['customer_id']
+                              for did in self.tools.documents_seen}),
+                          clean_customers=sorted(cid for cid, row in self.tools.comparisons.items() if row['status'] == 'clean'),
+                          findings=list(self.tools.findings.values()), reviews=list(self.tools.reviews.values()),
+                          validated_financial_discrepancies=validated, financial_totals=totals,
+                          metrics=dict(duration_seconds=round(self.clock() - start, 3), agent_tool_calls=calls,
+                                       tool_failures=failures, api_requests=responses, human_interventions=0,
+                                       human_review_requests=sum(e['type'] == 'human_review.requested' for e in self.journal.events),
+                                       input_tokens=input_tokens, output_tokens=output_tokens,
+                                       cached_input_tokens=cached_input_tokens, reasoning_output_tokens=reasoning_output_tokens,
+                                       actual_billed_cost_usd=None,
+                                       usage_priced_cost_usd=str(((Decimal(input_tokens - cached_input_tokens)
+                                           * self.limits.input_usd_per_million)
+                                           + Decimal(cached_input_tokens) * self.limits.cached_input_usd_per_million
+                                           + Decimal(output_tokens) * self.limits.output_usd_per_million) / 1_000_000)
+                                           if self.limits.cached_input_usd_per_million is not None
+                                           and cache_details_complete and cost_complete else None,
+                                       estimated_api_cost_usd=str(cost), cost_accounting_complete=cost_complete))
+            self.journal.save_report(report)
+            return report
+
         try:
             while responses < self.limits.max_responses:
                 remaining = self.limits.max_seconds - (self.clock() - start)
@@ -78,7 +141,7 @@ class Investigator:
                 try:
                     response = self.client.with_options(timeout=min(remaining, 60), max_retries=0).responses.create(
                         model=self.model, instructions=instructions, input=history, tools=TOOLS,
-                        parallel_tool_calls=False, max_output_tokens=self.limits.max_output_tokens,
+                        parallel_tool_calls=True, max_output_tokens=self.limits.max_output_tokens,
                         store=False, include=['reasoning.encrypted_content'])
                     data = response.model_dump(exclude_none=True)
                 except Exception as exc:
@@ -102,6 +165,7 @@ class Investigator:
                         or type(reasoning) is not int or not 0 <= reasoning <= usage['output_tokens']):
                     cost_complete = False
                     reason = 'invalid_usage_details'; break
+                cache_details_complete = cache_details_complete and 'cached_tokens' in input_details
                 cached_input_tokens += cached
                 reasoning_output_tokens += reasoning
                 request_cost = (Decimal(usage['input_tokens']) * self.limits.input_usd_per_million
@@ -149,7 +213,8 @@ class Investigator:
                     else:
                         self.journal.emit('tool.completed', actor='tool', correlation_id=call_id, tool=name, result=result)
                     history.append(dict(type='function_call_output', call_id=call_id,
-                                        output=json.dumps(result, allow_nan=False)))
+                                        output=json.dumps(model_result(name, result), allow_nan=False, separators=(',', ':'))))
+                    persist('in_progress')
                 if reason in ('tool_call_limit', 'time_limit'):
                     break
         except Exception as exc:
@@ -163,37 +228,6 @@ class Investigator:
                     reason = 'evidence_changed_at_completion'
             except Exception:
                 reason = 'invalid_evidence_update'
-        compared = set(self.tools.comparisons)
-        verified = [f for f in self.tools.findings.values() if f['state'] == 'verified'
-                    and f['data_revision'] == self.tools.data.revision]
-        covered = {cid for f in verified for cid in f['customer_ids']}
-        anomalies = {cid for cid, r in self.tools.comparisons.items() if r['status'] != 'clean'}
-        review_required = {f['finding_id'] for f in verified}
-        reviews_pending = {fid for fid, r in self.tools.reviews.items() if r['status'] == 'pending'
-                           and r['finding_version'] == self.tools.findings[fid]['version']}
-        complete = (reason == 'model_finished' and not failures
-                    and compared == set(self.tools.data.customers) and anomalies <= covered
-                    and review_required <= reviews_pending)
-        if reason == 'model_finished' and not complete:
-            reason = 'coverage_evidence_or_review_incomplete' if not failures else 'tool_failures'
-        validated = {cid: self.tools.comparisons[cid] for cid in covered}
-        amounts = [Decimal(r['difference_cad']) for r in validated.values() if r['status'] == 'discrepancy']
-        totals = dict(additional_receivables_cad=str(sum((v for v in amounts if v > 0), Decimal('0.00'))),
-                      potential_credits_cad=str(-sum((v for v in amounts if v < 0), Decimal('0.00'))),
-                      disclaimer='Potential differences only; no cash recovered and no billing records changed')
-        report = dict(run_id=self.journal.run_id, status='completed' if complete else 'incomplete', reason=reason,
-                      period=self.tools.data.period, data_revision=self.tools.data.revision,
-                      customers_compared=sorted(compared),
-                      clean_customers=sorted(cid for cid, row in self.tools.comparisons.items() if row['status'] == 'clean'),
-                      findings=list(self.tools.findings.values()), reviews=list(self.tools.reviews.values()),
-                      validated_financial_discrepancies=validated, financial_totals=totals,
-                      metrics=dict(duration_seconds=round(self.clock() - start, 3), agent_tool_calls=calls,
-                                   tool_failures=failures, api_requests=responses, human_interventions=0,
-                                   human_review_requests=sum(e['type'] == 'human_review.requested' for e in self.journal.events),
-                                   input_tokens=input_tokens, output_tokens=output_tokens,
-                                   cached_input_tokens=cached_input_tokens, reasoning_output_tokens=reasoning_output_tokens,
-                                   actual_billed_cost_usd=None,
-                                   estimated_api_cost_usd=str(cost), cost_accounting_complete=cost_complete))
-        self.journal.emit('investigation.completed', status=report['status'], reason=reason, metrics=report['metrics'])
-        self.journal.save_report(report)
+        report = persist(reason)
+        self.journal.emit('investigation.completed', status=report['status'], reason=report['reason'], metrics=report['metrics'])
         return report

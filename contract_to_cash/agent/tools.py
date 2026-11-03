@@ -1,4 +1,4 @@
-"""Granular tools: no arbitrary paths, Python execution, batch audit, or billing writes."""
+"""Read-only screening and model-selected evidence tools; no legal conclusions or billing writes."""
 import copy
 from decimal import Decimal
 import hashlib
@@ -20,6 +20,7 @@ class ToolError(ValueError):
 
 STRING = {'type': 'string', 'minLength': 1, 'maxLength': 200}
 IDS = {'type': 'array', 'items': STRING, 'minItems': 1, 'maxItems': 100}
+CASE_IDS = {**IDS, 'maxItems': 10}
 
 
 def schema(name, description, **properties):
@@ -30,6 +31,8 @@ def schema(name, description, **properties):
 
 CUSTOMER = {'customer_id': STRING}
 TOOLS = [
+    schema('screen_customers', 'Screen all structured records with deterministic billing comparisons. Returns candidates and clean IDs, not evidence verification, legal conclusions, or model findings. Conflicts queue mandatory guard review.'),
+    schema('get_customer_evidence', 'Retrieve records, all original contract/amendment documents (including contrary/future terms), and comparison for up to ten model-selected customers. Previously retrieved documents are referenced in this revision; get_document can reread them.', customer_ids=CASE_IDS),
     schema('list_customers', 'List public customer IDs, names, and pricing templates. No audit results.'),
     schema('get_contract', 'Retrieve authoritative contract and document reference.', **CUSTOMER),
     schema('get_amendments', 'Retrieve all amendments, including contrary and future evidence.', **CUSTOMER),
@@ -136,6 +139,7 @@ class Tools:
         self.definitions = {definition['name']: definition for definition in TOOLS}
         # Explicit mapping; never dispatch arbitrary attributes supplied by a model.
         self.handlers = {name: handler for name, handler in (
+            ('screen_customers', self.screen_customers), ('get_customer_evidence', self.get_customer_evidence),
             ('list_customers', self.list_customers), ('get_contract', self.get_contract),
             ('get_amendments', self.get_amendments), ('get_invoices', self.get_invoices),
             ('get_document', self.get_document), ('calculate_expected', self.calculate_expected),
@@ -161,6 +165,58 @@ class Tools:
     def list_customers(self):
         return [dict(customer_id=c['customer_id'], customer_name=c.get('customer_name', ''),
                      pricing_template=c['pricing_template']) for c in self.data.contracts]
+
+    @staticmethod
+    def compact_comparison(row):
+        # The complete comparison remains in server state and screening events.
+        keys = ('customer_id', 'status', 'pricing_template', 'expected_cad', 'billed_cad',
+                'difference_cad', 'financial_category', 'invoice_amounts_cad', 'requires_human_review')
+        return {key: row[key] for key in keys if key in row}
+
+    def screen_customers(self):
+        candidates, clean, unassessed = [], [], []
+        for cid in sorted(self.data.customers):
+            try:
+                row = self.comparisons.get(cid) or self.compare_invoices(cid)
+            except ToolError as exc:
+                # For example, absent usage quantity cannot be guessed. Do not mark covered.
+                unassessed.append(dict(customer_id=cid, reason=str(exc)))
+                continue
+            if row['status'] == 'clean':
+                clean.append(cid)
+            else:
+                candidates.append(self.compact_comparison(row))
+        # Full calculation evidence is logged without sending all clean rows back to the model.
+        self.journal.emit('screening.completed', actor='tool', period=self.data.period,
+                          data_revision=self.data.revision,
+                          comparisons=list(self.comparisons.values()), unassessed=unassessed)
+        return dict(period=self.data.period, data_revision=self.data.revision,
+                    customer_count=len(self.data.customers), screened_count=len(self.comparisons),
+                    candidates=candidates, clean_customer_ids=clean, unassessed=unassessed,
+                    boundary='Structured candidates only. Investigate sources before verifying findings.')
+
+    def get_customer_evidence(self, customer_ids):
+        # Validate the complete selection before retrieving anything.
+        for cid in customer_ids:
+            self._customer(cid)
+        cases = []
+        for cid in customer_ids:
+            contract = self.get_contract(cid)
+            amendments = self.get_amendments(cid)
+            invoices = self.get_invoices(cid)
+            documents = []
+            for did in [contract['contract_id']] + [a['amendment_id'] for a in amendments]:
+                if did in self.documents_seen:
+                    documents.append(dict(document_id=did, already_retrieved=True,
+                                          data_revision=self.data.revision))
+                else:
+                    documents.append(self.get_document(did))
+            comparison = self.comparisons.get(cid) or self.compare_invoices(cid)
+            cases.append(dict(customer_id=cid, contract=contract, amendments=amendments,
+                              invoices=invoices, documents=documents,
+                              comparison=self.compact_comparison(comparison),
+                              evidence_ids=sorted(self._required(cid))))
+        return dict(data_revision=self.data.revision, cases=cases)
 
     def _evidence(self, ids):
         self.seen.update(ids)

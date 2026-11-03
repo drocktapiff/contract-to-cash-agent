@@ -74,6 +74,17 @@ def evaluate(run, data, cached_price=None):
             all_requests.append(event)
         if event_type in ('tool.completed', 'tool.failed'):
             outcomes[correlation] = event
+        batch = []
+        if event_type == 'screening.completed':
+            batch = payload.get('comparisons', [])
+        elif event_type == 'tool.completed' and payload.get('tool') == 'get_customer_evidence':
+            batch = [case['comparison'] for case in payload['result']['cases']]
+        for comparison in batch:
+            financial_checks += 1
+            cid = comparison.get('customer_id')
+            errors = financial_errors(comparison, baseline[cid]) if cid in baseline else {'customer': 'Unknown'}
+            if errors:
+                mismatches.append(dict(event=event['sequence'], customer_id=cid, errors=errors))
         if event_type != 'tool.completed':
             continue
         tool, result = payload['tool'], payload['result']
@@ -119,10 +130,18 @@ def evaluate(run, data, cached_price=None):
     contracts, amendments, invoices = load_records(data)
     document_ids = {c['contract_id'] for c in contracts} | {a['amendment_id'] for a in amendments}
     retrieved_documents, retrieved_invoices = set(), set()
-    for event in outcomes.values():
+    for event in events:
+        if event['type'] == 'evidence.updated':
+            retrieved_documents.clear()
+            retrieved_invoices.clear()
         payload = event['payload']
         if event['type'] != 'tool.completed':
             continue
+        if payload['tool'] == 'get_customer_evidence':
+            for case in payload['result']['cases']:
+                # Reference-only repeats do not establish new source retrieval.
+                retrieved_documents.update(doc['document_id'] for doc in case['documents'] if 'text' in doc)
+                retrieved_invoices.update(row['invoice_id'] for row in case['invoices'])
         if payload['tool'] == 'get_document':
             retrieved_documents.add(payload['result']['document_id'])
         if payload['tool'] == 'get_invoices':

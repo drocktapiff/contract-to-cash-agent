@@ -27,6 +27,8 @@ def main(argv=None):
     run.add_argument('--max-cost-usd', type=Decimal, default=Decimal('5'))
     run.add_argument('--input-price-per-million', type=Decimal, required=True)
     run.add_argument('--output-price-per-million', type=Decimal, required=True)
+    run.add_argument('--cached-input-price-per-million', type=Decimal,
+                     help='Optional current cached-input rate; budget still uses full input rate')
     run.add_argument('--max-output-tokens', type=int, default=4096)
     run.add_argument('--max-responses', type=int, default=600)
     run.add_argument('--watch-data', action='store_true', help='Accept real operator public-data updates at response boundaries')
@@ -53,7 +55,7 @@ def main(argv=None):
         try:
             limits = Limits(args.max_tool_calls, args.max_seconds, args.max_cost_usd,
                             args.input_price_per_million, args.output_price_per_million,
-                            args.max_output_tokens, args.max_responses)
+                            args.max_output_tokens, args.max_responses, args.cached_input_price_per_million)
             data = PublicData(args.data, args.period)
             from openai import OpenAI
             client = resources.enter_context(OpenAI(api_key=key, base_url='https://api.openai.com/v1', max_retries=0))

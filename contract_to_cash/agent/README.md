@@ -1,5 +1,9 @@
 # Phase 2: model-directed investigation backend
 
+Phase 2.6 adds efficient structured screening and bundled evidence retrieval.
+See [the design, offline validation and proposed live commands](../../docs/PHASE26.md).
+No Phase 2.6 live performance result is claimed.
+
 This is a Python CLI using OpenAI Responses API function calling. The model
 chooses the next tool and customers; no anomaly IDs, findings or prescribed
 investigation sequence are in its instructions. The existing complete
@@ -27,7 +31,7 @@ prompts. No Git worktree is needed. Source assets are unchanged.
 
 Run from this bundle so the key and evaluation code are absent from the runtime
 working directory. The run CLI rejects data directories containing the sealed
-key. The model has only the ten tools below, with no shell, file-search, arbitrary
+key. The model has only the twelve tools below, with no shell, file-search, arbitrary
 path, network or code-execution tool. This is a model/tool access boundary, not an
 OS sandbox protecting files from a human running arbitrary Python on the host.
 
@@ -83,6 +87,8 @@ IDs/JSON keys are rejected server-side. Dispatch uses an explicit mapping.
 
 | Tool | Inputs | Behavior |
 |---|---|---|
+| `screen_customers` | none | Screen structured records using authoritative comparisons; compact candidates, clean IDs and unassessed IDs; never source verification or legal conclusions |
+| `get_customer_evidence` | up to ten selected customer IDs | Retrieve selected records, original contract and all amendment sources, invoices and comparisons; reuse current-revision evidence |
 | `list_customers` | none | Public customer inventory, no anomaly results |
 | `get_contract` | customer ID | Structured authoritative contract |
 | `get_amendments` | customer ID | All amendments, including contrary/future evidence |
@@ -125,6 +131,12 @@ completed/incomplete status), `tool.requested`, `tool.completed`, `tool.failed`,
 Additional API/error events expose counts and error classes, not provider error
 bodies or credentials. JSONL is ready for a later SSE adapter; no HTTP server is
 implemented in Phase 2.
+
+Independent calls may share a Responses exchange; execution and budget checks remain
+serial. Full results stay in the event log; repeated finding/pattern data is omitted
+from compact model acknowledgments. Reports checkpoint after each executed tool.
+`--cached-input-price-per-million` optionally records usage-priced cost separately
+from the conservative full-input budget estimate; neither is an actual bill.
 
 Each run writes:
 
