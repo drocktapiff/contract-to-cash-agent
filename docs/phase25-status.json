@@ -1,0 +1,107 @@
+{
+  "phase": "2.5",
+  "status": "blocked_invalid_api_key_on_responses",
+  "blockers": [
+    "Responses API returns HTTP 401 invalid_api_key even though model listing succeeds"
+  ],
+  "configuration_draft": "Published environment provides OPENAI_API_KEY and API network access; no credential values are stored in this repository",
+  "validation": {
+    "tests_passed": 59,
+    "live_validation_passed": false,
+    "model_candidate": "gpt-6.1-sol; verified in the official model catalog and available via model listing",
+    "input_usd_per_million": "2",
+    "output_usd_per_million": "10",
+    "cached_input_usd_per_million": "0.10"
+  },
+  "runs": [
+    {
+      "name": "pilot",
+      "status": "incomplete",
+      "reason": "api_failure",
+      "model": "gpt-6.1-sol",
+      "runtime_seconds": 0.748,
+      "api_requests": 1,
+      "tool_calls": 0,
+      "findings": 0,
+      "human_escalations": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_api_cost_usd": "0",
+      "cost_accounting_complete": false,
+      "actual_api_cost_usd": null,
+      "error": {
+        "http_status": 401,
+        "type": "invalid_request_error",
+        "code": "invalid_api_key"
+      }
+    },
+    {
+      "name": "full-1",
+      "status": "not_run",
+      "true_positives": null,
+      "false_positives": null,
+      "missed_anomalies": null,
+      "financial_accuracy": null,
+      "human_escalations": null,
+      "runtime_seconds": null,
+      "actual_api_cost_usd": null,
+      "model_calls": null,
+      "tool_calls": null,
+      "operational_failures": null
+    },
+    {
+      "name": "full-2",
+      "status": "not_run",
+      "true_positives": null,
+      "false_positives": null,
+      "missed_anomalies": null,
+      "financial_accuracy": null,
+      "human_escalations": null,
+      "runtime_seconds": null,
+      "actual_api_cost_usd": null,
+      "model_calls": null,
+      "tool_calls": null,
+      "operational_failures": null
+    },
+    {
+      "name": "full-3",
+      "status": "not_run",
+      "true_positives": null,
+      "false_positives": null,
+      "missed_anomalies": null,
+      "financial_accuracy": null,
+      "human_escalations": null,
+      "runtime_seconds": null,
+      "actual_api_cost_usd": null,
+      "model_calls": null,
+      "tool_calls": null,
+      "operational_failures": null
+    }
+  ],
+  "responses_api_attempts": 2,
+  "successful_model_executions": 0,
+  "credential_source": "OPENAI_API_KEY",
+  "authentication_diagnostic": {
+    "model_listing": "success",
+    "model": "gpt-6.1-sol",
+    "same_api_key": true,
+    "base_url": "https://api.openai.com/v1/",
+    "same_base_url": true,
+    "organization_configured": false,
+    "project_configured": false,
+    "same_organization": true,
+    "same_project": true,
+    "application_custom_auth_headers": false,
+    "responses_attempts": 1,
+    "tools": [],
+    "max_output_tokens": 16,
+    "error": {
+      "http_status": 401,
+      "type": "invalid_request_error",
+      "code": "invalid_api_key",
+      "message": "Incorrect API key provided: [REDACTED_API_KEY] You can find your API key at https://platform.openai.com/account/api-keys.",
+      "param": null
+    },
+    "recommended_correction": "Verify or replace the securely configured project API key; if using proxy injection, verify POST /v1/responses as well as GET /v1/models. No full investigation was retried."
+  }
+}
