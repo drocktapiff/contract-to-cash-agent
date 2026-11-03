@@ -20,8 +20,7 @@ class UsageTelemetryTests(unittest.TestCase):
         response.data['usage'].update(input_tokens_details={'cached_tokens': 40},
                                       output_tokens_details={'reasoning_tokens': 12})
         with tempfile.TemporaryDirectory() as tmp:
-            journal = Journal(Path(tmp) / 'run')
-            try:
+            with Journal(Path(tmp) / 'run') as journal:
                 report = Investigator(FakeClient([response]), 'model', Tools(PublicData(data, '2026-04'), journal),
                                       journal, Limits()).run('Audit')
                 self.assertEqual(report['metrics']['cached_input_tokens'], 40)
@@ -29,22 +28,18 @@ class UsageTelemetryTests(unittest.TestCase):
                 self.assertIsNone(report['metrics']['actual_billed_cost_usd'])
                 event = next(e for e in journal.events if e['type'] == 'api.completed')
                 self.assertEqual(event['payload']['model'], 'model-snapshot')
-            finally:
-                journal.close()
 
 
 class EvaluationTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
         self.run = Path(self.tmp.name)
         self.data = Path(__file__).resolve().parents[1] / 'data'
         self.report = dict(run_id='SIMULATED', status='incomplete', reason='tool_call_limit', period='2026-04',
                            data_revision='test-revision', findings=[], reviews=[], metrics={})
         self.events = [dict(sequence=1, type='investigation.started', payload=dict(limits=dict(
             input_usd_per_million='1', output_usd_per_million='4')))]
-
-    def tearDown(self):
-        self.tmp.cleanup()
 
     def write(self):
         (self.run / 'report.json').write_text(json.dumps(self.report))

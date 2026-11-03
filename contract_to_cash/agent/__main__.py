@@ -1,5 +1,6 @@
 """CLI for real OpenAI investigations and separate local operator review."""
 import argparse
+from contextlib import ExitStack
 from decimal import Decimal
 import json
 import os
@@ -48,24 +49,21 @@ def main(argv=None):
     key = os.environ.get('OPENAI_API_KEY') or os.environ.get('CONTRACT_AGENT_API_KEY')
     if not key:
         parser.error('Set OPENAI_API_KEY (or proxy-backed CONTRACT_AGENT_API_KEY); never commit credentials')
-    try:
-        limits = Limits(args.max_tool_calls, args.max_seconds, args.max_cost_usd,
-                        args.input_price_per_million, args.output_price_per_million,
-                        args.max_output_tokens, args.max_responses)
-        data = PublicData(args.data, args.period)
-        from openai import OpenAI
-        client = OpenAI(api_key=key, base_url='https://api.openai.com/v1', max_retries=0)
-        journal = Journal(args.output, sink=lambda line: print(line, flush=True))
-    except Exception as exc:
-        print('Setup failed: ' + type(exc).__name__ + '; check data integrity, limits, SDK installation, and output directory.', file=sys.stderr)
-        return 2
-    try:
+    with ExitStack() as resources:
+        try:
+            limits = Limits(args.max_tool_calls, args.max_seconds, args.max_cost_usd,
+                            args.input_price_per_million, args.output_price_per_million,
+                            args.max_output_tokens, args.max_responses)
+            data = PublicData(args.data, args.period)
+            from openai import OpenAI
+            client = resources.enter_context(OpenAI(api_key=key, base_url='https://api.openai.com/v1', max_retries=0))
+            journal = resources.enter_context(Journal(args.output, sink=lambda line: print(line, flush=True)))
+        except Exception as exc:
+            print('Setup failed: ' + type(exc).__name__ + '; check data integrity, limits, SDK installation, and output directory.', file=sys.stderr)
+            return 2
         report = Investigator(client, args.model, Tools(data, journal), journal, limits, args.watch_data).run(args.objective)
         print('Report: ' + str(args.output / 'report.json'), file=sys.stderr)
         return 0 if report['status'] == 'completed' else 1
-    finally:
-        journal.close()
-        client.close()
 
 
 if __name__ == '__main__':

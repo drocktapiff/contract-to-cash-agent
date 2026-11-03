@@ -53,14 +53,13 @@ class FakeClient:
 class AgentTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
+        # unittest runs cleanups in reverse order, including when setUp fails.
+        self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         self.journal = Journal(self.root / 'run')
+        self.addCleanup(self.journal.close)
         self.data = PublicData(DATA, '2026-04')
         self.tools = Tools(self.data, self.journal)
-
-    def tearDown(self):
-        self.journal.close()
-        self.tmp.cleanup()
 
     def evidence(self, cid):
         c = self.tools.execute('get_contract', dict(customer_id=cid))
