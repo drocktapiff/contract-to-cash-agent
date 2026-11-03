@@ -16,7 +16,7 @@ MONTHS = ("2026-02", "2026-03", "2026-04")
 
 
 def write_json(path: Path, obj: object) -> None:
-    path.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
 
 
 def build_fixture() -> tuple[list[dict], list[dict], list[dict], dict]:
@@ -118,13 +118,13 @@ def generate(output_dir: Path = DATA) -> dict:
                    f"Billing cycle: Monthly. Pricing template: {c['pricing_template']}."]
         if c.get("usage_tier"):
             details.append("For usage above 100 units in a month, all units are priced at CAD 9.00 each; otherwise CAD 10.00 each. This replaces the base charge for this customer's measured service.")
-        (docs / f"{c['contract_id']}.txt").write_text("\n".join(details) + "\n", encoding="utf-8")
+        (docs / f"{c['contract_id']}.txt").write_text("\n".join(details) + "\n", encoding="utf-8", newline="\n")
     for a in amendments:
         terms = {"discount_percent": "discount percentage", "uplift_percent": "price increase percentage", "set_price": "monthly price CAD"}
         body = [f"SIGNED AMENDMENT {a['amendment_id']}", f"Customer: {a['customer_id']}",
                 f"Effective: {a['effective_date']}", f"Term: {terms[a['kind']]} = {a['value']}"]
         if a["end_date"]: body.append(f"Expires: {a['end_date']}")
-        (docs / f"{a['amendment_id']}.txt").write_text("\n".join(body) + "\n", encoding="utf-8")
+        (docs / f"{a['amendment_id']}.txt").write_text("\n".join(body) + "\n", encoding="utf-8", newline="\n")
     write_json(output_dir / "sealed_answer_key.json", key)
     manifest = {}
     for path in sorted(docs.glob("*.txt")):
