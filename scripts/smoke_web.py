@@ -58,15 +58,18 @@ def main():
                                 "button", name="Run investigation", exact=True
                             ).is_disabled()
                         else:
-                            page.get_by_role("button", name="Enter operator workspace").click()
-                            page.get_by_label("Operator credential", exact=True).fill(
-                                "abcde"
+                            assert page.get_by_label("Operator credential", exact=True).count() == 0
+                            assert (
+                                page.get_by_role(
+                                    "button", name="Operator sign in", exact=True
+                                ).count()
+                                == 0
                             )
-                            page.get_by_role("button", name="Sign in securely", exact=True).click()
                             page.get_by_role("button", name="Run investigation", exact=True).click()
                             page.get_by_label("Input", exact=True).fill("2")
                             page.get_by_label("Cached input", exact=True).fill("0.1")
                             page.get_by_label("Output", exact=True).fill("10")
+                            assert page.get_by_role("button", name="Start one investigation", exact=True).is_disabled()
                             page.get_by_role("checkbox").check()
                             page.get_by_role(
                                 "button", name="Start one investigation", exact=True

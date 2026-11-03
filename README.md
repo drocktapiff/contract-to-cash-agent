@@ -11,3 +11,7 @@ is bundled, no paid run starts automatically, and no public deployment is config
 
 Windows users can double-click **Start Ledgerline.cmd** after one-time setup. See
 [the launcher, secure credentials and desktop shortcut guide](docs/WINDOWS_LAUNCHER.md).
+
+Normal local startup now opens directly into the dashboard without a password.
+Loopback-only sessions, CSRF, explicit paid-run confirmation and human authorization
+remain required; public/network deployment requires proper authentication first.

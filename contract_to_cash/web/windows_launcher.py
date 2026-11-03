@@ -204,7 +204,7 @@ def singleton():
         kernel.CloseHandle(handle)
 
 
-def serve(root, password):
+def serve(root):
     import uvicorn
     from .app import create_app
     from .store import Settings
@@ -214,7 +214,6 @@ def serve(root, password):
             data=root / "agent-runtime-web/contract_to_cash/data",
             root=root / "runs/web",
             frontend=root / "frontend/dist",
-            operator_token=password,
             reviewer=os.environ.get("CONTRACT_WEB_REVIEWER", "Local operator"),
         )
     )
@@ -297,8 +296,7 @@ def launch(root=PROJECT, force_prompt=False):
         errors = installation_errors(root)
         if errors:
             raise LaunchError("\n".join(errors) + "\n\n" + SETUP)
-        password = operator_password(root, force_prompt=force_prompt)
-        return serve(root, password)
+        return serve(root)
 
 
 def main(argv=None):
@@ -307,7 +305,7 @@ def main(argv=None):
     actions.add_argument(
         "--save-credential",
         action="store_true",
-        help="Securely prompt and save only the operator password to current-user Windows Credential Manager",
+        help="Retired: local startup no longer uses operator passwords",
     )
     actions.add_argument(
         "--forget-credential",
@@ -322,7 +320,7 @@ def main(argv=None):
     parser.add_argument(
         "--prompt-password",
         action="store_true",
-        help="Ignore inherited/stored operator passwords and securely prompt when starting a new server",
+        help="Retired: local startup no longer uses password prompts",
     )
     args = parser.parse_args(argv)
     try:
@@ -339,21 +337,10 @@ def main(argv=None):
             print("This checkout operator credential was removed. Run history was not changed.")
             return 0
         if args.save_credential:
-            import sys
-
-            if not sys.stdin.isatty():
-                raise LaunchError("Open a Windows console for secure password entry")
-            password = secure_prompt("New operator password (5–512 characters, hidden): ")
-            if not valid_password(password):
-                raise LaunchError("Operator password must contain 5–512 characters")
-            if secure_prompt("Confirm operator password (hidden): ") != password:
-                raise LaunchError("Passwords did not match; no credential was saved")
-            windows_credentials.write(credential_target(PROJECT), password)
-            print(
-                "Operator password saved in current-user Windows Credential Manager. No API key was stored."
-            )
-            return 0
-        return launch(force_prompt=args.prompt_password)
+            raise LaunchError("Passwordless local startup does not use saved passwords. No credential was written.")
+        if args.prompt_password:
+            raise LaunchError("Local startup no longer requires a password; omit --prompt-password")
+        return launch()
     except (LaunchError, windows_credentials.CredentialError) as exc:
         print(str(exc))
         return 1

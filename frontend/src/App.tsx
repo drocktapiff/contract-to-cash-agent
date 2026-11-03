@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, setCsrf } from './api';
+import { api, setCsrf, bootstrapSession } from './api';
 import type { Activity, Dataset, Evidence, Finding, Health, Review, Run, Session } from './types';
 import {
   exportAllowed,
@@ -75,9 +75,7 @@ export default function App() {
     [error, setError] = useState(''),
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false),
-    [token, setToken] = useState(''),
-    [launchOpen, setLaunchOpen] = useState(false),
+  const [launchOpen, setLaunchOpen] = useState(false),
     [paid, setPaid] = useState(false);
   const [inputPrice, setInputPrice] = useState(''),
     [cachedPrice, setCachedPrice] = useState(''),
@@ -119,7 +117,7 @@ export default function App() {
     }
   }
   useEffect(() => {
-    Promise.all([api<Session>('/session'), api<Health>('/health')])
+    Promise.all([bootstrapSession(), api<Health>('/health')])
       .then(([s, h]) => {
         setSession(s);
         setCsrf(s.csrf_token);
@@ -143,6 +141,12 @@ export default function App() {
       setRun(null);
       setEvents([]);
       setSelected(null);
+      void bootstrapSession()
+        .then((s) => {
+          setSession(s);
+          setCsrf(s.csrf_token);
+        })
+        .catch((e) => setError(e.message));
     };
     window.addEventListener('ctc-session-expired', expired);
     return () => window.removeEventListener('ctc-session-expired', expired);
@@ -207,38 +211,6 @@ export default function App() {
       cancelled = true;
     };
   }, [selected?.finding_id, runId]);
-  async function signIn(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError('');
-    try {
-      const s = await api<Session>('/session', { method: 'POST', body: JSON.stringify({ token }) });
-      setSession(s);
-      setCsrf(s.csrf_token);
-      setToken('');
-      setLoginOpen(false);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function signOut() {
-    setBusy(true);
-    try {
-      await api('/session', { method: 'DELETE' });
-      setSession(null);
-      setCsrf(null);
-      setRuns([]);
-      setRun(null);
-      setEvents([]);
-      location.reload();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
   async function launch(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -318,13 +290,12 @@ export default function App() {
     }
   }
   useEffect(() => {
-    if (!loginOpen && !launchOpen && !selected) return;
+    if (!launchOpen && !selected) return;
     const previous = document.activeElement as HTMLElement | null;
     const handler = (event: KeyboardEvent) => {
       const dialogs = document.querySelectorAll<HTMLElement>('[role="dialog"]');
       const dialog = dialogs[dialogs.length - 1];
       if (event.key === 'Escape') {
-        setLoginOpen(false);
         setLaunchOpen(false);
         setSelected(null);
       }
@@ -354,7 +325,7 @@ export default function App() {
       document.body.style.overflow = '';
       previous?.focus();
     };
-  }, [loginOpen, launchOpen, selected?.finding_id]);
+  }, [launchOpen, selected?.finding_id]);
   const pending = run?.reviews.filter((r) => r.status === 'pending') ?? [];
   const verified = run?.findings.filter((f) => f.state === 'verified' && f.evidence_verified) ?? [];
   const reviewFor = (f: Finding) => run?.reviews.find((r) => r.finding_id === f.finding_id);
@@ -509,16 +480,8 @@ export default function App() {
           <div className="topbar-actions">
             <span className="environment-dot" />
             {recorded ? 'Recorded Investigation' : 'Local · read-only billing'}
-            {session?.authenticated ? (
-              <button className="quiet" onClick={() => void signOut()} disabled={busy}>
-                Sign out
-              </button>
-            ) : (
-              !recorded && (
-                <button className="quiet" onClick={() => setLoginOpen(true)}>
-                  Operator sign in
-                </button>
-              )
+            {!recorded && session?.authenticated && (
+              <span>Local operator · {session.reviewer}</span>
             )}
           </div>
         </header>
@@ -583,7 +546,7 @@ export default function App() {
               <Glyph kind="lock" />
               <span>
                 {!health.operator_configured
-                  ? 'Configure the local operator credential to enable sign in.'
+                  ? 'The local operator workspace is not ready.'
                   : !health.dataset_ready
                     ? 'Build the isolated public runtime to enable investigations.'
                     : !health.api_key_configured
@@ -609,29 +572,13 @@ export default function App() {
             </div>
           )}
           {!readable ? (
-            <section className="panel welcome">
-              <div className="welcome-icon">
-                <Glyph kind="lock" />
-              </div>
-              <div className="eyebrow">HUMAN OVERSIGHT, BUILT IN</div>
-              <h2>
-                A clearer path from signed terms
-                <br />
-                to billing confidence.
-              </h2>
+            <section className="panel empty" role="status">
+              <h2>{loading ? 'Opening local workspace…' : 'Local workspace unavailable'}</h2>
               <p>
-                The agent screens records, challenges discrepancies against original contracts, and
-                brings supported findings to a Contract & Billing Operations Specialist.
+                {loading
+                  ? 'Connecting to the loopback-only operator session.'
+                  : 'Reconnect to http://127.0.0.1:8000. This passwordless workspace cannot be used through a public or network address.'}
               </p>
-              <div className="principles">
-                <span>01 · Deterministic calculations</span>
-                <span>02 · Cited source evidence</span>
-                <span>03 · Explicit human review</span>
-              </div>
-              <button className="primary" onClick={() => setLoginOpen(true)}>
-                Enter operator workspace
-                <Glyph kind="arrow" />
-              </button>
             </section>
           ) : (
             <>
@@ -1082,44 +1029,6 @@ export default function App() {
           </footer>
         </main>
       </div>
-      {loginOpen && (
-        <div className="modal-backdrop">
-          <section className="modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
-            <button
-              className="modal-close icon-button"
-              onClick={() => setLoginOpen(false)}
-              aria-label="Close sign in"
-            >
-              <Glyph kind="close" />
-            </button>
-            <div className="eyebrow">LOCAL OPERATOR SESSION</div>
-            <h2 id="login-title">Enter your workspace.</h2>
-            <p>
-              Use the operator credential configured on this local server. This is not your OpenAI
-              API key.
-            </p>
-            <form onSubmit={signIn}>
-              <label>
-                Operator credential
-                <input
-                  type="password"
-                  autoFocus
-                  autoComplete="current-password"
-                  value={token}
-                  minLength={5}
-                  maxLength={512}
-                  required
-                  onChange={(e) => setToken(e.target.value)}
-                />
-              </label>
-              <button className="primary" disabled={busy}>
-                {busy ? 'Signing in…' : 'Sign in securely'}
-              </button>
-            </form>
-            <small>Session cookie is HttpOnly and expires after eight hours.</small>
-          </section>
-        </div>
-      )}
       {launchOpen && (
         <div className="modal-backdrop">
           <section className="modal" role="dialog" aria-modal="true" aria-labelledby="launch-title">

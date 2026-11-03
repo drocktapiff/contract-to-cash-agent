@@ -29,6 +29,7 @@ class Settings:
     frontend: Path = Path("frontend/dist")
     mode: str = "operator"
     operator_token: str = ""
+    local_passwordless: bool = True
     reviewer: str = "Local operator"
     origins: tuple = (
         "http://127.0.0.1:8000",

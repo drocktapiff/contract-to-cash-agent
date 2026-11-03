@@ -38,6 +38,7 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
             recordings=self.root / "recordings",
             frontend=self.root / "dist",
             operator_token="operator-credential-" + "x" * 32,
+            local_passwordless=False,
             reviewer="Test Operator",
         )
         self.env = patch.dict(os.environ, {"OPENAI_API_KEY": "local-test-placeholder"})

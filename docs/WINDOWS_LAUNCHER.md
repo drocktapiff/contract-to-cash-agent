@@ -1,15 +1,15 @@
-# Windows one-click launcher
+# Windows one-click launcher · passwordless local workspace
 
-After the one-time setup below, double-click **Start Ledgerline.cmd** in the project
-folder (or the optional desktop shortcut). The launcher uses this checkout's
-`.web-venv\Scripts\python.exe`, starts the existing FastAPI application on loopback
-port 8000, and opens http://127.0.0.1:8000 only after its API and frontend respond.
-It never starts an investigation, spends API credits, installs software automatically,
-or deletes history to repair startup.
+After the one-time setup below, double-click **Start Ledgerline.cmd** or its optional
+desktop shortcut. It uses `.web-venv\Scripts\python.exe`, starts the existing FastAPI
+application **strictly on 127.0.0.1:8000**, and opens the operations dashboard once the
+API and built frontend respond. **No operator password, Credential Manager lookup or
+browser login is required.** Startup never makes an OpenAI call, starts a paid run,
+approves a finding, authorizes an export or deletes history.
 
 ## One-time setup (Windows Git Bash / Python 3.13)
 
-Install Python 3.13 and Node.js 22.12+ first. From the project checkout:
+Install Python 3.13 and Node.js 22.12+. From the checkout:
 
 ```bash
 py -3.13 -m venv .web-venv
@@ -20,140 +20,116 @@ npm --prefix frontend run build
 python -m scripts.build_agent_runtime ./agent-runtime-web
 ```
 
-The builder requires a **new** destination and copies public data without the sealed
-answer key. If that destination already exists, inspect/keep it rather than deleting
-run history. Missing or invalid prerequisites produce actionable instructions and a
-paused console so the error remains visible. The frontend assets and source-integrity
-manifest are checked; the launcher never regenerates or modifies financial records.
+The runtime builder requires a new destination and excludes the sealed answer key.
+Missing/incomplete prerequisites print setup instructions and keep the launcher window
+open for inspection. No financial data or journals are automatically repaired/deleted.
+The launcher uses the explicit venv executable, so daily startup needs no shell activation.
 
-The normal double-click path requires no Git Bash activation or Python on PATH:
-it uses the project's explicit virtual-environment executable. Keep the console open.
-You still sign into the browser with the same operator password; startup does not
-bypass operator authentication or approve billing/export actions.
+After pulling an update, run `npm ci --prefix frontend` and
+`npm --prefix frontend run build` to refresh the browser assets. The launcher checks
+that a build exists; it does not automatically rebuild stale assets.
 
-## Operator password: hidden prompt or Credential Manager
+Restart an existing server once after upgrading: a running Python process still uses
+its previously loaded code. Subsequent launches open the dashboard directly. Choose
+**Run investigation** only when you intend to authorize one paid run; the confirmation
+checkbox, token rates, limits and review/export controls remain mandatory.
 
-For a new server the selection order is:
+## Local sessions, attribution and API credentials
 
-1. Inherited `CONTRACT_WEB_OPERATOR_TOKEN`, if configured and valid.
-2. This checkout's current-user Windows Credential Manager entry.
-3. Hidden console password entry (5–512 characters).
+The browser automatically receives an eight-hour random HttpOnly/SameSite=Strict
+session cookie and separate CSRF token. New session creation is rate-limited. Allowed
+Origin/Host checks, cross-site restrictions and explicit loopback peer/server checks
+remain enforced. Mutating actions require a valid session and matching CSRF header.
+The frontend renews expired sessions but never automatically retries a paid action or
+human decision. Local access is implicit operator authority, not verified identity.
 
-The five-character minimum applies only to the loopback local operator console.
-Longer passwords remain supported and recommended. Public deployment must use stronger
-authentication and user identity/RBAC; this local minimum is not a public-deployment
-policy. OpenAI API credential requirements and handling are unchanged.
+Reviewer attribution still comes from server-side `CONTRACT_WEB_REVIEWER` (default
+`Local operator`) and is stored with the human decision and rationale. To choose a
+name when launching from Git Bash:
 
-There is no plaintext password file, secret command argument or browser URL. Hidden
-entry is refused if the console cannot guarantee it; an echoing `getpass` fallback
-is never accepted. `--prompt-password` ignores inherited/stored operator credentials
-when starting a new server. It does not change the password of an already-running server.
-
-To save a password in **Windows Credential Manager** from Command Prompt:
-
-```bat
-"Start Ledgerline.cmd" --save-credential
+```bash
+export CONTRACT_WEB_REVIEWER='Your display name'
+./Start\ Ledgerline.cmd
 ```
 
-You enter and confirm it without echo. Windows stores it as a current-user generic
-credential, persistent on this machine. The target is `Ledgerline/Operator/<checkout
-hash>`; no local path or secret appears in the target name. A different checkout or
-moved folder has a different target. The launcher never saves an OpenAI API key.
-The password remains available to the current Windows account; this is not protection
-against processes already running as that account. Python strings/process memory are
-not guaranteed to be securely erasable.
+Explorer inherits its own environment, not variables exported only in a shell. The
+OpenAI API key remains server-side in the existing secure environment/binding; the
+launcher does not store it, send it to the browser or change its validation. Without
+a configured API credential, history/review is available but paid launch is disabled.
+Do not put keys in `.cmd` files, shortcut arguments, frontend variables or committed files.
+See [Phase 3](PHASE3.md) for server setup and the distinction between configured
+credentials and actual OpenAI authorization.
 
-To remove only this checkout's saved operator password:
+Old `CONTRACT_WEB_OPERATOR_TOKEN` values and saved operator credentials are ignored
+by normal startup. Nothing deletes existing Credential Manager entries automatically.
+If desired, remove only this checkout's old entry from Command Prompt:
 
 ```bat
 "Start Ledgerline.cmd" --forget-credential
 ```
 
-You may also inspect/remove its generic credential through Windows Credential Manager.
-Removing a credential neither stops a server nor changes journals. If Credential Manager
-is unavailable under local policy, use `--prompt-password` instead. No third-party
-credential module or administrator privilege is required.
+`--save-credential` and `--prompt-password` are retired and return guidance without
+prompting or storing a password. Removing an old credential neither stops a server nor
+changes journals. Do not confuse operator credentials with the OpenAI API credential.
 
-API credentials remain server-side in the existing environment. A double-click from
-Explorer inherits Explorer's environment, **not** variables exported only in a Git Bash
-window. To inherit an existing securely configured shell environment, invoke
-`./Start\ Ledgerline.cmd` from that shell, or use the normal managed credential binding.
-Never put API keys in the `.cmd`, shortcut arguments, frontend configuration or a
-committed file. Without an API credential the console still opens for history/review,
-but paid investigation launch stays disabled. See [Phase 3](PHASE3.md) for server setup.
+## One instance and clean shutdown
 
-## One instance and shutdown
+A ready Ledgerline instance is reused without starting another process. A Windows
+named mutex coordinates simultaneous clicks; the second waits up to 30 seconds for
+startup. The existing run-store lock still protects journals. Foreign/older/unresponsive
+services on port 8000 and stale store locks are never killed or deleted. A failed
+browser open prints the URL; startup failures keep the console visible.
 
-Before prompting, the launcher probes the loopback health identity and dashboard.
-If Ledgerline is ready, it opens the existing dashboard without changing credentials
-or starting another server. A Windows named mutex coordinates concurrent launcher
-clicks across checkouts in the same Windows session. A second click during startup
-waits up to 30 seconds for the first launcher. The existing store lock continues to
-protect SQLite/run ownership, including manually started servers.
+Keep the original console open. **Press Ctrl+C there for clean shutdown.** New paid
+launches are disabled immediately; any active bounded investigation is allowed to
+settle and close its journal before FastAPI exits and releases ownership. Repeated
+Ctrl+C does not force-kill the writer. If Command Prompt asks whether to terminate
+the batch job after Python exits, confirm it then.
 
-A foreign/older service on port 8000 is never killed. A health response without the
-new Ledgerline application identity is treated conservatively as an unrecognized
-service; stop an older manually started Ledgerline instance once and relaunch it
-with this version. A startup timeout reports failure rather than opening a broken page.
-If the default browser fails to open, the console prints the URL for manual use.
-
-For **clean shutdown**, press **Ctrl+C in the original launcher console**. New paid
-launches are disabled immediately. If an investigation is active, the launcher waits
-for that bounded run to settle and close its journal before stopping FastAPI and
-releasing ownership. Repeated Ctrl+C does not force-terminate an active journal writer.
-This wait may last up to the remaining investigation limit. If Command Prompt asks
-whether to terminate the batch job after Python exits, confirm it then.
-
-Do not close the console with its window X or use Task Manager to stop a running
-investigation: Windows may terminate it without graceful cleanup. A crash/forced stop
-can leave `.server.lock`. The launcher **never** removes that file automatically.
-Confirm no process owns/writes the run store before following the recovery procedure
-in [Phase 3](PHASE3.md#interruptions-and-recovery). SQLite journals and `runs/web` are
-preserved; neither reinstalling a shortcut nor launcher startup clears them.
+Do not use the window X or Task Manager during an investigation: Windows can force
+termination without cleanup. For a leftover `.server.lock`, first confirm no process
+owns/writes the store, then follow [safe recovery](PHASE3.md#interruptions-and-recovery).
+Never delete `runs/web` or a SQLite journal to repair startup.
 
 ## Optional desktop shortcut
 
-From PowerShell, in the project folder:
+From PowerShell in the checkout:
 
 ```powershell
 .\scripts\windows\install_shortcut.ps1
-```
-
-This installs `Ledgerline Operations Console.lnk` on the current user's actual desktop
-(including redirected/OneDrive desktops), with this checkout as its working directory.
-It stores no secrets, starts no server and installs no auto-start entry. An existing
-shortcut is not overwritten without `-Force`. To uninstall:
-
-```powershell
+# To remove only this checkout's shortcut:
 .\scripts\windows\install_shortcut.ps1 -Remove
 ```
 
-`-Destination <folder>` is available for a different shortcut folder or automated tests.
-Removal refuses a shortcut pointing to another checkout. If Windows execution policy
-blocks the helper, follow your organization's policy or manually create a shortcut
-to `Start Ledgerline.cmd`; do not disable machine-wide script security. Moving the
-checkout requires recreating the shortcut and optionally saving its new credential.
+The helper creates `Ledgerline Operations Console.lnk` on the actual current-user
+desktop, including redirected/OneDrive desktops. It stores no secrets and creates no
+auto-start entry. `-Force` is required to overwrite an existing shortcut;
+`-Destination <folder>` supports other folders/testing. Removal refuses another
+checkout's shortcut. If execution policy blocks the script, follow organizational
+policy or create a manual shortcut to `Start Ledgerline.cmd` instead of disabling
+machine-wide security. Moving the checkout requires recreating its shortcut.
 
-## Troubleshooting and validation
+## Deployment boundary
 
-- **Window reports missing Python:** run the one-time setup. Installing global Python
-  alone does not create `.web-venv`.
-- **Missing modules:** run `.web-venv\Scripts\python.exe -m pip install -r requirements-web.txt`.
-- **Frontend missing:** run `npm ci --prefix frontend` and `npm --prefix frontend run build`.
-- **Runtime invalid:** the isolated dataset must include unchanged public documents and
-  matching hashes, and must exclude the sealed answer key. No financial data is repaired
-  by this launcher.
-- **Password rejected:** sign in using the password selected when that server started.
-  Changing environment/Credential Manager entries does not change a running session's
-  server password. Stop cleanly and restart if you intend to change it.
-- **Port 8000 occupied / 30-second timeout:** inspect the original server console and
-  Windows processes; do not kill an unknown service or delete its lock blindly.
-- **Readiness succeeds but browser stays closed:** manually open the printed local URL.
-- **Credential entry fails:** use `--prompt-password` in a normal interactive console.
-- **No paid launch:** configure the API credential on the server. Neither startup nor
-  readiness checks verify OpenAI authorization, and neither makes an API request.
+**Passwordless mode is only for the local 127.0.0.1 application and is not suitable
+for public deployment. Proper authentication is mandatory before any network-accessible
+or publicly hosted version, including recorded/replay mode.** Add real identity/RBAC,
+HTTPS, Secure cookies, durable sessions and the controls described in [Phase 3](PHASE3.md)
+before designing such a version. Do not expose this service through a proxy, tunnel,
+port forwarding or a changed host binding. Any local process/user able to connect is
+trusted as operator; CSRF protections do not turn local implicit trust into identity.
 
-Safe checks after installing web requirements:
+## Troubleshooting and safe tests
+
+- Missing Python/modules: run the venv setup and install `requirements-web.txt`.
+- Frontend unavailable: run `npm ci --prefix frontend` and `npm --prefix frontend run build`.
+- Runtime invalid: build a new isolated public runtime with correct source hashes and no sealed key.
+- An old login page appears: rebuild the frontend, stop the previous server cleanly,
+  restart the updated version, and refresh the browser.
+- Session/access error: use http://127.0.0.1:8000 directly, refresh once, then deliberately
+  retry any intended action. Do not route the console through a public/network address.
+- Port occupied/readiness timeout: inspect the original console/process; no automatic killing occurs.
+- No paid launch: configure the server API credential. Readiness is not a paid API authentication test.
 
 ```bash
 python -W error::ResourceWarning -m unittest discover -s tests_launcher -v
@@ -162,14 +138,7 @@ python -W error::ResourceWarning -m unittest discover -s contract_to_cash/tests 
 python -m scripts.export_web_schema --check
 ```
 
-On Windows, `"Start Ledgerline.cmd" --check` checks prerequisites without starting a
-server. Tests use mocks and local HTTP/journal fixtures, never paid OpenAI calls.
-Actual Windows console/Credential Manager/Explorer behavior must be verified on Windows;
-Linux tests cannot establish native desktop integration behavior.
-
-Local validation on Linux/Python 3.13.5: 17 portable launcher tests passed; two native
-Windows integration tests were skipped by platform. All 77 agent tests, 20 web-adapter
-tests, six UI mapping tests, the production frontend build and both existing Chromium
-smoke workflows also passed. The Windows CI matrix includes the native credential
-round-trip and shortcut install/remove tests; its result is not claimed as local
-verification. No paid OpenAI requests were made.
+`"Start Ledgerline.cmd" --check` validates installation without starting a server.
+Tests use simulated SDK responses and temporary local journals, not paid OpenAI calls.
+Native Windows console/Explorer behavior cannot be established by Linux tests; native
+Credential Manager cleanup compatibility and shortcut tests run in Windows CI.

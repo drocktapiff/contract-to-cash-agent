@@ -121,7 +121,7 @@ class LauncherTests(unittest.TestCase):
             launcher, "serve", return_value=0
         ) as serve:
             self.assertEqual(launcher.launch(), 0)
-        serve.assert_called_once_with(launcher.PROJECT, PASSWORD)
+        serve.assert_called_once_with(launcher.PROJECT)
 
     def test_inherited_and_stored_passwords_are_never_echoed(self):
         with patch.dict(os.environ, {"CONTRACT_WEB_OPERATOR_TOKEN": PASSWORD}), patch.object(
@@ -162,25 +162,28 @@ class LauncherTests(unittest.TestCase):
         ):
             launcher.secure_prompt("hidden")
 
-    def test_save_requires_confirmation_and_never_outputs_password(self):
-        with patch.object(
-            launcher, "secure_prompt", side_effect=[PASSWORD, PASSWORD]
-        ), patch.object(credentials, "write") as write, patch(
-            "sys.stdin.isatty", return_value=True
-        ), patch(
-            "sys.stdout", new_callable=io.StringIO
-        ) as output:
-            self.assertEqual(launcher.main(["--save-credential"]), 0)
-            self.assertNotIn(PASSWORD, output.getvalue())
-        write.assert_called_once_with(launcher.credential_target(launcher.PROJECT), PASSWORD)
-        with patch.object(
-            launcher, "secure_prompt", side_effect=[PASSWORD, "different"]
-        ), patch.object(credentials, "write") as write, patch(
-            "sys.stdin.isatty", return_value=True
-        ), patch(
-            "sys.stdout", new_callable=io.StringIO
-        ):
+    def test_normal_startup_never_prompts_or_reads_saved_operator_password(self):
+        with patch.object(launcher, "probe", return_value="starting"), patch.object(
+            launcher, "singleton", return_value=ownership(True)
+        ), patch.object(launcher, "installation_errors", return_value=[]), patch.object(
+            launcher, "operator_password"
+        ) as password, patch.object(
+            credentials, "read"
+        ) as read, patch.object(
+            launcher, "serve", return_value=0
+        ) as serve:
+            self.assertEqual(launcher.main([]), 0)
+        password.assert_not_called()
+        read.assert_not_called()
+        serve.assert_called_once_with(launcher.PROJECT)
+
+    def test_retired_password_flags_never_prompt_or_store_credentials(self):
+        with patch.object(launcher, "secure_prompt") as prompt, patch.object(
+            credentials, "write"
+        ) as write, patch("sys.stdout", new_callable=io.StringIO):
             self.assertEqual(launcher.main(["--save-credential"]), 1)
+            self.assertEqual(launcher.main(["--prompt-password"]), 1)
+        prompt.assert_not_called()
         write.assert_not_called()
 
     def test_credential_target_is_per_checkout_without_raw_paths(self):
@@ -263,7 +266,7 @@ class LauncherTests(unittest.TestCase):
         ) as thread, patch(
             "sys.stdout", new_callable=io.StringIO
         ):
-            self.assertEqual(launcher.serve(launcher.PROJECT, PASSWORD), 0)
+            self.assertEqual(launcher.serve(launcher.PROJECT), 0)
         self.assertEqual(seen, [(True, False, False), True])
         thread.return_value.join.assert_called_once()
 
