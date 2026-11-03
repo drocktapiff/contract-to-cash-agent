@@ -60,7 +60,7 @@ def main():
                         else:
                             page.get_by_role("button", name="Enter operator workspace").click()
                             page.get_by_label("Operator credential", exact=True).fill(
-                                "smoke-operator-" + "x" * 32
+                                "abcde"
                             )
                             page.get_by_role("button", name="Sign in securely", exact=True).click()
                             page.get_by_role("button", name="Run investigation", exact=True).click()

@@ -8,6 +8,7 @@ from contract_to_cash.web.models import (
     EventView,
     Health,
     Launch,
+    Login,
     ReviewAction,
     RunView,
 )
@@ -16,7 +17,7 @@ from contract_to_cash.web.models import (
 def public_schema():
     return {
         model.__name__: model.model_json_schema()
-        for model in (DatasetView, EventView, Health, Launch, ReviewAction, RunView)
+        for model in (DatasetView, EventView, Health, Launch, Login, ReviewAction, RunView)
     }
 
 

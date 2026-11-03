@@ -1106,7 +1106,7 @@ export default function App() {
                   autoFocus
                   autoComplete="current-password"
                   value={token}
-                  minLength={32}
+                  minLength={5}
                   maxLength={512}
                   required
                   onChange={(e) => setToken(e.target.value)}

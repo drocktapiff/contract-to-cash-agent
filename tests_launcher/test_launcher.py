@@ -18,7 +18,7 @@ from contract_to_cash.web import windows_credentials as credentials
 from contract_to_cash.web import windows_launcher as launcher
 from scripts.build_agent_runtime import build
 
-PASSWORD = "offline-test-password-" + "x" * 32
+PASSWORD = "abcde"
 
 
 @contextmanager
@@ -27,6 +27,17 @@ def ownership(owner):
 
 
 class LauncherTests(unittest.TestCase):
+    def test_local_password_length_boundaries_apply_to_storage(self):
+        self.assertFalse(launcher.valid_password("abcd"))
+        self.assertTrue(launcher.valid_password("abcde"))
+        self.assertTrue(launcher.valid_password("x" * 512))
+        self.assertFalse(launcher.valid_password("x" * 513))
+        self.assertFalse(launcher.valid_password("abcde\x00"))
+        with patch.object(credentials, "api") as api:
+            with self.assertRaises(credentials.CredentialError):
+                credentials.write("test-target", "abcd")
+            api.assert_not_called()
+
     def test_existing_dashboard_skips_checks_and_passwords(self):
         with patch.object(launcher, "probe", return_value="ready"), patch.object(
             launcher, "open_dashboard"

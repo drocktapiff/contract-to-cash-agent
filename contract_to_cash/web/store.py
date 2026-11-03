@@ -164,6 +164,18 @@ class Store:
             sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
         ) as db:
             with closing(db.cursor()) as cursor:
+                # Journal.connect creates the file before its first schema statement.
+                # A startup reader may arrive in that interval; settled journals must
+                # still fail explicitly if their event schema is absent.
+                initialized = cursor.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'events'"
+                ).fetchone()
+                if not initialized:
+                    if self.meta(run_id)["status"] in ("queued", "running"):
+                        return []
+                    raise StoreError(
+                        503, "Retained journal is uninitialized; inspect the run before continuing"
+                    )
                 rows = cursor.execute(
                     "SELECT body FROM events WHERE sequence > ? ORDER BY sequence", (after,)
                 ).fetchall()

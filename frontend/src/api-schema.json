@@ -326,6 +326,20 @@
     "title": "Launch",
     "type": "object"
   },
+  "Login": {
+    "additionalProperties": false,
+    "properties": {
+      "token": {
+        "maxLength": 512,
+        "minLength": 5,
+        "title": "Token",
+        "type": "string"
+      }
+    },
+    "required": ["token"],
+    "title": "Login",
+    "type": "object"
+  },
   "ReviewAction": {
     "additionalProperties": false,
     "properties": {

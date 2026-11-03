@@ -37,7 +37,12 @@ For a new server the selection order is:
 
 1. Inherited `CONTRACT_WEB_OPERATOR_TOKEN`, if configured and valid.
 2. This checkout's current-user Windows Credential Manager entry.
-3. Hidden console password entry (32–512 characters).
+3. Hidden console password entry (5–512 characters).
+
+The five-character minimum applies only to the loopback local operator console.
+Longer passwords remain supported and recommended. Public deployment must use stronger
+authentication and user identity/RBAC; this local minimum is not a public-deployment
+policy. OpenAI API credential requirements and handling are unchanged.
 
 There is no plaintext password file, secret command argument or browser URL. Hidden
 entry is refused if the console cannot guarantee it; an echoing `getpass` fallback
@@ -162,8 +167,8 @@ server. Tests use mocks and local HTTP/journal fixtures, never paid OpenAI calls
 Actual Windows console/Credential Manager/Explorer behavior must be verified on Windows;
 Linux tests cannot establish native desktop integration behavior.
 
-Local validation on Linux/Python 3.13.5: 16 portable launcher tests passed; two native
-Windows integration tests were skipped by platform. All 77 agent tests, 17 web-adapter
+Local validation on Linux/Python 3.13.5: 17 portable launcher tests passed; two native
+Windows integration tests were skipped by platform. All 77 agent tests, 20 web-adapter
 tests, six UI mapping tests, the production frontend build and both existing Chromium
 smoke workflows also passed. The Windows CI matrix includes the native credential
 round-trip and shortcut install/remove tests; its result is not claimed as local

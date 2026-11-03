@@ -19,6 +19,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from contract_to_cash.agent.review import decide
 from .models import DatasetView, EventView, Health, Launch, Login, ReviewAction, RunView
 from .presentation import event_view, evidence_from_events
+from .operator_auth import valid_operator_password
 from .store import Settings, Store, StoreError
 
 
@@ -118,7 +119,7 @@ def create_app(settings=None, runner=None):
         credentials = bool(
             os.environ.get("OPENAI_API_KEY") or os.environ.get("CONTRACT_AGENT_API_KEY")
         )
-        operator = len(settings.operator_token) >= 32
+        operator = valid_operator_password(settings.operator_token)
         return Health(
             status="ready" if settings.mode == "recorded" or ready else "setup_required",
             mode=settings.mode,
@@ -148,7 +149,7 @@ def create_app(settings=None, runner=None):
 
     @app.post("/api/session")
     async def login(body: Login, request: Request, response: Response):
-        if settings.mode != "operator" or len(settings.operator_token) < 32:
+        if settings.mode != "operator" or not valid_operator_password(settings.operator_token):
             raise HTTPException(503, "Operator login is not configured")
         address = request.client.host if request.client else "local"
         recent = [t for t in attempts.get(address, []) if time.monotonic() - t < 60]

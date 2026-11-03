@@ -3,6 +3,7 @@
 import ctypes
 from ctypes import wintypes
 import os
+from .operator_auth import valid_operator_password
 
 
 class CredentialError(RuntimeError):
@@ -65,6 +66,8 @@ def read(target):
 
 
 def write(target, password):
+    if not valid_operator_password(password):
+        raise CredentialError("Local operator password must contain 5–512 characters and no NUL")
     dll = api()
     blob = ctypes.create_string_buffer(password.encode("utf-16-le"))
     try:

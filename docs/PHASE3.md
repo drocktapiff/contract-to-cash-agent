@@ -50,11 +50,11 @@ python -m scripts.build_agent_runtime ./agent-runtime-web
 ```
 
 Configure the local operator separately from the OpenAI credential. Use a strong
-operator passphrase of at least 32 characters. Do not paste either secret into an
+operator passphrase of at least 5 characters. Do not paste either secret into an
 issue, command argument, frontend variable, screenshot or committed file.
 
 ```bash
-read -rsp 'Set local operator passphrase (32+ characters): ' CONTRACT_WEB_OPERATOR_TOKEN
+read -rsp 'Set local operator passphrase (5+ characters): ' CONTRACT_WEB_OPERATOR_TOKEN
 printf '\n'
 export CONTRACT_WEB_OPERATOR_TOKEN
 read -rp 'Reviewer attribution: ' CONTRACT_WEB_REVIEWER
@@ -220,6 +220,9 @@ credential in localStorage. Restrictive same-origin behavior is used instead of 
 CORS. Validation and unexpected API errors omit submitted secrets, stack traces and
 local paths. No dataset/journal directory is mounted as static content.
 
+The five-character operator minimum is strictly a local-development allowance. Stronger
+authentication is mandatory before any public deployment; do not reuse this local policy.
+
 For public deployment, replace the shared passphrase with proper user identity/RBAC,
 HTTPS + Secure cookies, durable session storage, audit-grade multi-process workers and
 transactional job ownership, managed secrets, immutable source snapshots, authenticated
@@ -268,7 +271,7 @@ approval/download, reload/history persistence, recorded empty/read-only mode and
 financial discovery recall or API authorization. There is no paid live-run result
 for this phase and no assertion that the supplied baseline was reproduced.
 
-Observed local results: **77 existing agent tests, 16 adapter tests and six UI mapping
+Observed local results: **77 existing agent tests, 20 adapter tests and six UI mapping
 tests passed** on Linux/Python 3.13.5. Clean `npm ci`, TypeScript checking and the Vite
 production build passed. The Chromium smoke test passed both the simulated operator
 workflow and the recorded empty/read-only workflow, including mobile overflow checks.

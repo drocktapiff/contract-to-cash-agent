@@ -17,6 +17,7 @@ import webbrowser
 import warnings
 
 from . import windows_credentials
+from .operator_auth import valid_operator_password
 
 URL = "http://127.0.0.1:8000"
 APPLICATION_ID = "ledgerline-contract-operations"
@@ -42,7 +43,7 @@ def credential_target(root):
 
 
 def valid_password(password):
-    return 32 <= len(password) <= 512 and "\x00" not in password
+    return valid_operator_password(password)
 
 
 def secure_prompt(message, prompt=None):
@@ -64,7 +65,7 @@ def operator_password(root, prompt=None, force_prompt=False):
     inherited = os.environ.get("CONTRACT_WEB_OPERATOR_TOKEN")
     if inherited is not None and not force_prompt:
         if not valid_password(inherited):
-            raise LaunchError("The inherited operator password must contain 32–512 characters")
+            raise LaunchError("The inherited operator password must contain 5–512 characters")
         return inherited
     stored = None if force_prompt else windows_credentials.read(credential_target(root))
     if stored is not None:
@@ -79,10 +80,10 @@ def operator_password(root, prompt=None, force_prompt=False):
     if not sys.stdin.isatty():
         raise LaunchError("Open the launcher in a Windows console for secure password entry")
     password = secure_prompt(
-        "Operator password (32–512 characters, hidden; also used to sign in): ", prompt
+        "Operator password (5–512 characters, hidden; also used to sign in): ", prompt
     )
     if not valid_password(password):
-        raise LaunchError("Operator password must contain 32–512 characters")
+        raise LaunchError("Operator password must contain 5–512 characters")
     return password
 
 
@@ -342,9 +343,9 @@ def main(argv=None):
 
             if not sys.stdin.isatty():
                 raise LaunchError("Open a Windows console for secure password entry")
-            password = secure_prompt("New operator password (32–512 characters, hidden): ")
+            password = secure_prompt("New operator password (5–512 characters, hidden): ")
             if not valid_password(password):
-                raise LaunchError("Operator password must contain 32–512 characters")
+                raise LaunchError("Operator password must contain 5–512 characters")
             if secure_prompt("Confirm operator password (hidden): ") != password:
                 raise LaunchError("Passwords did not match; no credential was saved")
             windows_credentials.write(credential_target(PROJECT), password)
