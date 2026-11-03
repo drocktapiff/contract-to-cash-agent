@@ -28,6 +28,7 @@ jobs:
       - run: python -m pip install -r requirements-web-test.txt
       - run: python -W error::ResourceWarning -m unittest discover -s contract_to_cash/tests -v
       - run: python -W error::ResourceWarning -m unittest discover -s tests_web -v
+      - run: python -W error::ResourceWarning -m unittest discover -s tests_launcher -v
       - run: python -m scripts.export_web_schema --check
       - run: npm ci --prefix frontend
       - run: npm --prefix frontend run build

@@ -31,6 +31,8 @@ confirmed payable amount or duplicate exposure. Signed-amendment conflicts displ
 the deterministic guard and require judgment; no term is chosen automatically.
 Hypotheses remain explicitly labeled model interpretations, not legal conclusions.
 
+For one-click startup after setup, see [the Windows launcher guide](WINDOWS_LAUNCHER.md).
+
 ## Windows Git Bash · Python 3.13
 
 Install Python 3.13 with the Windows Python launcher and Node.js **22.12 or newer**

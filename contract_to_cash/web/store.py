@@ -51,6 +51,7 @@ class Store:
         self.worker = None
         self.runner = runner or self.run_agent
         self.active = None
+        self.accepting_launches = True
         self.owner_fd = None
         self.index = settings.root / "index"
 
@@ -247,6 +248,8 @@ class Store:
 
     def launch(self, request):
         with self.lock:
+            if not self.accepting_launches:
+                raise StoreError(503, "Server is shutting down; no new paid run was started")
             previous = self.metadata()
             for meta in previous:
                 if meta["idempotency_key"] == str(request.idempotency_key):

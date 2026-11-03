@@ -45,6 +45,7 @@ class ReviewAction(Input):
 
 
 class Health(BaseModel):
+    application_id: Literal["ledgerline-contract-operations"] = "ledgerline-contract-operations"
     status: str
     mode: Literal["operator", "recorded"]
     api_key_configured: bool

@@ -209,6 +209,13 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("HttpOnly", response.headers["set-cookie"])
         self.assertIn("SameSite=strict", response.headers["set-cookie"])
 
+    async def test_shutdown_disables_new_paid_requests_without_creating_history(self):
+        self.app.state.store.accepting_launches = False
+        response = await self.client.post("/api/runs", headers=self.headers, json=self.payload())
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual((await self.client.get("/api/runs")).json(), [])
+        self.assertIsNone(self.app.state.store.active)
+
     async def test_missing_credentials_fail_before_creating_paid_run(self):
         with patch.dict(os.environ, {}, clear=True):
             response = await self.client.post(

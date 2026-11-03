@@ -177,6 +177,12 @@
         "title": "Api Key Configured",
         "type": "boolean"
       },
+      "application_id": {
+        "const": "ledgerline-contract-operations",
+        "default": "ledgerline-contract-operations",
+        "title": "Application Id",
+        "type": "string"
+      },
       "dataset_ready": {
         "title": "Dataset Ready",
         "type": "boolean"
