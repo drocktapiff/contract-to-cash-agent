@@ -1,4 +1,5 @@
 """Local human decisions for review/export only; never a model tool or billing action."""
+from contextlib import closing
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -24,17 +25,19 @@ def decide(run_directory: Path, finding_id: str, decision: str, reviewer: str):
                            finding_sha256=hashlib.sha256(json.dumps(finding, sort_keys=True).encode()).hexdigest(),
                            scope='review/export only; not authorization for billing changes')
     # SQLite serializes decisions from multiple operator CLI processes.
-    with sqlite3.connect(run_directory / 'events.sqlite3') as db:
-        db.execute('CREATE TABLE IF NOT EXISTS decisions (finding_id TEXT, version INTEGER, body TEXT, PRIMARY KEY (finding_id, version))')
-        db.execute('INSERT INTO decisions VALUES (?, ?, ?)',
-                   (finding_id, finding['version'], json.dumps(decision_record)))
-        sequence = db.execute('SELECT COALESCE(MAX(sequence), 0) + 1 FROM events').fetchone()[0]
-        event = dict(schema_version=1, event_id=uuid4().hex, run_id=report['run_id'],
-                     sequence=sequence, timestamp=decision_record['decided_at'],
-                     type='human_review.decided', actor='human', correlation_id=None,
-                     payload=decision_record)
-        db.execute('INSERT INTO events VALUES (?, ?)', (sequence, json.dumps(event)))
-        interventions = db.execute('SELECT COUNT(*) FROM decisions').fetchone()[0]
+    # A connection context manages the transaction, not the connection lifetime.
+    with closing(sqlite3.connect(run_directory / 'events.sqlite3')) as db:
+        with db, closing(db.cursor()) as cursor:
+            cursor.execute('CREATE TABLE IF NOT EXISTS decisions (finding_id TEXT, version INTEGER, body TEXT, PRIMARY KEY (finding_id, version))')
+            cursor.execute('INSERT INTO decisions VALUES (?, ?, ?)',
+                           (finding_id, finding['version'], json.dumps(decision_record)))
+            sequence = cursor.execute('SELECT COALESCE(MAX(sequence), 0) + 1 FROM events').fetchone()[0]
+            event = dict(schema_version=1, event_id=uuid4().hex, run_id=report['run_id'],
+                         sequence=sequence, timestamp=decision_record['decided_at'],
+                         type='human_review.decided', actor='human', correlation_id=None,
+                         payload=decision_record)
+            cursor.execute('INSERT INTO events VALUES (?, ?)', (sequence, json.dumps(event)))
+            interventions = cursor.execute('SELECT COUNT(*) FROM decisions').fetchone()[0]
     with (run_directory / 'events.jsonl').open('a', encoding='utf-8', newline='\n') as output:
         output.write(json.dumps(event) + '\n')
     review['status'] = decision

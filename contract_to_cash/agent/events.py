@@ -1,4 +1,5 @@
 """Append-only observable events, suitable for JSONL streaming and later UI replay."""
+from contextlib import closing
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -14,7 +15,12 @@ class Journal:
         self.sequence = 0
         self.sink = sink
         self.db = sqlite3.connect(directory / 'events.sqlite3')
-        self.db.execute('CREATE TABLE events (sequence INTEGER PRIMARY KEY, body TEXT NOT NULL)')
+        try:
+            with closing(self.db.cursor()) as cursor:
+                cursor.execute('CREATE TABLE events (sequence INTEGER PRIMARY KEY, body TEXT NOT NULL)')
+        except BaseException:
+            self.db.close()
+            raise
         self.events = []
 
     def emit(self, event_type, actor='orchestrator', correlation_id=None, **payload):
@@ -23,7 +29,8 @@ class Journal:
                      sequence=self.sequence, timestamp=datetime.now(timezone.utc).isoformat(),
                      type=event_type, actor=actor, correlation_id=correlation_id, payload=payload)
         line = json.dumps(event, ensure_ascii=True, allow_nan=False)
-        self.db.execute('INSERT INTO events VALUES (?, ?)', (self.sequence, line))
+        with closing(self.db.cursor()) as cursor:
+            cursor.execute('INSERT INTO events VALUES (?, ?)', (self.sequence, line))
         self.db.commit()
         with (self.directory / 'events.jsonl').open('a', encoding='utf-8', newline='\n') as stream:
             stream.write(line + '\n')
@@ -37,5 +44,12 @@ class Journal:
         temporary.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n', encoding='utf-8')
         temporary.replace(self.directory / 'report.json')
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def close(self):
+        """Release the database handle; safe to call more than once."""
         self.db.close()
