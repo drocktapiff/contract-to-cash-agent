@@ -1,0 +1,6 @@
+CONTRACT CTR-C024
+Customer: Demo Customer 24 (C024)
+Status: Signed
+Start: 2026-01-01
+Base subscription charge: CAD 12000 per month.
+Billing cycle: Monthly. Pricing template: standard-2026.

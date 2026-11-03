@@ -1,0 +1,69 @@
+{
+  "fixture_version": "phase1-v1",
+  "issues": [
+    {
+      "customers": [
+        "C001"
+      ],
+      "id": "A1",
+      "type": "overbilling"
+    },
+    {
+      "customers": [
+        "C002"
+      ],
+      "id": "A2",
+      "type": "underbilling"
+    },
+    {
+      "customers": [
+        "C003"
+      ],
+      "id": "A3",
+      "type": "expired_discount"
+    },
+    {
+      "customers": [
+        "C004"
+      ],
+      "id": "A4",
+      "type": "missed_uplift"
+    },
+    {
+      "customers": [
+        "C005"
+      ],
+      "id": "A5",
+      "type": "usage_tier_error"
+    },
+    {
+      "customers": [
+        "C006"
+      ],
+      "id": "A6",
+      "type": "duplicate_invoice"
+    },
+    {
+      "customers": [
+        "C007"
+      ],
+      "id": "A7",
+      "requires_human": true,
+      "type": "conflicting_signed_amendments"
+    },
+    {
+      "customers": [
+        "C008",
+        "C009",
+        "C010"
+      ],
+      "id": "A8",
+      "type": "shared_pricing_template_error"
+    }
+  ],
+  "negative_control": {
+    "customer": "C011",
+    "reason": "Valid signed April price amendment; do not flag"
+  },
+  "period": "2026-04"
+}

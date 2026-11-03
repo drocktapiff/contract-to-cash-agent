@@ -1,0 +1,7 @@
+CONTRACT CTR-C005
+Customer: Demo Customer 05 (C005)
+Status: Signed
+Start: 2026-01-01
+Base subscription charge: CAD 1000 per month.
+Billing cycle: Monthly. Pricing template: standard-2026.
+For usage above 100 units in a month, all units are priced at CAD 9.00 each; otherwise CAD 10.00 each. This replaces the base charge for this customer's measured service.

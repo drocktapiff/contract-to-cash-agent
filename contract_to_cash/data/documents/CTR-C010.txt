@@ -1,0 +1,6 @@
+CONTRACT CTR-C010
+Customer: Demo Customer 10 (C010)
+Status: Signed
+Start: 2026-01-01
+Base subscription charge: CAD 10000 per month.
+Billing cycle: Monthly. Pricing template: legacy-2025.

@@ -1,0 +1,182 @@
+[
+  {
+    "amendment_id": "AMD-C003-01",
+    "customer_id": "C003",
+    "effective_date": "2026-01-01",
+    "end_date": "2026-02-28",
+    "kind": "discount_percent",
+    "status": "signed",
+    "value": "10"
+  },
+  {
+    "amendment_id": "AMD-C004-01",
+    "customer_id": "C004",
+    "effective_date": "2026-04-01",
+    "end_date": null,
+    "kind": "uplift_percent",
+    "status": "signed",
+    "value": "10"
+  },
+  {
+    "amendment_id": "AMD-C007-01",
+    "customer_id": "C007",
+    "effective_date": "2026-04-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "13000"
+  },
+  {
+    "amendment_id": "AMD-C007-02",
+    "customer_id": "C007",
+    "effective_date": "2026-04-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "14000"
+  },
+  {
+    "amendment_id": "AMD-C011-01",
+    "customer_id": "C011",
+    "effective_date": "2026-04-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "9500"
+  },
+  {
+    "amendment_id": "AMD-C012-01",
+    "customer_id": "C012",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "11000"
+  },
+  {
+    "amendment_id": "AMD-C013-01",
+    "customer_id": "C013",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "11500"
+  },
+  {
+    "amendment_id": "AMD-C014-01",
+    "customer_id": "C014",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "12000"
+  },
+  {
+    "amendment_id": "AMD-C015-01",
+    "customer_id": "C015",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "10000"
+  },
+  {
+    "amendment_id": "AMD-C016-01",
+    "customer_id": "C016",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "10500"
+  },
+  {
+    "amendment_id": "AMD-C017-01",
+    "customer_id": "C017",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "11000"
+  },
+  {
+    "amendment_id": "AMD-C018-01",
+    "customer_id": "C018",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "11500"
+  },
+  {
+    "amendment_id": "AMD-C019-01",
+    "customer_id": "C019",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "12000"
+  },
+  {
+    "amendment_id": "AMD-C020-01",
+    "customer_id": "C020",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "10000"
+  },
+  {
+    "amendment_id": "AMD-C021-01",
+    "customer_id": "C021",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "10500"
+  },
+  {
+    "amendment_id": "AMD-C022-01",
+    "customer_id": "C022",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "11000"
+  },
+  {
+    "amendment_id": "AMD-C023-01",
+    "customer_id": "C023",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "11500"
+  },
+  {
+    "amendment_id": "AMD-C024-01",
+    "customer_id": "C024",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "12000"
+  },
+  {
+    "amendment_id": "AMD-C025-01",
+    "customer_id": "C025",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "10000"
+  },
+  {
+    "amendment_id": "AMD-C026-01",
+    "customer_id": "C026",
+    "effective_date": "2026-07-01",
+    "end_date": null,
+    "kind": "set_price",
+    "status": "signed",
+    "value": "10500"
+  }
+]

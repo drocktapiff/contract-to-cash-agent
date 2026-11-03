@@ -1,0 +1,4 @@
+SIGNED AMENDMENT AMD-C019-01
+Customer: C019
+Effective: 2026-07-01
+Term: monthly price CAD = 12000

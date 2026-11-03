@@ -1,0 +1,1091 @@
+[
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C001",
+    "invoice_id": "INV-C001-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C001",
+    "invoice_id": "INV-C001-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12500.00",
+    "currency": "CAD",
+    "customer_id": "C001",
+    "invoice_id": "INV-C001-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C002",
+    "invoice_id": "INV-C002-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C002",
+    "invoice_id": "INV-C002-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "9500.00",
+    "currency": "CAD",
+    "customer_id": "C002",
+    "invoice_id": "INV-C002-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "7200.00",
+    "currency": "CAD",
+    "customer_id": "C003",
+    "invoice_id": "INV-C003-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "8000.00",
+    "currency": "CAD",
+    "customer_id": "C003",
+    "invoice_id": "INV-C003-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "7200.00",
+    "currency": "CAD",
+    "customer_id": "C003",
+    "invoice_id": "INV-C003-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C004",
+    "invoice_id": "INV-C004-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C004",
+    "invoice_id": "INV-C004-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C004",
+    "invoice_id": "INV-C004-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "990.00",
+    "currency": "CAD",
+    "customer_id": "C005",
+    "invoice_id": "INV-C005-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 110
+  },
+  {
+    "billed_amount": "990.00",
+    "currency": "CAD",
+    "customer_id": "C005",
+    "invoice_id": "INV-C005-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 110
+  },
+  {
+    "billed_amount": "1100.00",
+    "currency": "CAD",
+    "customer_id": "C005",
+    "invoice_id": "INV-C005-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 110
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C006",
+    "invoice_id": "INV-C006-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C006",
+    "invoice_id": "INV-C006-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C006",
+    "invoice_id": "INV-C006-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C007",
+    "invoice_id": "INV-C007-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C007",
+    "invoice_id": "INV-C007-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C007",
+    "invoice_id": "INV-C007-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C008",
+    "invoice_id": "INV-C008-2026-02",
+    "period": "2026-02",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C008",
+    "invoice_id": "INV-C008-2026-03",
+    "period": "2026-03",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "9000.00",
+    "currency": "CAD",
+    "customer_id": "C008",
+    "invoice_id": "INV-C008-2026-04",
+    "period": "2026-04",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C009",
+    "invoice_id": "INV-C009-2026-02",
+    "period": "2026-02",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C009",
+    "invoice_id": "INV-C009-2026-03",
+    "period": "2026-03",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "9000.00",
+    "currency": "CAD",
+    "customer_id": "C009",
+    "invoice_id": "INV-C009-2026-04",
+    "period": "2026-04",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C010",
+    "invoice_id": "INV-C010-2026-02",
+    "period": "2026-02",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C010",
+    "invoice_id": "INV-C010-2026-03",
+    "period": "2026-03",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "9000.00",
+    "currency": "CAD",
+    "customer_id": "C010",
+    "invoice_id": "INV-C010-2026-04",
+    "period": "2026-04",
+    "pricing_template": "legacy-2025",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C011",
+    "invoice_id": "INV-C011-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C011",
+    "invoice_id": "INV-C011-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "9500.00",
+    "currency": "CAD",
+    "customer_id": "C011",
+    "invoice_id": "INV-C011-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C012",
+    "invoice_id": "INV-C012-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C012",
+    "invoice_id": "INV-C012-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C012",
+    "invoice_id": "INV-C012-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C013",
+    "invoice_id": "INV-C013-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C013",
+    "invoice_id": "INV-C013-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C013",
+    "invoice_id": "INV-C013-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C014",
+    "invoice_id": "INV-C014-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C014",
+    "invoice_id": "INV-C014-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C014",
+    "invoice_id": "INV-C014-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C015",
+    "invoice_id": "INV-C015-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C015",
+    "invoice_id": "INV-C015-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C015",
+    "invoice_id": "INV-C015-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C016",
+    "invoice_id": "INV-C016-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C016",
+    "invoice_id": "INV-C016-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C016",
+    "invoice_id": "INV-C016-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C017",
+    "invoice_id": "INV-C017-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C017",
+    "invoice_id": "INV-C017-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C017",
+    "invoice_id": "INV-C017-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C018",
+    "invoice_id": "INV-C018-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C018",
+    "invoice_id": "INV-C018-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C018",
+    "invoice_id": "INV-C018-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C019",
+    "invoice_id": "INV-C019-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C019",
+    "invoice_id": "INV-C019-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C019",
+    "invoice_id": "INV-C019-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C020",
+    "invoice_id": "INV-C020-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C020",
+    "invoice_id": "INV-C020-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C020",
+    "invoice_id": "INV-C020-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C021",
+    "invoice_id": "INV-C021-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C021",
+    "invoice_id": "INV-C021-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C021",
+    "invoice_id": "INV-C021-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C022",
+    "invoice_id": "INV-C022-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C022",
+    "invoice_id": "INV-C022-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C022",
+    "invoice_id": "INV-C022-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C023",
+    "invoice_id": "INV-C023-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C023",
+    "invoice_id": "INV-C023-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C023",
+    "invoice_id": "INV-C023-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C024",
+    "invoice_id": "INV-C024-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C024",
+    "invoice_id": "INV-C024-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C024",
+    "invoice_id": "INV-C024-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C025",
+    "invoice_id": "INV-C025-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C025",
+    "invoice_id": "INV-C025-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C025",
+    "invoice_id": "INV-C025-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C026",
+    "invoice_id": "INV-C026-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C026",
+    "invoice_id": "INV-C026-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C026",
+    "invoice_id": "INV-C026-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C027",
+    "invoice_id": "INV-C027-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C027",
+    "invoice_id": "INV-C027-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C027",
+    "invoice_id": "INV-C027-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C028",
+    "invoice_id": "INV-C028-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C028",
+    "invoice_id": "INV-C028-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C028",
+    "invoice_id": "INV-C028-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C029",
+    "invoice_id": "INV-C029-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C029",
+    "invoice_id": "INV-C029-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C029",
+    "invoice_id": "INV-C029-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C030",
+    "invoice_id": "INV-C030-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C030",
+    "invoice_id": "INV-C030-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C030",
+    "invoice_id": "INV-C030-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C031",
+    "invoice_id": "INV-C031-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C031",
+    "invoice_id": "INV-C031-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C031",
+    "invoice_id": "INV-C031-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C032",
+    "invoice_id": "INV-C032-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C032",
+    "invoice_id": "INV-C032-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C032",
+    "invoice_id": "INV-C032-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C033",
+    "invoice_id": "INV-C033-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C033",
+    "invoice_id": "INV-C033-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C033",
+    "invoice_id": "INV-C033-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C034",
+    "invoice_id": "INV-C034-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C034",
+    "invoice_id": "INV-C034-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C034",
+    "invoice_id": "INV-C034-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C035",
+    "invoice_id": "INV-C035-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C035",
+    "invoice_id": "INV-C035-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C035",
+    "invoice_id": "INV-C035-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C036",
+    "invoice_id": "INV-C036-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C036",
+    "invoice_id": "INV-C036-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C036",
+    "invoice_id": "INV-C036-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C037",
+    "invoice_id": "INV-C037-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C037",
+    "invoice_id": "INV-C037-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11000.00",
+    "currency": "CAD",
+    "customer_id": "C037",
+    "invoice_id": "INV-C037-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C038",
+    "invoice_id": "INV-C038-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C038",
+    "invoice_id": "INV-C038-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "11500.00",
+    "currency": "CAD",
+    "customer_id": "C038",
+    "invoice_id": "INV-C038-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C039",
+    "invoice_id": "INV-C039-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C039",
+    "invoice_id": "INV-C039-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "12000.00",
+    "currency": "CAD",
+    "customer_id": "C039",
+    "invoice_id": "INV-C039-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C040",
+    "invoice_id": "INV-C040-2026-02",
+    "period": "2026-02",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C040",
+    "invoice_id": "INV-C040-2026-03",
+    "period": "2026-03",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10000.00",
+    "currency": "CAD",
+    "customer_id": "C040",
+    "invoice_id": "INV-C040-2026-04",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  },
+  {
+    "billed_amount": "10500.00",
+    "currency": "CAD",
+    "customer_id": "C006",
+    "invoice_id": "INV-C006-2026-04-DUP",
+    "period": "2026-04",
+    "pricing_template": "standard-2026",
+    "usage_quantity": 0
+  }
+]

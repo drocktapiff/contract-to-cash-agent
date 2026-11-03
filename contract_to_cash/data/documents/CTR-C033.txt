@@ -1,0 +1,6 @@
+CONTRACT CTR-C033
+Customer: Demo Customer 33 (C033)
+Status: Signed
+Start: 2026-01-01
+Base subscription charge: CAD 11500 per month.
+Billing cycle: Monthly. Pricing template: standard-2026.

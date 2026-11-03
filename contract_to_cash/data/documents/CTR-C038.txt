@@ -1,0 +1,6 @@
+CONTRACT CTR-C038
+Customer: Demo Customer 38 (C038)
+Status: Signed
+Start: 2026-01-01
+Base subscription charge: CAD 11500 per month.
+Billing cycle: Monthly. Pricing template: standard-2026.

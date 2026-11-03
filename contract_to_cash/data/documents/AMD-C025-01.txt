@@ -1,0 +1,4 @@
+SIGNED AMENDMENT AMD-C025-01
+Customer: C025
+Effective: 2026-07-01
+Term: monthly price CAD = 10000
