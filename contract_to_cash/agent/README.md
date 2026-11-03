@@ -8,7 +8,9 @@ This is a Python CLI using OpenAI Responses API function calling. The model
 chooses the next tool and customers; no anomaly IDs, findings or prescribed
 investigation sequence are in its instructions. The existing complete
 `investigate()` batch result is never called or exposed by the agent.
-There is no frontend, deployment, billing connector, or billing mutation.
+The agent CLI has no deployment, billing connector, or billing mutation.
+An optional local React/FastAPI operations console is documented in
+[Phase 3](../../docs/PHASE3.md); its adapter is excluded from the model runtime bundle.
 
 ## Install and isolate the runtime
 
