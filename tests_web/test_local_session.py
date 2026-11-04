@@ -15,7 +15,22 @@ from scripts.build_agent_runtime import build
 
 class LocalSessionTests(unittest.IsolatedAsyncioTestCase):
     payload = test_api.ApiTests.payload
-    settled = test_api.ApiTests.settled
+
+    async def settled(self, payload=None):
+        body = payload or self.payload()
+        response = await self.client.put(
+            "/api/admin/pricing",
+            headers=self.headers,
+            json=dict(
+                input_price=body["input_price"],
+                cached_input_price=body["cached_input_price"],
+                output_price=body["output_price"],
+                checked_current_official_rates=True,
+            ),
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        return await test_api.ApiTests.settled(self, body)
+
     decision = test_api.ApiTests.decision
     simulated_runner = test_api.ApiTests.simulated_runner
 

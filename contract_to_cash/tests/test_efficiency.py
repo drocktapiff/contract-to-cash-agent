@@ -251,3 +251,11 @@ class EfficiencyTests(unittest.TestCase):
         for value in (Decimal('-1'), Decimal('NaN'), Decimal('2')):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 Limits(cached_input_usd_per_million=value)
+
+    def test_default_tier_is_explicit_only_when_configured(self):
+        client, _ = self.run_fake([FakeResponse([])], service_tier='default')
+        self.assertEqual(client.requests[0]['service_tier'], 'default')
+        client, _ = self.run_fake([FakeResponse([])])
+        self.assertNotIn('service_tier', client.requests[0])
+        with self.assertRaises(ValueError):
+            Limits(service_tier='priority')

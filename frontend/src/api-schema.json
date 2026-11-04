@@ -1,4 +1,22 @@
 {
+  "BillingReviewRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_paid": {
+        "const": true,
+        "title": "Acknowledge Paid",
+        "type": "boolean"
+      },
+      "idempotency_key": {
+        "format": "uuid",
+        "title": "Idempotency Key",
+        "type": "string"
+      }
+    },
+    "required": ["idempotency_key", "acknowledge_paid"],
+    "title": "BillingReviewRequest",
+    "type": "object"
+  },
   "DatasetView": {
     "properties": {
       "currency": {
@@ -340,6 +358,253 @@
     "title": "Login",
     "type": "object"
   },
+  "PricingConfirmation": {
+    "additionalProperties": false,
+    "properties": {
+      "cached_input_price": {
+        "anyOf": [
+          {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "title": "Cached Input Price"
+      },
+      "checked_current_official_rates": {
+        "const": true,
+        "title": "Checked Current Official Rates",
+        "type": "boolean"
+      },
+      "currency": {
+        "const": "USD",
+        "default": "USD",
+        "title": "Currency",
+        "type": "string"
+      },
+      "input_price": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1000.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "title": "Input Price"
+      },
+      "model": {
+        "const": "gpt-6.1-sol",
+        "default": "gpt-6.1-sol",
+        "title": "Model",
+        "type": "string"
+      },
+      "output_price": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1000.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "title": "Output Price"
+      },
+      "service_tier": {
+        "const": "default",
+        "default": "default",
+        "title": "Service Tier",
+        "type": "string"
+      },
+      "source": {
+        "const": "https://developers.openai.com/api/docs/pricing",
+        "default": "https://developers.openai.com/api/docs/pricing",
+        "title": "Source",
+        "type": "string"
+      }
+    },
+    "required": [
+      "input_price",
+      "output_price",
+      "cached_input_price",
+      "checked_current_official_rates"
+    ],
+    "title": "PricingConfirmation",
+    "type": "object"
+  },
+  "PricingState": {
+    "$defs": {
+      "PricingConfirmation": {
+        "additionalProperties": false,
+        "properties": {
+          "cached_input_price": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Cached Input Price"
+          },
+          "checked_current_official_rates": {
+            "const": true,
+            "title": "Checked Current Official Rates",
+            "type": "boolean"
+          },
+          "currency": {
+            "const": "USD",
+            "default": "USD",
+            "title": "Currency",
+            "type": "string"
+          },
+          "input_price": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Input Price"
+          },
+          "model": {
+            "const": "gpt-6.1-sol",
+            "default": "gpt-6.1-sol",
+            "title": "Model",
+            "type": "string"
+          },
+          "output_price": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Output Price"
+          },
+          "service_tier": {
+            "const": "default",
+            "default": "default",
+            "title": "Service Tier",
+            "type": "string"
+          },
+          "source": {
+            "const": "https://developers.openai.com/api/docs/pricing",
+            "default": "https://developers.openai.com/api/docs/pricing",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "input_price",
+          "output_price",
+          "cached_input_price",
+          "checked_current_official_rates"
+        ],
+        "title": "PricingConfirmation",
+        "type": "object"
+      },
+      "PricingLimits": {
+        "properties": {
+          "max_responses": {
+            "title": "Max Responses",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "title": "Max Tool Calls",
+            "type": "integer"
+          },
+          "maximum_seconds": {
+            "title": "Maximum Seconds",
+            "type": "integer"
+          },
+          "spending_limit_usd": {
+            "title": "Spending Limit Usd",
+            "type": "string"
+          }
+        },
+        "required": ["maximum_seconds", "spending_limit_usd", "max_tool_calls", "max_responses"],
+        "title": "PricingLimits",
+        "type": "object"
+      },
+      "SavedPricing": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmed_at": {
+            "format": "date-time",
+            "title": "Confirmed At",
+            "type": "string"
+          },
+          "confirmed_by": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Confirmed By",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "rates": {
+            "$ref": "#/$defs/PricingConfirmation"
+          },
+          "verification_method": {
+            "const": "local_administrator_attestation",
+            "title": "Verification Method",
+            "type": "string"
+          }
+        },
+        "required": ["rates", "confirmed_by", "confirmed_at", "expires_at", "verification_method"],
+        "title": "SavedPricing",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "limits": {
+        "$ref": "#/$defs/PricingLimits"
+      },
+      "profile": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/SavedPricing"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ready": {
+        "title": "Ready",
+        "type": "boolean"
+      },
+      "reason": {
+        "title": "Reason",
+        "type": "string"
+      }
+    },
+    "required": ["ready", "reason", "profile", "limits"],
+    "title": "PricingState",
+    "type": "object"
+  },
   "ReviewAction": {
     "additionalProperties": false,
     "properties": {
@@ -449,6 +714,19 @@
       "period": {
         "title": "Period",
         "type": "string"
+      },
+      "pricing_verification": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Pricing Verification"
       },
       "reason": {
         "title": "Reason",
