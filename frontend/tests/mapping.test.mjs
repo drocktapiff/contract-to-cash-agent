@@ -62,3 +62,71 @@ test('real event types map to meaningful stages', () => {
   assert.equal(stageFor('human_review.decided'), 'Review');
   assert.equal(stageFor('evidence.updated'), 'Evidence');
 });
+
+import {
+  businessActivity,
+  businessTitle,
+  needsAttention,
+  stopExplanation,
+} from '../src/mapping.mjs';
+test('business activity is derived only from recognized real event types', () => {
+  assert.equal(
+    businessActivity({ type: 'tool.requested', tool: 'get_amendments' }),
+    'Comparing contract amendments.',
+  );
+  assert.equal(
+    businessActivity({ type: 'tool.requested', tool: 'summarize_pattern' }),
+    'Looking for pricing patterns across customers.',
+  );
+  assert.equal(businessActivity({ type: 'api.requested' }), null);
+  assert.equal(businessActivity({ type: 'invented.progress' }), null);
+});
+test('business descriptions do not invent contractual causes or amounts', () => {
+  assert.equal(
+    businessTitle({
+      state: 'proposed',
+      comparisons: [{ status: 'duplicate_invoice', difference_cad: null }],
+    }),
+    'Invoice records need reconciliation',
+  );
+  assert.equal(businessTitle({ comparison: { status: 'conflict' } }), 'Signed amendments disagree');
+  assert.equal(
+    businessTitle({
+      comparisons: [{ status: 'discrepancy', financial_category: 'potential_credit' }],
+    }),
+    'A customer may have been overcharged',
+  );
+});
+test('attention follows actual pending requests, not automatic approvals or resumable fiction', () => {
+  const f = { finding_id: 'f', state: 'verified' };
+  assert.equal(needsAttention(f, [{ finding_id: 'f', status: 'pending' }]), true);
+  assert.equal(needsAttention(f, [{ finding_id: 'f', status: 'approved' }]), false);
+  assert.equal(
+    needsAttention({ ...f, state: 'proposed' }, [{ finding_id: 'f', status: 'needs_information' }]),
+    false,
+  );
+  assert.equal(
+    needsAttention({ ...f, state: 'retracted' }, [{ finding_id: 'f', status: 'pending' }]),
+    false,
+  );
+});
+test('a bounded or failed review is not described as complete', () => {
+  assert.match(stopExplanation({ status: 'incomplete', reason: 'tool_call_limit' }), /work limit/);
+  assert.match(
+    stopExplanation({ status: 'interrupted', reason: 'server_restart_no_resume' }),
+    /not restarted automatically/,
+  );
+  assert.match(stopExplanation({ status: 'failed', reason: 'worker_failed' }), /did not finish/);
+});
+
+import { businessTimeline } from '../src/mapping.mjs';
+test('business timeline groups repeated real updates without inventing progress', () => {
+  const rows = businessTimeline([
+    { sequence: 1, type: 'evidence.retrieved' },
+    { sequence: 2, type: 'evidence.retrieved' },
+    { sequence: 3, type: 'api.completed' },
+  ]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].event.sequence, 2);
+  assert.equal(businessTitle({ state: 'retracted' }), 'An earlier billing finding was withdrawn');
+});

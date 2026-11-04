@@ -28,6 +28,7 @@ class Limits:
     max_output_tokens: int = 4096
     max_responses: int = 600
     cached_input_usd_per_million: Decimal | None = None
+    service_tier: str | None = None
 
     def __post_init__(self):
         if (type(self.max_tool_calls) is not int or self.max_tool_calls < 1
@@ -39,6 +40,8 @@ class Limits:
             if not isinstance(rate, Decimal) or not rate.is_finite() or rate <= 0:
                 raise ValueError('Budget and token prices must be positive finite Decimals')
 
+        if self.service_tier not in (None, "default"):
+            raise ValueError("Only the explicitly priced default service tier is supported")
         cached = self.cached_input_usd_per_million
         if cached is not None and (not isinstance(cached, Decimal) or not cached.is_finite()
                                    or cached < 0 or cached > self.input_usd_per_million):
@@ -143,7 +146,8 @@ class Investigator:
                     response = self.client.with_options(timeout=min(remaining, 60), max_retries=0).responses.create(
                         model=self.model, instructions=instructions, input=history, tools=TOOLS,
                         parallel_tool_calls=True, max_output_tokens=self.limits.max_output_tokens,
-                        store=False, include=['reasoning.encrypted_content'])
+                        store=False, include=['reasoning.encrypted_content'],
+                        **({'service_tier': self.limits.service_tier} if self.limits.service_tier else {}))
                     data = response.model_dump(exclude_none=True)
                 except Exception as exc:
                     # Never copy provider exception text: it can contain credentials/request content.

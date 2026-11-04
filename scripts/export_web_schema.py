@@ -13,11 +13,24 @@ from contract_to_cash.web.models import (
     RunView,
 )
 
+from contract_to_cash.web.pricing import BillingReviewRequest, PricingConfirmation, PricingState
+
 
 def public_schema():
     return {
         model.__name__: model.model_json_schema()
-        for model in (DatasetView, EventView, Health, Launch, Login, ReviewAction, RunView)
+        for model in (
+            DatasetView,
+            EventView,
+            Health,
+            Launch,
+            Login,
+            ReviewAction,
+            RunView,
+            BillingReviewRequest,
+            PricingConfirmation,
+            PricingState,
+        )
     }
 
 

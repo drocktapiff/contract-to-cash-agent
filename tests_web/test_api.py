@@ -129,7 +129,17 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
                 ),
                 FakeResponse([]),
             ]
-            return Investigator(FakeClient(script), "simulated-test", tools, journal, Limits()).run(
+            limits = Limits(
+                max_tool_calls=request.max_tool_calls,
+                max_seconds=request.max_seconds,
+                max_cost_usd=request.max_cost_usd,
+                input_usd_per_million=request.input_price,
+                output_usd_per_million=request.output_price,
+                max_responses=request.max_responses,
+                cached_input_usd_per_million=request.cached_input_price,
+                service_tier="default",
+            )
+            return Investigator(FakeClient(script), "simulated-test", tools, journal, limits).run(
                 "Simulated test only"
             )
 

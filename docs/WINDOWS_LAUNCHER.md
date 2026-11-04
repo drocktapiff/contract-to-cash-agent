@@ -31,8 +31,11 @@ that a build exists; it does not automatically rebuild stale assets.
 
 Restart an existing server once after upgrading: a running Python process still uses
 its previously loaded code. Subsequent launches open the dashboard directly. Choose
-**Run investigation** only when you intend to authorize one paid run; the confirmation
-checkbox, token rates, limits and review/export controls remain mandatory.
+**Start Billing Review** only when you intend to authorize one paid run. An
+administrator must first verify current official model rates in **Advanced Settings**;
+the saved confirmation expires after 24 hours. Employees authorize each paid run
+without entering token prices. Limits and review/export controls remain mandatory.
+See [the Phase 3.1 workflow and screenshot guide](PHASE31.md).
 
 ## Local sessions, attribution and API credentials
 

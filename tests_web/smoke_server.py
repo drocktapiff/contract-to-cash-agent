@@ -14,6 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8124)
     parser.add_argument("--recorded", action="store_true")
+    parser.add_argument("--slow-test-runner", action="store_true")
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -27,6 +28,18 @@ if __name__ == "__main__":
             mode="recorded" if args.recorded else "operator",
             origins=(f"http://127.0.0.1:{args.port}",),
         )
+        if args.slow_test_runner:
+            import test_agent
+            import time
+
+            original = test_agent.FakeClient.create
+
+            def delayed_test_response(self, **kwargs):
+                response = original(self, **kwargs)
+                time.sleep(0.8)
+                return response
+
+            test_agent.FakeClient.create = delayed_test_response
         fixture = ApiTests()
         fixture.settings = settings
         os.environ["OPENAI_API_KEY"] = "local-test-placeholder"

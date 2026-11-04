@@ -21,6 +21,14 @@ from .models import DatasetView, EventView, Health, Launch, Login, ReviewAction,
 from .presentation import event_view, evidence_from_events
 from .operator_auth import valid_operator_password
 from .store import Settings, Store, StoreError
+from .pricing import (
+    PricingConfirmation,
+    PricingState,
+    BillingReviewRequest,
+    pricing_state,
+    confirm_pricing,
+    employee_launch,
+)
 
 
 def create_app(settings=None, runner=None):
@@ -224,13 +232,54 @@ def create_app(settings=None, runner=None):
     async def dataset():
         return store.dataset()
 
+    @app.get("/api/admin/pricing", response_model=PricingState, dependencies=[Depends(reader)])
+    async def administrator_pricing():
+        return pricing_state(settings.root, settings.mode)
+
+    @app.put("/api/admin/pricing", response_model=PricingState, dependencies=[Depends(writer)])
+    async def administrator_confirm_pricing(body: PricingConfirmation):
+        with store.lock:
+            if store.active:
+                raise StoreError(
+                    409, "Wait for the active review to settle before changing pricing"
+                )
+            return confirm_pricing(settings.root, body, settings.reviewer)
+
+    @app.post(
+        "/api/billing-reviews",
+        response_model=RunView,
+        status_code=202,
+        dependencies=[Depends(writer)],
+    )
+    async def start_employee_review(body: BillingReviewRequest):
+        with store.lock:
+            state = pricing_state(settings.root, settings.mode)
+            request = employee_launch(body, state)
+            return store.launch(request, pricing_verification=state["profile"])
+
     @app.get("/api/runs", response_model=list[RunView], dependencies=[Depends(reader)])
     async def runs():
         return store.list_runs()
 
     @app.post("/api/runs", response_model=RunView, status_code=202, dependencies=[Depends(writer)])
     async def launch(body: Launch):
-        return store.launch(body)
+        if not settings.local_passwordless:
+            return store.launch(body)  # Explicit legacy integration; not the normal UI.
+        with store.lock:
+            state = pricing_state(settings.root, settings.mode)
+            confirmed = employee_launch(
+                BillingReviewRequest(idempotency_key=body.idempotency_key, acknowledge_paid=True),
+                state,
+            )
+            if (body.input_price, body.cached_input_price, body.output_price) != (
+                confirmed.input_price,
+                confirmed.cached_input_price,
+                confirmed.output_price,
+            ):
+                raise StoreError(
+                    409, "Launch rates must match current administrator-confirmed pricing"
+                )
+            return store.launch(body, pricing_verification=state["profile"])
 
     @app.get("/api/runs/{run_id}", response_model=RunView, dependencies=[Depends(reader)])
     async def detail(run_id: str):

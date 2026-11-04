@@ -16,6 +16,7 @@ export type Health = {
   message: string;
 };
 export type Dataset = {
+  currency: string;
   period: string;
   customer_count: number | null;
   invoice_count: number | null;
@@ -81,6 +82,7 @@ export type Metrics = {
   tool_failures?: number;
 };
 export type Run = {
+  pricing_verification?: PricingProfile | null;
   id: string;
   mode: 'live' | 'recorded';
   status: string;
@@ -123,4 +125,31 @@ export type Evidence = {
   text?: string;
   kind?: string;
   record?: Record<string, unknown>;
+};
+export type PricingProfile = {
+  rates: {
+    model: string;
+    service_tier: string;
+    currency: string;
+    source: string;
+    input_price: string;
+    cached_input_price: string;
+    output_price: string;
+    checked_current_official_rates: boolean;
+  };
+  confirmed_by: string;
+  confirmed_at: string;
+  expires_at: string;
+  verification_method: string;
+};
+export type ReviewSettings = {
+  ready: boolean;
+  reason: string;
+  profile: PricingProfile | null;
+  limits: {
+    maximum_seconds: number;
+    spending_limit_usd: string;
+    max_tool_calls: number;
+    max_responses: number;
+  };
 };

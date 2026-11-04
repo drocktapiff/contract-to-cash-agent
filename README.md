@@ -15,3 +15,6 @@ Windows users can double-click **Start Ledgerline.cmd** after one-time setup. Se
 Normal local startup now opens directly into the dashboard without a password.
 Loopback-only sessions, CSRF, explicit paid-run confirmation and human authorization
 remain required; public/network deployment requires proper authentication first.
+
+The [Phase 3.1 human + AI workflow guide](docs/PHASE31.md) covers the four-scene
+workspace, administrator pricing setup, Windows updates and labeled test screenshots.

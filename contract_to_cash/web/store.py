@@ -234,6 +234,7 @@ class Store:
                 period="2026-04",
                 model="gpt-6.1-sol",
                 data_revision=report.get("data_revision"),
+                pricing_verification=meta.get("pricing_verification"),
                 report_event_sequence=report.get("journal_sequence", 0),
                 last_event_sequence=events[-1]["sequence"] if events else 0,
                 screening_complete=report.get("screening_complete", False),
@@ -259,7 +260,7 @@ class Store:
             reverse=True,
         )
 
-    def launch(self, request):
+    def launch(self, request, pricing_verification=None):
         with self.lock:
             if not self.accepting_launches:
                 raise StoreError(503, "Server is shutting down; no new paid run was started")
@@ -294,6 +295,7 @@ class Store:
                 status="queued",
                 reason="waiting_for_worker",
                 reviewer=self.settings.reviewer,
+                pricing_verification=pricing_verification,
             )
             self.write_meta(meta)
             self.active = run_id
@@ -337,6 +339,7 @@ class Store:
             output_usd_per_million=request.output_price,
             max_responses=request.max_responses,
             cached_input_usd_per_million=request.cached_input_price,
+            service_tier="default",
         )
         key = os.environ.get("OPENAI_API_KEY") or os.environ.get("CONTRACT_AGENT_API_KEY")
         with OpenAI(api_key=key, base_url="https://api.openai.com/v1", max_retries=0) as client:

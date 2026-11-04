@@ -1,5 +1,8 @@
 # Phase 3 · local Contract Operations console
 
+For the current four-scene experience, administrator pricing setup and screenshots,
+see [Phase 3.1](PHASE31.md). This document describes the underlying adapter.
+
 This is a runnable local application over the existing Phase 2.6 agent, not a new
 investigation engine. The UI is branded Ledgerline, with overview, investigations,
 findings, review queue and audit history in one workspace. React/TypeScript + Vite
@@ -69,7 +72,7 @@ python -m contract_to_cash.web \
 
 Open **http://127.0.0.1:8000**. The dashboard obtains a random, HttpOnly local session
 and CSRF token automatically; there is no password or login screen. A key is not needed
-to inspect retained history. Each paid launch still requires current token rates and
+to inspect retained history. Each paid launch requires fresh administrator-confirmed token rates and
 an explicit confirmation for **one** bounded investigation. No investigation, review
 approval or export authorization occurs on startup, refresh or session renewal.
 
