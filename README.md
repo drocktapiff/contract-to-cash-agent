@@ -18,3 +18,7 @@ remain required; public/network deployment requires proper authentication first.
 
 The [Phase 3.1 human + AI workflow guide](docs/PHASE31.md) covers the four-scene
 workspace, administrator pricing setup, Windows updates and labeled test screenshots.
+
+[Phase 3.2 human resolution and scoped agent continuation](docs/PHASE32.md) adds
+evidence-supported decisions, explicit paid continuation and a persisted before/after
+summary, with Windows instructions and labeled test screenshots.

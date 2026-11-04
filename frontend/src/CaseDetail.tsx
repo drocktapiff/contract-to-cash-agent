@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
-import type { Evidence, Finding, Review, Run } from './types';
+import type { Evidence, Finding, Review, Run, Recommendation } from './types';
 import { api } from './api';
-import { businessTitle, exportAllowed, findingCategory, statusLabel } from './mapping.mjs';
+import CaseWorkflow from './CaseWorkflow';
+import {
+  businessTitle,
+  exportAllowed,
+  findingCategory,
+  statusLabel,
+  humanActionLabel,
+} from './mapping.mjs';
 
 const money = (value: unknown) =>
   value == null
@@ -14,6 +21,8 @@ export default function CaseDetail({
   onClose,
   onDecision,
   onExport,
+  onUpdated,
+  onContinue,
   busy,
   stale,
 }: {
@@ -23,6 +32,8 @@ export default function CaseDetail({
   onClose: () => void;
   onDecision: (decision: string, rationale: string) => Promise<void>;
   onExport: () => Promise<void>;
+  onUpdated: (run: Run) => void;
+  onContinue: (run: Run) => void;
   busy: boolean;
   stale: boolean;
 }) {
@@ -30,9 +41,39 @@ export default function CaseDetail({
     [loading, setLoading] = useState(true),
     [error, setError] = useState(''),
     [rationale, setRationale] = useState('');
+  const [legacyRecommendation, setLegacyRecommendation] = useState<Recommendation | null>(null);
+  const recommendation = finding.recommendation ?? legacyRecommendation;
+  useEffect(() => {
+    if (!finding.recommendation)
+      api<Recommendation | null>(
+        `/runs/${run.id}/findings/${encodeURIComponent(finding.finding_id)}/recommendation`,
+      )
+        .then(setLegacyRecommendation)
+        .catch((e) => setError(e.message));
+  }, [run.id, finding.finding_id]);
+  async function prepareRecommendation() {
+    try {
+      setLegacyRecommendation(
+        await api<Recommendation>(
+          `/runs/${run.id}/findings/${encodeURIComponent(finding.finding_id)}/recommendation`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              expected_revision: finding.data_revision,
+              expected_version: finding.version,
+            }),
+          },
+        ),
+      );
+      onUpdated(await api<Run>(`/runs/${run.id}`));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
   const category = findingCategory(finding),
     conflict = category === 'Signed terms conflict',
     duplicate = category === 'Possible duplicate';
+  const intervention = run.interventions?.filter((r) => r.finding_id === finding.finding_id).at(-1);
   const pending = review?.status === 'pending',
     verified = finding.state === 'verified' && finding.evidence_verified;
   const canDecide =
@@ -107,7 +148,11 @@ export default function CaseDetail({
         <p className="muted">{finding.customer_ids.join(' · ')}</p>
         <div className="badge-row">
           <span className={'badge ' + finding.state}>{statusLabel(finding.state)}</span>
-          {review && <span className={'badge ' + review.status}>{statusLabel(review.status)}</span>}
+          {intervention ? (
+            <span className="badge pending">{humanActionLabel(intervention.action)}</span>
+          ) : (
+            review && <span className={'badge ' + review.status}>{statusLabel(review.status)}</span>
+          )}
         </div>
         <section className="judgment-note">
           <h3>
@@ -127,6 +172,65 @@ export default function CaseDetail({
                   : 'This is a proposed interpretation. It has not completed evidence verification.'}
           </p>
         </section>
+        {recommendation && (
+          <section className="recommendation-card">
+            <span className="eyebrow">
+              {recommendation.origin === 'model_suggestion'
+                ? 'AI RECOMMENDATION · SUGGESTION'
+                : 'EVIDENCE-BASED PROCEDURAL SUGGESTION'}
+            </span>
+            <h3>{recommendation.problem}</h3>
+            <p>
+              <strong>Suggested next step</strong>
+              <br />
+              {recommendation.suggested_action}
+            </p>
+            <p>
+              <strong>Why</strong>
+              <br />
+              {recommendation.reasoning}
+            </p>
+            <p>
+              <strong>What remains uncertain</strong>
+              <br />
+              {recommendation.uncertainty}
+            </p>
+            <p className="muted small">
+              Cited original records: {recommendation.evidence_ids.join(', ')}. Suggestions do not
+              establish contractual authority.
+            </p>
+            {finding.recommendation_history && finding.recommendation_history.length > 1 && (
+              <details>
+                <summary>
+                  Previous recommendations ({finding.recommendation_history.length - 1})
+                </summary>
+                {finding.recommendation_history.slice(0, -1).map((r, i) => (
+                  <p key={i}>
+                    Version {r.finding_version} ·{' '}
+                    {r.origin === 'model_suggestion' ? 'AI suggestion' : 'Procedural suggestion'}:{' '}
+                    {r.suggested_action}
+                  </p>
+                ))}
+              </details>
+            )}
+          </section>
+        )}
+        {!recommendation && (
+          <p className="notice">
+            This historical finding has no saved recommendation.{' '}
+            <button
+              className="secondary"
+              disabled={run.mode !== 'live' || stale || ['running', 'queued'].includes(run.status)}
+              onClick={() => void prepareRecommendation()}
+            >
+              Prepare an evidence-based next step
+            </button>
+            <small>
+              Uses the saved comparison, makes no model request, and is labeled as procedural
+              guidance.
+            </small>
+          </p>
+        )}
         <h3>Agent assessment</h3>
         <p className="assessment">
           {finding.model_hypothesis ??
@@ -135,6 +239,14 @@ export default function CaseDetail({
         <small className="muted">
           A hypothesis for your judgment, not a legal conclusion or billing instruction.
         </small>
+        <CaseWorkflow
+          key={run.id + finding.finding_id}
+          run={run}
+          finding={finding}
+          stale={stale}
+          onUpdated={onUpdated}
+          onContinue={onContinue}
+        />
         <h3>Agreed amount and invoice comparison</h3>
         <div className="comparison-list">
           {(finding.comparisons ?? (finding.comparison ? [finding.comparison] : [])).map((row) => (
@@ -201,93 +313,92 @@ export default function CaseDetail({
             verification.
           </p>
         )}
-        <section className="decision-section">
-          <h3>Your decision</h3>
-          <p className="muted">
-            {review?.action === 'export'
-              ? 'This request can authorize an evidence package only.'
-              : 'This request is for review only. It cannot authorize an export or a financial correction.'}{' '}
-            Pending review is not approval.
-          </p>
-          {stale && (
-            <p className="notice error">
-              These source records changed. A new investigation is required before a decision or
-              export.
+        {verified && (
+          <section className="decision-section">
+            <h3>Your decision</h3>
+            <p className="muted">
+              {review?.action === 'export'
+                ? 'This request can authorize an evidence package only.'
+                : 'This request is for review only. It cannot authorize an export or a financial correction.'}{' '}
+              Pending review is not approval.
             </p>
-          )}
-          {canDecide ? (
-            <>
-              <label>
-                Decision rationale
-                <textarea
-                  value={rationale}
-                  onChange={(event) => setRationale(event.target.value)}
-                  minLength={5}
-                  maxLength={1000}
-                  placeholder="What did you conclude from the original records?"
-                />
-              </label>
-              <div className="decision-actions">
-                {verified && (
+            {stale && (
+              <p className="notice error">
+                These source records changed. A new investigation is required before a decision or
+                export.
+              </p>
+            )}
+            {canDecide ? (
+              <>
+                <label>
+                  Decision rationale
+                  <textarea
+                    value={rationale}
+                    onChange={(event) => setRationale(event.target.value)}
+                    minLength={5}
+                    maxLength={1000}
+                    placeholder="What did you conclude from the original records?"
+                  />
+                </label>
+                <div className="decision-actions">
+                  {verified && (
+                    <button
+                      className="primary"
+                      disabled={busy || rationale.trim().length < 5}
+                      onClick={() => void onDecision('approved', rationale)}
+                    >
+                      {review?.action === 'export'
+                        ? 'Approve evidence export'
+                        : 'Approve review only'}
+                    </button>
+                  )}
                   <button
-                    className="primary"
+                    className="secondary"
                     disabled={busy || rationale.trim().length < 5}
-                    onClick={() => void onDecision('approved', rationale)}
+                    onClick={() => void onDecision('needs_information', rationale)}
                   >
-                    {review?.action === 'export'
-                      ? 'Approve evidence export'
-                      : 'Approve review only'}
+                    Request clarification
                   </button>
-                )}
-                <button
-                  className="secondary"
-                  disabled={busy || rationale.trim().length < 5}
-                  onClick={() => void onDecision('needs_information', rationale)}
-                >
-                  Request clarification
-                </button>
-                <button
-                  className="danger"
-                  disabled={busy || rationale.trim().length < 5}
-                  onClick={() => void onDecision('rejected', rationale)}
-                >
-                  Reject hypothesis
-                </button>
-              </div>
+                  <button
+                    className="danger"
+                    disabled={busy || rationale.trim().length < 5}
+                    onClick={() => void onDecision('rejected', rationale)}
+                  >
+                    Reject hypothesis
+                  </button>
+                </div>
+              </>
+            ) : (
               <p className="small muted">
-                Clarification is saved for this version. It does not choose a contract term or
-                resume the agent. Updated records require a new review.
+                {run.mode === 'recorded'
+                  ? 'Recorded investigation — decisions are read-only.'
+                  : review?.status === 'pending'
+                    ? 'Decisions are available after the review settles.'
+                    : review
+                      ? 'The decision for this version has been recorded.'
+                      : 'The agent has not requested a supported decision for this item.'}
               </p>
-            </>
-          ) : (
-            <p className="small muted">
-              {run.mode === 'recorded'
-                ? 'Recorded investigation — decisions are read-only.'
-                : review?.status === 'pending'
-                  ? 'Decisions are available after the review settles.'
-                  : review
-                    ? 'The decision for this version has been recorded.'
-                    : 'The agent has not requested a supported decision for this item.'}
-            </p>
-          )}
-          {review?.decision && (
-            <div className="decision-record">
-              <strong>{statusLabel(review.decision.decision)}</strong>
-              <p>
-                {review.decision.rationale ??
-                  'No rationale was captured by this historical version.'}
-              </p>
-              <small>
-                {review.decision.reviewer} · {new Date(review.decision.decided_at).toLocaleString()}
-              </small>
-            </div>
-          )}
-          {exportAllowed(run, finding, review) && !stale && (
-            <button className="secondary" onClick={() => void onExport()} disabled={busy}>
-              Download approved evidence package
-            </button>
-          )}
-        </section>
+            )}
+            {review?.decision && (
+              <div className="decision-record">
+                <strong>{statusLabel(review.decision.decision)}</strong>
+                <p>
+                  {review.decision.rationale ??
+                    'No rationale was captured by this historical version.'}
+                </p>
+                <small>
+                  {review.decision.reviewer} ·{' '}
+                  {new Date(review.decision.decided_at).toLocaleString()}
+                </small>
+              </div>
+            )}
+            {exportAllowed(run, finding, review) && !stale && (
+              <button className="secondary" onClick={() => void onExport()} disabled={busy}>
+                Download approved evidence package
+              </button>
+            )}
+          </section>
+        )}
         <details className="technical">
           <summary>View Technical Details</summary>
           <p>

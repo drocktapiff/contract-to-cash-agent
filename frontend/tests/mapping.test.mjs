@@ -130,3 +130,29 @@ test('business timeline groups repeated real updates without inventing progress'
   assert.equal(rows[0].event.sequence, 2);
   assert.equal(businessTitle({ state: 'retracted' }), 'An earlier billing finding was withdrawn');
 });
+
+test('human escalation, resolution and dismissal remain distinct from verification', () => {
+  const f = { finding_id: 'f', state: 'proposed', evidence_verified: false };
+  const rows = [{ finding_id: 'f', action: 'escalate' }];
+  assert.equal(needsAttention(f, [], rows), true);
+  assert.match(businessActivity({ type: 'human_resolution.escalate' }), /waiting/);
+  rows.push({ finding_id: 'f', action: 'resolve' });
+  assert.equal(needsAttention(f, [], rows), true);
+  assert.match(businessActivity({ type: 'human_resolution.resolve' }), /still needs authorization/);
+  assert.equal(f.evidence_verified, false);
+  rows.push({ finding_id: 'f', action: 'dismiss' });
+  assert.equal(needsAttention(f, [], rows), false);
+  assert.equal(
+    needsAttention({ ...f, state: 'retracted' }, [], [{ finding_id: 'f', action: 'resolve' }]),
+    false,
+  );
+});
+test('a suggested action is not represented as a verified financial outcome', () => {
+  assert.match(
+    businessActivity({ type: 'tool.requested', tool: 'recommend_next_action' }),
+    /suggested next step/,
+  );
+  assert.match(businessActivity({ type: 'recommendation.created' }), /suggested next step/);
+  assert.match(businessActivity({ type: 'continuation.authorized' }), /separate investigation/);
+  assert.equal(businessActivity({ type: 'resolution.verified' }), null);
+});

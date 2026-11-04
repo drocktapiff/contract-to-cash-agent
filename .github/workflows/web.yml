@@ -35,3 +35,4 @@ jobs:
       - run: npm --prefix frontend test
       - run: python -m playwright install chromium --only-shell
       - run: python -m scripts.smoke_web
+      - run: python -m scripts.smoke_continuation

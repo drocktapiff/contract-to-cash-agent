@@ -3,6 +3,12 @@
 from .models import EventView
 
 LABELS = {
+    "human_resolution.resolve": "Documented human resolution saved; continuation requires separate authorization",
+    "human_resolution.escalate": "Clarification requested; dependent calculations remain paused",
+    "human_resolution.dismiss": "Hypothesis dismissed; original evidence retained",
+    "continuation.authorized": "Bounded new continuation explicitly authorized",
+    "guidance.prepared": "Procedural guidance saved from the historical comparison; no model request",
+    "recommendation.created": "Evidence-grounded model suggestion saved",
     "investigation.started": "Investigation started",
     "screening.completed": "Structured customer screening finished",
     "evidence.retrieved": "Source evidence retrieved",
@@ -25,7 +31,7 @@ def event_view(event):
     tool = payload.get("tool") if event["type"].startswith("tool.") else None
     finding = payload.get("finding", {})
     review = payload.get("review", {})
-    decision = payload if event["type"] == "human_review.decided" else {}
+    decision = payload if event["type"] == "human_review.decided" or event["type"].startswith("human_resolution.") else {}
     summary = LABELS.get(event["type"], "Recorded activity")
     if event["type"] == "tool.requested":
         summary = "Model selected " + str(tool)
@@ -47,7 +53,7 @@ def event_view(event):
         tool=tool,
         customer_ids=finding.get("customer_ids", []),
         finding_id=finding.get("finding_id", review.get("finding_id", decision.get("finding_id"))),
-        decision=decision.get("decision"),
+        decision=decision.get("decision", decision.get("action")),
         reviewer=decision.get("reviewer"),
         rationale=decision.get("rationale"),
         finding_version=decision.get("finding_version"),
@@ -72,6 +78,8 @@ def finding_view(finding):
         "data_revision",
         "origin",
         "requires_revalidation",
+        "recommendation",
+        "recommendation_history",
     )
     return {key: finding[key] for key in keys if key in finding}
 

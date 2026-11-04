@@ -37,6 +37,16 @@ the saved confirmation expires after 24 hours. Employees authorize each paid run
 without entering token prices. Limits and review/export controls remain mandatory.
 See [the Phase 3.1 workflow and screenshot guide](PHASE31.md).
 
+## Human resolution and agent continuation
+
+See [Phase 3.2](PHASE32.md) to register source-verified written authority, resolve an
+ambiguous case, and explicitly authorize a bounded continuation. Registration and
+saving a decision make no OpenAI call. Escalation and dismissal do not continue work.
+New findings still require separate review/export authorization; billing is unchanged.
+After updating, rebuild the frontend and restart with Ctrl+C as described above.
+Retain the same runs folder, isolated runtime and journals. No history reset or manual
+SQLite migration is needed; new workflow tables are created additively on first use.
+
 ## Local sessions, attribution and API credentials
 
 The browser automatically receives an eight-hour random HttpOnly/SameSite=Strict

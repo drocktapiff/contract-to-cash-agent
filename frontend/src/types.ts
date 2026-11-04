@@ -32,7 +32,62 @@ export type Comparison = {
   financial_category?: string;
   invoice_amounts_cad?: string[];
 };
+export type Recommendation = {
+  origin: string;
+  problem: string;
+  suggested_action: string;
+  reasoning: string;
+  uncertainty: string;
+  evidence_ids: string[];
+  finding_version: number;
+  data_revision: string;
+};
+export type AuthorityRecord = {
+  evidence_id: string;
+  payload: {
+    original_document_text: string;
+    original_document_sha256: string;
+    verified_by: string;
+    verified_at: string;
+    assertion: {
+      customer_id: string;
+      governing_amendment_id: string;
+      superseded_amendment_ids: string[];
+      issuer: string;
+      issuer_authority: string;
+      source_reference: string;
+      confirmation_text: string;
+    };
+  };
+};
+export type Intervention = {
+  id: string;
+  finding_id: string;
+  action: 'resolve' | 'escalate' | 'dismiss';
+  workflow_version: number;
+  rationale: string;
+  reviewer: string;
+  created_at: string;
+  evidence_id?: string;
+  clarification_owner?: string;
+  missing_information?: string;
+};
+export type CollaborativeOutcome = {
+  original_findings: Finding[];
+  human_contributions: Intervention[];
+  continued_investigations: {
+    run_id: string;
+    intervention_id: string;
+    customers_compared: string[];
+    findings: Finding[];
+    status: string;
+    ready_for_review: boolean;
+  }[];
+  disclaimer: string;
+};
 export type Finding = {
+  recommendation?: Recommendation;
+  recommendation_history?: Recommendation[];
   finding_id: string;
   customer_ids: string[];
   state: string;
@@ -82,6 +137,14 @@ export type Metrics = {
   tool_failures?: number;
 };
 export type Run = {
+  continuation?: {
+    parent_run_id: string;
+    parent_finding_id: string;
+    base_revision: string;
+    customer_ids: string[];
+    method: string;
+  } | null;
+  interventions?: Intervention[];
   pricing_verification?: PricingProfile | null;
   id: string;
   mode: 'live' | 'recorded';
