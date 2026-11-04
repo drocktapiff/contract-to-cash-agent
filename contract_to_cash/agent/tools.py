@@ -45,6 +45,7 @@ TOOLS = [
            customer_ids=IDS, evidence_ids=IDS,
            state={'type': 'string', 'enum': ['proposed', 'verified', 'retracted']},
            rationale={'type': 'string', 'minLength': 1, 'maxLength': 1000}),
+    schema('recommend_next_action', 'Persist a suggested action for an existing finding, grounded in exact retrieved evidence. Suggestions and rationale are model hypotheses, never contractual authority.', finding_id=STRING, evidence_ids=IDS, problem={'type': 'string', 'minLength': 1, 'maxLength': 1000}, suggested_action={'type': 'string', 'minLength': 1, 'maxLength': 1000}, reasoning={'type': 'string', 'minLength': 1, 'maxLength': 1000}, uncertainty={'type': 'string', 'minLength': 1, 'maxLength': 1000}),
     schema('request_human_review', 'Queue a finding for human review/export only. Never approves or executes billing changes.',
            finding_id=STRING, action={'type': 'string', 'enum': ['review', 'export']}),
 ]
@@ -144,7 +145,7 @@ class Tools:
             ('get_amendments', self.get_amendments), ('get_invoices', self.get_invoices),
             ('get_document', self.get_document), ('calculate_expected', self.calculate_expected),
             ('compare_invoices', self.compare_invoices), ('summarize_pattern', self.summarize_pattern),
-            ('submit_finding', self.submit_finding), ('request_human_review', self.request_human_review))}
+            ('submit_finding', self.submit_finding), ('recommend_next_action', self.recommend_next_action), ('request_human_review', self.request_human_review))}
 
     def execute(self, name, arguments):
         if name not in self.handlers:
@@ -252,6 +253,9 @@ class Tools:
                 *(a['amendment_id'] for a in self.data.changes[customer_id]),
                 *(i['invoice_id'] for i in self.data.rows[customer_id])}
 
+    def calculation_amendments(self, customer_id):
+        return self.data.changes[customer_id]
+
     def calculate_expected(self, customer_id):
         c = self._customer(customer_id)
         rows = self.data.rows[customer_id]
@@ -261,7 +265,7 @@ class Tools:
         quantities = sorted({i['usage_quantity'] for i in rows}) or [0]
         try:
             amounts = [dict(usage_quantity=q, expected_cad=str(expected_amount(
-                c, self.data.changes[customer_id], self.data.period, q))) for q in quantities]
+                c, self.calculation_amendments(customer_id), self.data.period, q))) for q in quantities]
         except ConflictError:
             result = dict(status='conflict', expected_cad=None, difference_cad=None, customer_id=customer_id,
                           data_revision=self.data.revision,
@@ -320,6 +324,7 @@ class Tools:
                 version=old['version'] + 1 if old else 1,
                 comparison=result, evidence_ids=result['evidence_ids'], data_revision=self.data.revision,
                 origin='deterministic_conflict_guard', evidence_verified=False)
+            self._procedural_recommendation(self.findings[fid], old)
             self.journal.emit('finding.proposed', actor='tool', finding=self.findings[fid])
         review = self.reviews.get(fid)
         if not review or review['status'] == 'invalidated' or review['finding_version'] != self.findings[fid]['version']:
@@ -351,12 +356,57 @@ class Tools:
                        version=old['version'] + 1 if old else 1, evidence_ids=sorted(provided),
                        evidence_verified=state == 'verified', comparisons=rows, pattern=pattern,
                        model_hypothesis=rationale, data_revision=self.data.revision, origin='model_submission')
+        self._procedural_recommendation(finding, old)
         self.findings[fid] = finding
         # Every revision invalidates prior pending/approved review scope.
         if fid in self.reviews:
             self.reviews[fid]['status'] = 'invalidated'
         self.journal.emit('finding.' + state, actor='tool', finding=finding)
         return finding
+
+    def _procedural_recommendation(self, finding, old=None):
+        finding['recommendation_history'] = copy.deepcopy((old or {}).get('recommendation_history', []))
+        rec = self.select_procedural_recommendation(finding)
+        finding['recommendation'] = rec
+        finding['recommendation_history'].append(rec)
+
+    @staticmethod
+    def select_procedural_recommendation(finding):
+        rows = finding.get('comparisons', [finding.get('comparison', {})])
+        kinds = {row.get('status') for row in rows}
+        if 'conflict' in kinds:
+            problem = 'The signed terms conflict; no governing price is established.'
+            action = 'Obtain written confirmation from the responsible contract authority, register the supporting record, then resolve with evidence.'
+            uncertainty = 'Which conflicting signed amendment governs this billing period remains unknown.'
+        elif 'duplicate_invoice' in kinds:
+            problem = 'Multiple invoice records require reconciliation.'
+            action = 'Ask Billing Operations to identify authoritative invoice and payment records before asserting duplicate exposure.'
+            uncertainty = 'The records do not establish that multiple charges were collected.'
+        else:
+            problem = 'The saved comparison needs human review.'
+            action = 'Inspect the cited original terms and invoice records; approve only the requested review or export scope if supported.'
+            uncertainty = 'Business context and authorization remain for the employee to establish.'
+        rec = dict(origin='evidence_rule', problem=problem, suggested_action=action,
+                   reasoning='Selected by the deterministic comparison state, not model-generated reasoning.',
+                   uncertainty=uncertainty, evidence_ids=finding['evidence_ids'],
+                   finding_version=finding['version'], data_revision=finding['data_revision'])
+        return rec
+
+    def recommend_next_action(self, finding_id, evidence_ids, problem, suggested_action, reasoning, uncertainty):
+        finding = self.findings.get(finding_id)
+        if not finding or finding['state'] == 'retracted':
+            raise ToolError('Recommendation requires an active finding')
+        required = set().union(*(self._required(cid) for cid in finding['customer_ids']))
+        if not set(evidence_ids) <= required or not set(evidence_ids) <= self.seen or not evidence_ids:
+            raise ToolError('Recommendation citations must be retrieved evidence for this finding')
+        rec = dict(origin='model_suggestion', problem=problem, suggested_action=suggested_action,
+                   reasoning=reasoning, uncertainty=uncertainty, evidence_ids=sorted(evidence_ids),
+                   finding_version=finding['version'], data_revision=self.data.revision)
+        finding['recommendation'] = rec
+        finding.setdefault('recommendation_history', []).append(rec)
+        self.journal.emit('recommendation.created', actor='model', finding_id=finding_id,
+                          recommendation=rec)
+        return rec
 
     def request_human_review(self, finding_id, action):
         if finding_id not in self.findings or self.findings[finding_id]['state'] == 'retracted':

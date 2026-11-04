@@ -1,4 +1,84 @@
 {
+  "AuthorityAssertion": {
+    "additionalProperties": false,
+    "properties": {
+      "base_revision": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Base Revision",
+        "type": "string"
+      },
+      "confirmation_text": {
+        "maxLength": 10000,
+        "minLength": 30,
+        "title": "Confirmation Text",
+        "type": "string"
+      },
+      "contract_id": {
+        "maxLength": 100,
+        "minLength": 1,
+        "title": "Contract Id",
+        "type": "string"
+      },
+      "customer_id": {
+        "maxLength": 100,
+        "minLength": 1,
+        "title": "Customer Id",
+        "type": "string"
+      },
+      "governing_amendment_id": {
+        "maxLength": 100,
+        "minLength": 1,
+        "title": "Governing Amendment Id",
+        "type": "string"
+      },
+      "issuer": {
+        "maxLength": 200,
+        "minLength": 3,
+        "title": "Issuer",
+        "type": "string"
+      },
+      "issuer_authority": {
+        "maxLength": 1000,
+        "minLength": 10,
+        "title": "Issuer Authority",
+        "type": "string"
+      },
+      "period": {
+        "const": "2026-04",
+        "title": "Period",
+        "type": "string"
+      },
+      "source_reference": {
+        "maxLength": 1000,
+        "minLength": 5,
+        "title": "Source Reference",
+        "type": "string"
+      },
+      "superseded_amendment_ids": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "title": "Superseded Amendment Ids",
+        "type": "array"
+      }
+    },
+    "required": [
+      "customer_id",
+      "contract_id",
+      "period",
+      "base_revision",
+      "governing_amendment_id",
+      "superseded_amendment_ids",
+      "issuer",
+      "issuer_authority",
+      "source_reference",
+      "confirmation_text"
+    ],
+    "title": "AuthorityAssertion",
+    "type": "object"
+  },
   "BillingReviewRequest": {
     "additionalProperties": false,
     "properties": {
@@ -13,8 +93,38 @@
         "type": "string"
       }
     },
-    "required": ["idempotency_key", "acknowledge_paid"],
+    "required": [
+      "idempotency_key",
+      "acknowledge_paid"
+    ],
     "title": "BillingReviewRequest",
+    "type": "object"
+  },
+  "ContinueInvestigation": {
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_paid": {
+        "const": true,
+        "title": "Acknowledge Paid",
+        "type": "boolean"
+      },
+      "idempotency_key": {
+        "format": "uuid",
+        "title": "Idempotency Key",
+        "type": "string"
+      },
+      "intervention_id": {
+        "pattern": "^[0-9a-f]{32}$",
+        "title": "Intervention Id",
+        "type": "string"
+      }
+    },
+    "required": [
+      "idempotency_key",
+      "intervention_id",
+      "acknowledge_paid"
+    ],
+    "title": "ContinueInvestigation",
     "type": "object"
   },
   "DatasetView": {
@@ -67,7 +177,12 @@
         "type": "string"
       }
     },
-    "required": ["period", "customer_count", "invoice_count", "message"],
+    "required": [
+      "period",
+      "customer_count",
+      "invoice_count",
+      "message"
+    ],
     "title": "DatasetView",
     "type": "object"
   },
@@ -185,7 +300,13 @@
         "type": "string"
       }
     },
-    "required": ["sequence", "timestamp", "type", "actor", "summary"],
+    "required": [
+      "sequence",
+      "timestamp",
+      "type",
+      "actor",
+      "summary"
+    ],
     "title": "EventView",
     "type": "object"
   },
@@ -214,7 +335,10 @@
         "type": "string"
       },
       "mode": {
-        "enum": ["operator", "recorded"],
+        "enum": [
+          "operator",
+          "recorded"
+        ],
         "title": "Mode",
         "type": "string"
       },
@@ -237,6 +361,109 @@
       "message"
     ],
     "title": "Health",
+    "type": "object"
+  },
+  "HumanIntervention": {
+    "additionalProperties": false,
+    "properties": {
+      "action": {
+        "enum": [
+          "resolve",
+          "escalate",
+          "dismiss"
+        ],
+        "title": "Action",
+        "type": "string"
+      },
+      "clarification_owner": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Clarification Owner"
+      },
+      "evidence_id": {
+        "anyOf": [
+          {
+            "maxLength": 100,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Evidence Id"
+      },
+      "expected_revision": {
+        "maxLength": 100,
+        "minLength": 1,
+        "title": "Expected Revision",
+        "type": "string"
+      },
+      "expected_version": {
+        "minimum": 1,
+        "title": "Expected Version",
+        "type": "integer"
+      },
+      "expected_workflow_version": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Expected Workflow Version",
+        "type": "integer"
+      },
+      "governing_amendment_id": {
+        "anyOf": [
+          {
+            "maxLength": 100,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Governing Amendment Id"
+      },
+      "idempotency_key": {
+        "pattern": "^[0-9a-f-]{32,36}$",
+        "title": "Idempotency Key",
+        "type": "string"
+      },
+      "missing_information": {
+        "anyOf": [
+          {
+            "maxLength": 1000,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Missing Information"
+      },
+      "rationale": {
+        "maxLength": 1000,
+        "minLength": 5,
+        "title": "Rationale",
+        "type": "string"
+      }
+    },
+    "required": [
+      "idempotency_key",
+      "expected_revision",
+      "expected_version",
+      "action",
+      "rationale"
+    ],
+    "title": "HumanIntervention",
     "type": "object"
   },
   "Launch": {
@@ -354,8 +581,32 @@
         "type": "string"
       }
     },
-    "required": ["token"],
+    "required": [
+      "token"
+    ],
     "title": "Login",
+    "type": "object"
+  },
+  "PrepareGuidance": {
+    "additionalProperties": false,
+    "properties": {
+      "expected_revision": {
+        "maxLength": 100,
+        "minLength": 1,
+        "title": "Expected Revision",
+        "type": "string"
+      },
+      "expected_version": {
+        "minimum": 1,
+        "title": "Expected Version",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "expected_version"
+    ],
+    "title": "PrepareGuidance",
     "type": "object"
   },
   "PricingConfirmation": {
@@ -541,7 +792,12 @@
             "type": "string"
           }
         },
-        "required": ["maximum_seconds", "spending_limit_usd", "max_tool_calls", "max_responses"],
+        "required": [
+          "maximum_seconds",
+          "spending_limit_usd",
+          "max_tool_calls",
+          "max_responses"
+        ],
         "title": "PricingLimits",
         "type": "object"
       },
@@ -573,7 +829,13 @@
             "type": "string"
           }
         },
-        "required": ["rates", "confirmed_by", "confirmed_at", "expires_at", "verification_method"],
+        "required": [
+          "rates",
+          "confirmed_by",
+          "confirmed_at",
+          "expires_at",
+          "verification_method"
+        ],
         "title": "SavedPricing",
         "type": "object"
       }
@@ -601,7 +863,12 @@
         "type": "string"
       }
     },
-    "required": ["ready", "reason", "profile", "limits"],
+    "required": [
+      "ready",
+      "reason",
+      "profile",
+      "limits"
+    ],
     "title": "PricingState",
     "type": "object"
   },
@@ -609,7 +876,11 @@
     "additionalProperties": false,
     "properties": {
       "decision": {
-        "enum": ["approved", "rejected", "needs_information"],
+        "enum": [
+          "approved",
+          "rejected",
+          "needs_information"
+        ],
         "title": "Decision",
         "type": "string"
       },
@@ -631,7 +902,12 @@
         "type": "string"
       }
     },
-    "required": ["decision", "rationale", "expected_revision", "expected_version"],
+    "required": [
+      "decision",
+      "rationale",
+      "expected_revision",
+      "expected_version"
+    ],
     "title": "ReviewAction",
     "type": "object"
   },
@@ -644,6 +920,19 @@
         },
         "title": "Candidates",
         "type": "array"
+      },
+      "continuation": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Continuation"
       },
       "created_at": {
         "title": "Created At",
@@ -692,6 +981,14 @@
         "title": "Id",
         "type": "string"
       },
+      "interventions": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Interventions",
+        "type": "array"
+      },
       "last_event_sequence": {
         "default": 0,
         "title": "Last Event Sequence",
@@ -703,7 +1000,10 @@
         "type": "object"
       },
       "mode": {
-        "enum": ["live", "recorded"],
+        "enum": [
+          "live",
+          "recorded"
+        ],
         "title": "Mode",
         "type": "string"
       },
@@ -755,7 +1055,15 @@
         "type": "string"
       }
     },
-    "required": ["id", "mode", "status", "reason", "created_at", "period", "model"],
+    "required": [
+      "id",
+      "mode",
+      "status",
+      "reason",
+      "created_at",
+      "period",
+      "model"
+    ],
     "title": "RunView",
     "type": "object"
   }

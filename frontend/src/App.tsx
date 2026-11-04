@@ -1,3 +1,4 @@
+import { CollaborationSummary } from './CaseWorkflow';
 import { useEffect, useRef, useState } from 'react';
 import { api, bootstrapSession, setCsrf } from './api';
 import type { Activity, Dataset, Finding, Health, ReviewSettings, Run, Session } from './types';
@@ -7,6 +8,7 @@ import {
   businessTitle,
   exportAllowed,
   findingAmount,
+  humanActionLabel,
   isActive,
   mergeEvents,
   needsAttention,
@@ -76,7 +78,16 @@ export default function App() {
   const currentFinding = run?.findings.find((f) => f.finding_id === selectedId);
   const reviewFor = (finding: Finding) =>
     run?.reviews.find((r) => r.finding_id === finding.finding_id);
-  const attention = run?.findings.filter((f) => needsAttention(f, run.reviews)) ?? [];
+  const humanFor = (finding: Finding) =>
+    run?.interventions?.filter((r) => r.finding_id === finding.finding_id).at(-1);
+  const workflowBadge = (finding: Finding) =>
+    humanFor(finding) ? (
+      <span className="badge pending">{humanActionLabel(humanFor(finding)!.action)}</span>
+    ) : reviewFor(finding) ? (
+      <Badge value={reviewFor(finding)!.status} />
+    ) : null;
+  const attention =
+    run?.findings.filter((f) => needsAttention(f, run.reviews, run.interventions)) ?? [];
   const verified =
     run?.findings.filter(
       (f) =>
@@ -90,7 +101,7 @@ export default function App() {
   const stale = !!(
     dataset?.data_revision &&
     run?.data_revision &&
-    dataset.data_revision !== run.data_revision
+    dataset.data_revision !== (run.continuation?.base_revision ?? run.data_revision)
   );
   const businessEvents = businessTimeline(events);
   const latestActivity = businessEvents.at(-1)?.text;
@@ -288,6 +299,24 @@ export default function App() {
       setBusy(false);
     }
   }
+  async function refreshHumanActivity(id: string) {
+    try {
+      const response = await fetch(`/api/runs/${id}/events?after=${events.at(-1)?.sequence ?? 0}`, {
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw new Error();
+      const saved = (await response.text())
+        .split('\n')
+        .filter((line) => line.startsWith('data: '))
+        .map((line) => JSON.parse(line.slice(6)))
+        .filter((item) => Number.isInteger(item.sequence));
+      setEvents((previous) => mergeEvents(previous, saved) as Activity[]);
+    } catch {
+      setError(
+        'Your decision was saved, but activity could not refresh. Reopen this review to inspect its retained audit trail.',
+      );
+    }
+  }
   async function decide(decision: string, rationale: string) {
     if (!run || !currentFinding) return;
     setBusy(true);
@@ -307,24 +336,7 @@ export default function App() {
       );
       setRun(response.run);
       await refreshRun(run.id);
-      // Human decisions happen after the live stream settles: read the real journal delta.
-      try {
-        const response = await fetch(
-          `/api/runs/${run.id}/events?after=${events.at(-1)?.sequence ?? 0}`,
-          { credentials: 'same-origin' },
-        );
-        if (!response.ok) throw new Error();
-        const saved = (await response.text())
-          .split('\n')
-          .filter((line) => line.startsWith('data: '))
-          .map((line) => JSON.parse(line.slice(6)))
-          .filter((item) => Number.isInteger(item.sequence));
-        setEvents((previous) => mergeEvents(previous, saved) as Activity[]);
-      } catch {
-        setError(
-          'Your decision was saved, but activity could not refresh. Reopen this review to inspect its retained audit trail.',
-        );
-      }
+      await refreshHumanActivity(run.id);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -434,7 +446,7 @@ export default function App() {
             </span>
             <span className="finding-meta">
               <Badge value={f.state} />
-              {reviewFor(f) && <Badge value={reviewFor(f)!.status} />}
+              {workflowBadge(f)}
               <strong>
                 {findingAmount(f) == null ? 'Amount unresolved' : money(findingAmount(f))}
               </strong>
@@ -730,6 +742,12 @@ export default function App() {
                   <div className="page-heading">
                     <span className="eyebrow">REVIEW IN PROGRESS</span>
                     <h1>The agent is working through the records.</h1>
+                    {run?.continuation && (
+                      <p className="notice">
+                        Continuing only {run.continuation.customer_ids.join(', ')} with your
+                        registered evidence. This is a new scoped investigation.
+                      </p>
+                    )}
                     <p>
                       You can stay here or return later. Your review and its evidence are saved as
                       the work happens.
@@ -792,6 +810,14 @@ export default function App() {
                       {run ? stopExplanation(run) : 'Choose a saved review to see its findings.'}
                     </p>
                   </div>
+                  {run?.continuation && (
+                    <p className="notice">
+                      Continued investigation · {run.continuation.customer_ids.join(', ')} only.
+                      This is a new investigation linked to the original review; it does not cover
+                      the whole dataset.
+                    </p>
+                  )}
+                  {run && <CollaborationSummary run={run} onOpen={selectRun} />}
                   {run ? (
                     <>
                       <section className="outcome-panel panel">
@@ -881,12 +907,11 @@ export default function App() {
                   </div>
                   <div className="attention-cards">
                     {attention.map((f) => {
-                      const review = reviewFor(f);
                       return (
                         <article className="attention-card panel" key={f.finding_id}>
                           <div className="card-top">
                             <span className="eyebrow">{f.customer_ids.join(' · ')}</span>
-                            <Badge value={review?.status ?? f.state} />
+                            {workflowBadge(f) ?? <Badge value={f.state} />}
                           </div>
                           <h2>{businessTitle(f)}</h2>
                           <p>
@@ -1180,13 +1205,27 @@ export default function App() {
           </section>
         </div>
       )}
+
       {run && currentFinding && (
         <CaseDetail
+          key={run.id + currentFinding.finding_id}
           run={run}
           finding={currentFinding}
           review={reviewFor(currentFinding)}
           onClose={() => setSelectedId('')}
           onDecision={decide}
+          onUpdated={(next) => {
+            setRun(next);
+            void refreshRun(next.id);
+            void refreshHumanActivity(next.id);
+          }}
+          onContinue={(next) => {
+            setSelectedId('');
+            setRunId(next.id);
+            setRun(next);
+            setScene('working');
+            void loadWorkspace();
+          }}
           onExport={download}
           busy={busy}
           stale={stale}

@@ -86,6 +86,8 @@ class RunView(BaseModel):
     report_event_sequence: int = 0
     last_event_sequence: int = 0
     pricing_verification: dict | None = None
+    continuation: dict | None = None
+    interventions: list[dict] = Field(default_factory=list)
     screening_complete: bool = False
     customers_compared: list[str] = Field(default_factory=list)
     customers_with_retrieved_documents: list[str] = Field(default_factory=list)

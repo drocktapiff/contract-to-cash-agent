@@ -1789,3 +1789,82 @@ textarea {
     font-size: 8px;
   }
 }
+
+/* Phase 3.2: focused human judgment and auditable collaboration. */
+.recommendation-card,
+.authority-preview,
+.continuation-card,
+.paid-confirmation {
+  background: #f0f7f5;
+  border: 1px solid #c9dfd9;
+  border-radius: 12px;
+  padding: 22px;
+  margin: 22px 0;
+}
+.recommendation-card h3 {
+  margin-top: 10px;
+}
+.decision-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.guided-action {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.human-workflow label {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+.human-workflow select {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid #c9d7e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #24384d;
+  font: inherit;
+}
+.human-workflow .check {
+  display: flex;
+  align-items: center;
+}
+.human-workflow .check input {
+  width: auto;
+}
+.collaboration-summary {
+  margin: 25px 0;
+  padding: 28px;
+}
+.collaboration-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+}
+.collaboration-columns > div {
+  min-width: 0;
+}
+.contribution {
+  border-top: 1px solid #e2e8ed;
+  padding: 12px 0;
+}
+.contribution p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 800px) {
+  .collaboration-summary {
+    margin: 18px;
+    padding: 20px;
+  }
+  .collaboration-columns {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .decision-choices {
+    flex-direction: column;
+  }
+}

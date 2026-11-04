@@ -30,6 +30,17 @@ from .pricing import (
     employee_launch,
 )
 
+from .workflow import (
+    PrepareGuidance,
+    saved_guidance,
+    prepare_guidance,
+    HumanIntervention,
+    ContinueInvestigation,
+    record_intervention,
+    outcome_summary,
+)
+from .resolution_evidence import registered_evidence
+
 
 def create_app(settings=None, runner=None):
     settings = settings or Settings(
@@ -342,17 +353,66 @@ def create_app(settings=None, runner=None):
         if store.active or store.meta(run_id)["status"] in ("queued", "running"):
             raise StoreError(409, "Wait for the investigation to settle before review/export")
         run, row = finding(run_id, finding_id)
-        revision = store.public_data().revision
-        if (
-            run.data_revision != revision
-            or row.get("data_revision") != revision
-            or row.get("requires_revalidation")
-        ):
+        store.validate_current(run_id)
+        if row.get("data_revision") != run.data_revision or row.get("requires_revalidation"):
+            raise StoreError(409, "Source revision changed; no decision/export was made")
+        if any(r["finding_id"] == finding_id for r in run.interventions):
             raise StoreError(
                 409,
-                "Source revision changed. A new investigation is required; no decision/export was made.",
+                "This original finding has a human intervention; review the updated investigation instead",
             )
         return run, row
+
+    @app.get(
+        "/api/runs/{run_id}/findings/{finding_id}/recommendation", dependencies=[Depends(reader)]
+    )
+    async def recommendation(run_id: str, finding_id: str):
+        if settings.mode == "recorded":
+            _, row = finding(run_id, finding_id)
+            return row.get("recommendation")
+        return saved_guidance(store, run_id, finding_id)
+
+    @app.post(
+        "/api/runs/{run_id}/findings/{finding_id}/recommendation", dependencies=[Depends(writer)]
+    )
+    async def prepare_recommendation(run_id: str, finding_id: str, body: PrepareGuidance):
+        return prepare_guidance(store, run_id, finding_id, body)
+
+    @app.get("/api/resolution-evidence", dependencies=[Depends(reader)])
+    async def authority_records():
+        if settings.mode == "recorded":
+            return []
+        try:
+            return registered_evidence(settings.root, store.public_data())
+        except (ValueError, OSError, KeyError):
+            raise StoreError(
+                409, "Registered authority is invalid or contradictory; ask the administrator"
+            ) from None
+
+    @app.post(
+        "/api/runs/{run_id}/findings/{finding_id}/interventions", dependencies=[Depends(writer)]
+    )
+    async def intervene(run_id: str, finding_id: str, body: HumanIntervention):
+        record = record_intervention(store, run_id, finding_id, body)
+        return dict(intervention=record, run=store.snapshot(run_id))
+
+    @app.post(
+        "/api/runs/{run_id}/continue",
+        response_model=RunView,
+        status_code=202,
+        dependencies=[Depends(writer)],
+    )
+    async def continue_review(run_id: str, body: ContinueInvestigation):
+        with store.lock:
+            return store.continue_investigation(
+                run_id, body, pricing_state(settings.root, settings.mode)
+            )
+
+    @app.get("/api/runs/{run_id}/outcome", dependencies=[Depends(reader)])
+    async def outcome(run_id: str):
+        if settings.mode == "recorded":
+            raise StoreError(403, "Recorded mode does not claim a live collaborative outcome")
+        return outcome_summary(store, run_id)
 
     @app.post("/api/runs/{run_id}/findings/{finding_id}/review", dependencies=[Depends(writer)])
     async def review(run_id: str, finding_id: str, body: ReviewAction):

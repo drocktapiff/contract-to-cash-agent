@@ -84,7 +84,7 @@ class AgentTests(unittest.TestCase):
     def test_exact_allowlist_and_no_batch_audit(self):
         self.assertEqual(set(self.tools.handlers), {'screen_customers', 'get_customer_evidence', 'list_customers', 'get_contract', 'get_amendments',
                          'get_invoices', 'get_document', 'calculate_expected', 'compare_invoices',
-                         'summarize_pattern', 'submit_finding', 'request_human_review'})
+                         'summarize_pattern', 'submit_finding', 'recommend_next_action', 'request_human_review'})
         for name in ('investigate', 'investigate_period', '__getattribute__', 'execute',
                      'approve', 'modify_invoice', 'request_human_review.__globals__'):
             with self.subTest(name=name), self.assertRaises(ToolError):

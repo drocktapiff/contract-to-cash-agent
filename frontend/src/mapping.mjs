@@ -82,6 +82,7 @@ export function businessActivity(event) {
         summarize_pattern: 'Looking for pricing patterns across customers.',
         submit_finding: 'Preparing a finding for review.',
         request_human_review: 'Preparing an item for your judgment.',
+        recommend_next_action: 'Preparing an evidence-grounded suggested next step.',
       }[tool] ?? null
     );
   }
@@ -96,6 +97,16 @@ export function businessActivity(event) {
       'finding.retracted': 'An earlier finding has been withdrawn.',
       'human_review.requested': 'An item is ready for a human decision.',
       'human_review.decided': 'Your review decision has been saved.',
+      'human_resolution.resolve':
+        'Your documented resolution has been saved. Continuation still needs authorization.',
+      'human_resolution.escalate':
+        'Your clarification request has been saved. The dependent work is waiting.',
+      'human_resolution.dismiss':
+        'Your dismissal has been saved. The original evidence is retained.',
+      'continuation.authorized': 'You authorized a separate investigation of the affected case.',
+      'guidance.prepared':
+        'An evidence-based procedural next step has been saved. No model request was made.',
+      'recommendation.created': 'The agent saved a suggested next step for your judgment.',
       'tool.failed': 'A check could not finish. Affected conclusions remain unverified.',
       'api.failed': 'The investigation service could not complete a request.',
       'investigation.error': 'The review was interrupted. Saved work is retained.',
@@ -119,7 +130,10 @@ export function businessTitle(finding) {
     }[category] ?? 'A billing item needs further investigation'
   );
 }
-export function needsAttention(finding, reviews) {
+export function needsAttention(finding, reviews, interventions = []) {
+  if (finding.state === 'retracted') return false;
+  const human = interventions.filter((r) => r.finding_id === finding.finding_id).at(-1);
+  if (human) return human.action !== 'dismiss';
   const review = reviews.find((r) => r.finding_id === finding.finding_id);
   return (
     finding.state !== 'retracted' &&
@@ -157,4 +171,12 @@ export function businessTimeline(events) {
     else result.push({ event, text });
   }
   return result;
+}
+
+export function humanActionLabel(action) {
+  return (
+    { resolve: 'Resolution documented', escalate: 'Awaiting clarification', dismiss: 'Dismissed' }[
+      action
+    ] ?? null
+  );
 }

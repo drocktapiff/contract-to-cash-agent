@@ -51,7 +51,11 @@ def main():
                 with sync_playwright() as p:
                     browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
                     try:
-                        page = browser.new_page(viewport={"width": 1440, "height": 1080}, locale="en-CA", timezone_id="America/Toronto")
+                        page = browser.new_page(
+                            viewport={"width": 1440, "height": 1080},
+                            locale="en-CA",
+                            timezone_id="America/Toronto",
+                        )
                         errors = []
                         page.on("pageerror", lambda error: errors.append(str(error)))
                         page.goto("http://127.0.0.1:8124", wait_until="networkidle")
@@ -127,7 +131,7 @@ def main():
                             page.get_by_role(
                                 "heading", name="The agent is working through the records."
                             ).wait_for()
-                            expect(page.locator('.coverage strong').first).to_have_text('3')
+                            expect(page.locator(".coverage strong").first).to_have_text("3")
                             capture("02-agent-working.png")
                             page.get_by_role(
                                 "heading", name=re.compile("evidence-verified")
@@ -172,11 +176,20 @@ def main():
                                 == 0
                             )
                             capture("05-original-evidence.png")
-                            dialog.get_by_label("Decision rationale", exact=True).fill(
-                                "Simulated UX test: signed terms conflict; request clarification before selecting a term."
+                            dialog.get_by_role(
+                                "button", name="Escalate for clarification", exact=True
+                            ).click()
+                            dialog.get_by_label(
+                                "Who should provide clarification?", exact=True
+                            ).fill("Contract Administration")
+                            dialog.get_by_label("What information is missing?", exact=True).fill(
+                                "Written confirmation of the governing amendment"
+                            )
+                            dialog.get_by_label("Explain your decision", exact=True).fill(
+                                "Simulated UX test: retain unresolved terms and ask for authoritative clarification."
                             )
                             dialog.get_by_role(
-                                "button", name="Request clarification", exact=True
+                                "button", name="Save clarification request", exact=True
                             ).click()
                             dialog.locator(".decision-record").wait_for()
                             capture("06-human-decision-saved.png")
