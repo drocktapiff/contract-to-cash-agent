@@ -26,7 +26,6 @@ def main():
             recordings=args.recordings,
             frontend=args.frontend,
             mode=args.mode,
-            operator_token=os.environ.get("CONTRACT_WEB_OPERATOR_TOKEN", ""),
             reviewer=os.environ.get("CONTRACT_WEB_REVIEWER", "Local operator"),
             origins=(
                 f"http://127.0.0.1:{args.port}",

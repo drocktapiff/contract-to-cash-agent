@@ -177,6 +177,12 @@
         "title": "Api Key Configured",
         "type": "boolean"
       },
+      "application_id": {
+        "const": "ledgerline-contract-operations",
+        "default": "ledgerline-contract-operations",
+        "title": "Application Id",
+        "type": "string"
+      },
       "dataset_ready": {
         "title": "Dataset Ready",
         "type": "boolean"
@@ -318,6 +324,20 @@
       "cached_input_price"
     ],
     "title": "Launch",
+    "type": "object"
+  },
+  "Login": {
+    "additionalProperties": false,
+    "properties": {
+      "token": {
+        "maxLength": 512,
+        "minLength": 5,
+        "title": "Token",
+        "type": "string"
+      }
+    },
+    "required": ["token"],
+    "title": "Login",
     "type": "object"
   },
   "ReviewAction": {

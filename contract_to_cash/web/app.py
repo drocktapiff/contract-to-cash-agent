@@ -1,4 +1,4 @@
-"""Same-origin local operator API. No privileged unauthenticated network endpoints."""
+"""Loopback-only local sessions; CSRF and explicit financial authorization remain mandatory."""
 
 import asyncio
 from contextlib import closing
@@ -19,12 +19,12 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from contract_to_cash.agent.review import decide
 from .models import DatasetView, EventView, Health, Launch, Login, ReviewAction, RunView
 from .presentation import event_view, evidence_from_events
+from .operator_auth import valid_operator_password
 from .store import Settings, Store, StoreError
 
 
 def create_app(settings=None, runner=None):
     settings = settings or Settings(
-        operator_token=os.environ.get("CONTRACT_WEB_OPERATOR_TOKEN", ""),
         reviewer=os.environ.get("CONTRACT_WEB_REVIEWER", "Local operator"),
     )
     if settings.mode not in ("operator", "recorded"):
@@ -51,11 +51,30 @@ def create_app(settings=None, runner=None):
     )
     app.state.store = store
     app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"]
+        TrustedHostMiddleware,
+        allowed_hosts=["localhost", "127.0.0.1"]
+        + ([] if settings.local_passwordless else ["testserver"]),
     )
 
     @app.middleware("http")
     async def boundary(request, call_next):
+        if settings.mode in ("operator", "recorded"):
+            peer = request.client.host if request.client else None
+            bound_host = (request.scope.get("server") or (None,))[0]
+            if peer != "127.0.0.1" or (settings.local_passwordless and bound_host != "127.0.0.1"):
+                return JSONResponse(
+                    {
+                        "detail": "Operator mode is restricted to a 127.0.0.1 loopback connection; network access requires proper authentication"
+                    },
+                    status_code=403,
+                )
+            if (
+                settings.local_passwordless
+                and request.headers.get("sec-fetch-site") == "cross-site"
+            ):
+                return JSONResponse(
+                    {"detail": "Cross-site local session access is forbidden"}, status_code=403
+                )
         origin = request.headers.get("origin")
         if origin and origin not in settings.origins:
             return JSONResponse({"detail": "Origin is not allowed"}, status_code=403)
@@ -89,7 +108,7 @@ def create_app(settings=None, runner=None):
         item = sessions.get(token)
         if not item or item["expires"] <= time.monotonic():
             sessions.pop(token, None)
-            raise HTTPException(401, "Sign in as the local operator")
+            raise HTTPException(401, "Local session expired; reconnect to the local workspace")
         return item
 
     async def reader(request: Request):
@@ -118,7 +137,7 @@ def create_app(settings=None, runner=None):
         credentials = bool(
             os.environ.get("OPENAI_API_KEY") or os.environ.get("CONTRACT_AGENT_API_KEY")
         )
-        operator = len(settings.operator_token) >= 32
+        operator = settings.local_passwordless or valid_operator_password(settings.operator_token)
         return Health(
             status="ready" if settings.mode == "recorded" or ready else "setup_required",
             mode=settings.mode,
@@ -129,34 +148,11 @@ def create_app(settings=None, runner=None):
             message=(
                 "Recorded Investigation · read-only"
                 if settings.mode == "recorded"
-                else "Local operator service. Authentication does not verify OpenAI API authorization."
+                else "Loopback-only local workspace. Local access does not verify identity or OpenAI API authorization."
             ),
         )
 
-    @app.get("/api/session")
-    async def current_session(request: Request):
-        try:
-            item = session(request)
-        except HTTPException:
-            item = None
-        return dict(
-            authenticated=item is not None,
-            csrf_token=item["csrf"] if item else None,
-            reviewer=settings.reviewer if item else None,
-            mode=settings.mode,
-        )
-
-    @app.post("/api/session")
-    async def login(body: Login, request: Request, response: Response):
-        if settings.mode != "operator" or len(settings.operator_token) < 32:
-            raise HTTPException(503, "Operator login is not configured")
-        address = request.client.host if request.client else "local"
-        recent = [t for t in attempts.get(address, []) if time.monotonic() - t < 60]
-        attempts[address] = recent + [time.monotonic()]
-        if len(recent) >= 5:
-            raise HTTPException(429, "Too many login attempts; wait one minute")
-        if not secrets.compare_digest(body.token.encode(), settings.operator_token.encode()):
-            raise HTTPException(401, "Operator credential was not accepted")
+    def issue_session(response):
         token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         sessions[token] = dict(csrf=csrf, expires=time.monotonic() + 8 * 3600)
         response.set_cookie(
@@ -167,9 +163,51 @@ def create_app(settings=None, runner=None):
             max_age=8 * 3600,
             secure=False,
             path="/api",
-        )  # Loopback HTTP only; HTTPS deployment requires Secure.
+        )
+        return sessions[token]
+
+    def throttle_session_creation(request):
+        address = request.client.host if request.client else "local"
+        recent = [t for t in attempts.get(address, []) if time.monotonic() - t < 60]
+        attempts[address] = recent + [time.monotonic()]
+        if len(recent) >= 5:
+            raise HTTPException(429, "Too many session attempts; wait one minute")
+
+    @app.get("/api/session")
+    async def current_session(request: Request, response: Response):
+        try:
+            item = session(request)
+        except HTTPException:
+            item = None
+        if settings.mode == "operator" and settings.local_passwordless and item is None:
+            throttle_session_creation(request)
+            item = issue_session(response)
         return dict(
-            authenticated=True, csrf_token=csrf, reviewer=settings.reviewer, mode=settings.mode
+            authenticated=item is not None,
+            csrf_token=item["csrf"] if item else None,
+            reviewer=settings.reviewer if item else None,
+            mode=settings.mode,
+            local_passwordless=settings.local_passwordless,
+            identity_verified=False,
+        )
+
+    @app.post("/api/session")
+    async def login(body: Login, request: Request, response: Response):
+        if settings.local_passwordless:
+            raise HTTPException(409, "No password login is required; open the local workspace")
+        if settings.mode != "operator" or not valid_operator_password(settings.operator_token):
+            raise HTTPException(503, "Operator login is not configured")
+        throttle_session_creation(request)
+        if not secrets.compare_digest(body.token.encode(), settings.operator_token.encode()):
+            raise HTTPException(401, "Operator credential was not accepted")
+        item = issue_session(response)
+        return dict(
+            authenticated=True,
+            csrf_token=item["csrf"],
+            reviewer=settings.reviewer,
+            mode=settings.mode,
+            local_passwordless=False,
+            identity_verified=False,
         )
 
     @app.delete("/api/session", dependencies=[Depends(writer)])

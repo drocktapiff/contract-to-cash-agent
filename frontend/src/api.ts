@@ -1,3 +1,4 @@
+import type { Session } from './types';
 let csrf: string | null = null;
 export function setCsrf(value: string | null) {
   csrf = value;
@@ -18,4 +19,16 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     throw new Error(message);
   }
   return response.json() as Promise<T>;
+}
+
+// Share in-flight bootstrap across React StrictMode effects so cookie and CSRF
+// always come from the same response. Never retry a paid/review action here.
+let sessionPending: Promise<Session> | null = null;
+export function bootstrapSession(): Promise<Session> {
+  if (!sessionPending) {
+    sessionPending = api<Session>('/session').finally(() => {
+      sessionPending = null;
+    });
+  }
+  return sessionPending;
 }

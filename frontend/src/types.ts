@@ -1,5 +1,7 @@
 export type Session = {
   authenticated: boolean;
+  local_passwordless: boolean;
+  identity_verified: boolean;
   csrf_token: string | null;
   reviewer: string | null;
   mode: 'operator' | 'recorded';

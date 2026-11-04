@@ -3,6 +3,7 @@
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
+from .operator_auth import MIN_OPERATOR_PASSWORD_LENGTH, MAX_OPERATOR_PASSWORD_LENGTH
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -11,7 +12,9 @@ class Input(BaseModel):
 
 
 class Login(Input):
-    token: str = Field(min_length=32, max_length=512)
+    token: str = Field(
+        min_length=MIN_OPERATOR_PASSWORD_LENGTH, max_length=MAX_OPERATOR_PASSWORD_LENGTH
+    )
 
 
 class Launch(Input):
@@ -45,6 +48,7 @@ class ReviewAction(Input):
 
 
 class Health(BaseModel):
+    application_id: Literal["ledgerline-contract-operations"] = "ledgerline-contract-operations"
     status: str
     mode: Literal["operator", "recorded"]
     api_key_configured: bool

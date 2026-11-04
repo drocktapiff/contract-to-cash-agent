@@ -23,7 +23,6 @@ if __name__ == "__main__":
             root=root / "runs",
             recordings=root / "recordings",
             frontend=Path("frontend/dist"),
-            operator_token="smoke-operator-" + "x" * 32,
             reviewer="Simulated test operator",
             mode="recorded" if args.recorded else "operator",
             origins=(f"http://127.0.0.1:{args.port}",),

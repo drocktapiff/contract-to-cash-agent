@@ -38,6 +38,7 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
             recordings=self.root / "recordings",
             frontend=self.root / "dist",
             operator_token="operator-credential-" + "x" * 32,
+            local_passwordless=False,
             reviewer="Test Operator",
         )
         self.env = patch.dict(os.environ, {"OPENAI_API_KEY": "local-test-placeholder"})
@@ -157,6 +158,58 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
             | overrides
         )
 
+    async def test_five_character_local_password_and_four_character_rejection(self):
+        self.settings.operator_token = "abcde"
+        response = await self.client.post("/api/session", json={"token": "abcde"})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue((await self.client.get("/api/health")).json()["operator_configured"])
+        self.assertEqual(
+            (await self.client.post("/api/session", json={"token": "abcd"})).status_code, 422
+        )
+        self.settings.operator_token = "abcd"
+        self.assertFalse((await self.client.get("/api/health")).json()["operator_configured"])
+        self.assertEqual(
+            (await self.client.post("/api/session", json={"token": "abcde"})).status_code, 503
+        )
+
+    async def test_short_local_password_preserves_login_rate_limit(self):
+        self.settings.operator_token = "abcde"
+        # setUp already made one successful login from this address.
+        for _ in range(4):
+            self.assertEqual(
+                (await self.client.post("/api/session", json={"token": "wrong"})).status_code, 401
+            )
+        self.assertEqual(
+            (await self.client.post("/api/session", json={"token": "abcde"})).status_code, 429
+        )
+
+    async def test_starting_journal_can_be_polled_before_schema_initialization(self):
+        import sqlite3
+        from contextlib import closing
+        from contract_to_cash.web.store import now, StoreError
+
+        run_id = uuid4().hex
+        store = self.app.state.store
+        metadata = dict(
+            id=run_id,
+            idempotency_key=str(uuid4()),
+            created_at=now(),
+            status="running",
+            reason="starting",
+        )
+        store.write_meta(metadata)
+        directory = store.directory(run_id)
+        directory.mkdir()
+        with closing(sqlite3.connect(directory / "events.sqlite3")):
+            pass
+        self.assertEqual(store.events(run_id), [])
+        self.assertEqual((await self.client.get("/api/runs/" + run_id)).status_code, 200)
+        metadata["status"] = "failed"
+        store.write_meta(metadata)
+        with self.assertRaises(StoreError) as failure:
+            store.events(run_id)
+        self.assertEqual(failure.exception.status, 503)
+
     async def test_schema_inventory_and_validation(self):
         schema = (await self.client.get("/api/schema")).json()
         self.assertIn("Launch", schema["components"]["schemas"])
@@ -208,6 +261,13 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertIn("HttpOnly", response.headers["set-cookie"])
         self.assertIn("SameSite=strict", response.headers["set-cookie"])
+
+    async def test_shutdown_disables_new_paid_requests_without_creating_history(self):
+        self.app.state.store.accepting_launches = False
+        response = await self.client.post("/api/runs", headers=self.headers, json=self.payload())
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual((await self.client.get("/api/runs")).json(), [])
+        self.assertIsNone(self.app.state.store.active)
 
     async def test_missing_credentials_fail_before_creating_paid_run(self):
         with patch.dict(os.environ, {}, clear=True):

@@ -31,6 +31,8 @@ confirmed payable amount or duplicate exposure. Signed-amendment conflicts displ
 the deterministic guard and require judgment; no term is chosen automatically.
 Hypotheses remain explicitly labeled model interpretations, not legal conclusions.
 
+For one-click startup after setup, see [the Windows launcher guide](WINDOWS_LAUNCHER.md).
+
 ## Windows Git Bash · Python 3.13
 
 Install Python 3.13 with the Windows Python launcher and Node.js **22.12 or newer**
@@ -47,19 +49,14 @@ npm --prefix frontend run build
 python -m scripts.build_agent_runtime ./agent-runtime-web
 ```
 
-Configure the local operator separately from the OpenAI credential. Use a strong
-operator passphrase of at least 32 characters. Do not paste either secret into an
-issue, command argument, frontend variable, screenshot or committed file.
+No operator password is needed. Start the loopback-only application and open the
+dashboard directly. Optionally configure the server-side reviewer display name;
+this attribution is recorded with decisions but is **not verified user identity**.
 
 ```bash
-read -rsp 'Set local operator passphrase (32+ characters): ' CONTRACT_WEB_OPERATOR_TOKEN
-printf '\n'
-export CONTRACT_WEB_OPERATOR_TOKEN
-read -rp 'Reviewer attribution: ' CONTRACT_WEB_REVIEWER
-export CONTRACT_WEB_REVIEWER
-
-# Skip this if OPENAI_API_KEY is already securely bound in the environment.
-# A key is not needed to inspect retained history; missing-key launch is disabled.
+export CONTRACT_WEB_REVIEWER='Local operator'
+# Retain OPENAI_API_KEY if it is already securely bound. If needed, enter it
+# without echo; it stays on the server and is never sent to the browser.
 read -rsp 'OpenAI API key (server only, if needed): ' OPENAI_API_KEY
 printf '\n'
 export OPENAI_API_KEY
@@ -70,12 +67,11 @@ python -m contract_to_cash.web \
   --frontend ./frontend/dist
 ```
 
-Open **http://127.0.0.1:8000**. Sign in with the operator passphrase (not the API key).
-The frontend build is served by FastAPI on the same origin. No terminal is required
-for subsequent launch, event watching, evidence inspection, review or permitted export.
-A launch requires entering current token rates and explicitly authorizing **one** paid
-run. Do not press launch without that authorization. Nothing launches on startup,
-refresh, navigation, reconnect or login.
+Open **http://127.0.0.1:8000**. The dashboard obtains a random, HttpOnly local session
+and CSRF token automatically; there is no password or login screen. A key is not needed
+to inspect retained history. Each paid launch still requires current token rates and
+an explicit confirmation for **one** bounded investigation. No investigation, review
+approval or export authorization occurs on startup, refresh or session renewal.
 
 For Linux/macOS, use `python3.13 -m venv .web-venv` and
 `source .web-venv/bin/activate`; the remaining commands are the same.
@@ -101,7 +97,7 @@ The adapter and its schemas are not copied into the model's allowlisted runtime.
 | Resource | Behavior |
 | --- | --- |
 | `GET /api/health` | Configuration readiness only; returns no credential values. |
-| `GET/POST/DELETE /api/session` | Session inspection, operator login, logout. |
+| `GET/POST/DELETE /api/session` | Automatic loopback session bootstrap; legacy credential POST is not used by normal startup. |
 | `GET /api/dataset` | Validated source inventory, never a batch financial audit. |
 | `GET/POST /api/runs` | Persisted runs / one controlled bounded launch. |
 | `GET /api/runs/{id}` | Run state, report checkpoint, real metrics and screening candidates. |
@@ -151,8 +147,8 @@ deduplicates them. A disconnected browser does not stop or restart the worker.
 
 The adapter retains `approved`, `rejected` and `needs_information` from `review.py`.
 It does not invent a resume transition. Decisions require a pending matching finding
-version and report revision, matching current integrity-validated public data, an
-operator session, CSRF token and rationale. Reviews are locked while a worker runs.
+version and report revision, matching current integrity-validated public data, a
+loopback operator session, CSRF token and rationale. Reviews are locked while a worker runs.
 Proposed/unresolved findings may be rejected or marked needs-information, but cannot
 be approved by the web adapter. No operation modifies an invoice or chooses a signed
 term to resolve a legal conflict.
@@ -208,22 +204,33 @@ new live work or artificially generated discoveries.
 
 ## Authentication and deployment boundary
 
-This is a single-operator **loopback-only development application**, not an
-enterprise identity system. The CLI always binds 127.0.0.1. Strong server-side operator
-credential comparison, eight-hour random HttpOnly/SameSite=Strict session cookies,
-CSRF headers, exact local Origin allowlisting, trusted Host validation, login rate
-limits and bounded paid launches protect local operations. Sessions/CSRF tokens stay
-in memory and expire on server restart; the browser never stores the operator/API
-credential in localStorage. Restrictive same-origin behavior is used instead of wildcard
-CORS. Validation and unexpected API errors omit submitted secrets, stack traces and
-local paths. No dataset/journal directory is mounted as static content.
+This is a **passwordless, loopback-only local application**, not a public authentication
+system. Both launchers bind strictly to 127.0.0.1. The API rejects non-loopback clients;
+passwordless mode also requires a loopback server address, trusted Host and allowed
+Origin, and rejects cross-site session access. Do not expose it through a reverse proxy,
+port forwarding or a network tunnel. Local processes/users who can reach this service
+are trusted as the operator: reviewer attribution is not proof of identity.
 
-For public deployment, replace the shared passphrase with proper user identity/RBAC,
-HTTPS + Secure cookies, durable session storage, audit-grade multi-process workers and
-transactional job ownership, managed secrets, immutable source snapshots, authenticated
-artifact storage, per-tenant authorization, stronger quotas/cost reconciliation,
-monitoring/backups and a reviewed recording publication pipeline. Do not change the
-host binding to expose this operator service. No public deployment is configured.
+`GET /api/session` issues a random eight-hour HttpOnly/SameSite=Strict cookie and a
+separate 32-byte random CSRF token. Session bootstrap is limited to five new sessions
+per minute; existing-cookie reuse is not throttled. Mutating actions still require
+that session and matching CSRF header. Sessions expire on restart and can be renewed
+without repeating a failed action. The frontend shares in-flight bootstrap requests
+and never automatically retries a paid launch or human decision. Paid-run quotas,
+explicit confirmation, rationale, revision checks and durable export scope are unchanged.
+There is no wildcard CORS, browser API key or automatic approval.
+
+The retained legacy credential endpoint/model exists only for compatibility tests and
+explicit old integrations. It is not used by the default launcher/UI and does not make
+a network deployment safe. There is no CLI option to bind to a public/network address.
+
+**Proper authentication is mandatory before any future network-accessible or publicly
+hosted version, including recorded mode.** It must use real user identity/RBAC, HTTPS
+and Secure cookies, durable sessions, authenticated artifact storage, transactional
+workers, per-tenant authorization, stronger quotas, monitoring and billing reconciliation.
+Removing the loopback check or setting a shared password is not a supported public
+configuration. Passwordless local mode must never be publicly deployed. No public
+hosting or network-accessible deployment is configured by this change.
 
 ## Interruptions and recovery
 
@@ -260,13 +267,13 @@ python -m scripts.smoke_web
 A GitHub Actions matrix runs these safe checks on Ubuntu and Windows/Python 3.13.
 Local verification used Linux/Python 3.13.5 and Chromium headless shell 151; actual
 Windows behavior must be verified by that matrix or on a Windows workstation. Browser
-smoke covers sign-in, bounded launch, SSE activity, evidence, rationale, export
+smoke covers direct dashboard access, bounded launch, SSE activity, evidence, rationale, export
 approval/download, reload/history persistence, recorded empty/read-only mode and a
 390-pixel mobile layout. Model simulations do not establish live model performance,
 financial discovery recall or API authorization. There is no paid live-run result
 for this phase and no assertion that the supplied baseline was reproduced.
 
-Observed local results: **77 existing agent tests, 16 adapter tests and six UI mapping
+Observed local results: **77 existing agent tests, 29 adapter tests and six UI mapping
 tests passed** on Linux/Python 3.13.5. Clean `npm ci`, TypeScript checking and the Vite
 production build passed. The Chromium smoke test passed both the simulated operator
 workflow and the recorded empty/read-only workflow, including mobile overflow checks.
