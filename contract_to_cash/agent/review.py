@@ -8,7 +8,7 @@ import sqlite3
 from uuid import uuid4
 
 
-def decide(run_directory: Path, finding_id: str, decision: str, reviewer: str):
+def decide(run_directory: Path, finding_id: str, decision: str, reviewer: str, rationale: str = ""):
     if decision not in ('approved', 'rejected', 'needs_information') or not reviewer.strip():
         raise ValueError('An explicit reviewer and supported decision are required')
     report_path = run_directory / 'report.json'
@@ -20,10 +20,12 @@ def decide(run_directory: Path, finding_id: str, decision: str, reviewer: str):
             or review['data_revision'] != report['data_revision']):
         raise ValueError('No pending review for this finding version and snapshot')
     decision_record = dict(decision_id=uuid4().hex, finding_id=finding_id, finding_version=finding['version'],
-                           data_revision=report['data_revision'], decision=decision, reviewer=reviewer,
+                           data_revision=report['data_revision'], decision=decision, reviewer=reviewer, action=review['action'],
                            decided_at=datetime.now(timezone.utc).isoformat(),
                            finding_sha256=hashlib.sha256(json.dumps(finding, sort_keys=True).encode()).hexdigest(),
                            scope='review/export only; not authorization for billing changes')
+    if rationale:
+        decision_record['rationale'] = rationale
     # SQLite serializes decisions from multiple operator CLI processes.
     # A connection context manages the transaction, not the connection lifetime.
     with closing(sqlite3.connect(run_directory / 'events.sqlite3')) as db:
@@ -43,6 +45,7 @@ def decide(run_directory: Path, finding_id: str, decision: str, reviewer: str):
     review['status'] = decision
     review['decision'] = decision_record
     report['metrics']['human_interventions'] = interventions
+    report['journal_sequence'] = sequence
     temporary = report_path.with_suffix('.tmp')
     temporary.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     temporary.replace(report_path)

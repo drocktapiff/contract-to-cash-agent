@@ -1,0 +1,464 @@
+{
+  "DatasetView": {
+    "properties": {
+      "currency": {
+        "default": "CAD",
+        "title": "Currency",
+        "type": "string"
+      },
+      "customer_count": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Customer Count"
+      },
+      "data_revision": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Data Revision"
+      },
+      "invoice_count": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Invoice Count"
+      },
+      "message": {
+        "title": "Message",
+        "type": "string"
+      },
+      "period": {
+        "title": "Period",
+        "type": "string"
+      }
+    },
+    "required": ["period", "customer_count", "invoice_count", "message"],
+    "title": "DatasetView",
+    "type": "object"
+  },
+  "EventView": {
+    "properties": {
+      "actor": {
+        "title": "Actor",
+        "type": "string"
+      },
+      "customer_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Customer Ids",
+        "type": "array"
+      },
+      "data_revision": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Data Revision"
+      },
+      "decision": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Decision"
+      },
+      "finding_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Finding Id"
+      },
+      "finding_version": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Finding Version"
+      },
+      "rationale": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Rationale"
+      },
+      "reviewer": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Reviewer"
+      },
+      "sequence": {
+        "title": "Sequence",
+        "type": "integer"
+      },
+      "summary": {
+        "title": "Summary",
+        "type": "string"
+      },
+      "timestamp": {
+        "title": "Timestamp",
+        "type": "string"
+      },
+      "tool": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Tool"
+      },
+      "type": {
+        "title": "Type",
+        "type": "string"
+      }
+    },
+    "required": ["sequence", "timestamp", "type", "actor", "summary"],
+    "title": "EventView",
+    "type": "object"
+  },
+  "Health": {
+    "properties": {
+      "api_key_configured": {
+        "title": "Api Key Configured",
+        "type": "boolean"
+      },
+      "dataset_ready": {
+        "title": "Dataset Ready",
+        "type": "boolean"
+      },
+      "launch_available": {
+        "title": "Launch Available",
+        "type": "boolean"
+      },
+      "message": {
+        "title": "Message",
+        "type": "string"
+      },
+      "mode": {
+        "enum": ["operator", "recorded"],
+        "title": "Mode",
+        "type": "string"
+      },
+      "operator_configured": {
+        "title": "Operator Configured",
+        "type": "boolean"
+      },
+      "status": {
+        "title": "Status",
+        "type": "string"
+      }
+    },
+    "required": [
+      "status",
+      "mode",
+      "api_key_configured",
+      "operator_configured",
+      "dataset_ready",
+      "launch_available",
+      "message"
+    ],
+    "title": "Health",
+    "type": "object"
+  },
+  "Launch": {
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_paid": {
+        "const": true,
+        "title": "Acknowledge Paid",
+        "type": "boolean"
+      },
+      "cached_input_price": {
+        "anyOf": [
+          {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "title": "Cached Input Price"
+      },
+      "idempotency_key": {
+        "format": "uuid",
+        "title": "Idempotency Key",
+        "type": "string"
+      },
+      "input_price": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1000.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "title": "Input Price"
+      },
+      "max_cost_usd": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "default": "1",
+        "title": "Max Cost Usd"
+      },
+      "max_responses": {
+        "default": 40,
+        "maximum": 40,
+        "minimum": 1,
+        "title": "Max Responses",
+        "type": "integer"
+      },
+      "max_seconds": {
+        "default": 180,
+        "maximum": 180,
+        "minimum": 1,
+        "title": "Max Seconds",
+        "type": "integer"
+      },
+      "max_tool_calls": {
+        "default": 35,
+        "maximum": 35,
+        "minimum": 1,
+        "title": "Max Tool Calls",
+        "type": "integer"
+      },
+      "objective": {
+        "default": "Investigate contractual billing discrepancies and shared patterns. Challenge findings with source evidence and request human review. Do not change billing.",
+        "maxLength": 2000,
+        "minLength": 10,
+        "title": "Objective",
+        "type": "string"
+      },
+      "output_price": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1000.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "title": "Output Price"
+      }
+    },
+    "required": [
+      "idempotency_key",
+      "acknowledge_paid",
+      "input_price",
+      "output_price",
+      "cached_input_price"
+    ],
+    "title": "Launch",
+    "type": "object"
+  },
+  "ReviewAction": {
+    "additionalProperties": false,
+    "properties": {
+      "decision": {
+        "enum": ["approved", "rejected", "needs_information"],
+        "title": "Decision",
+        "type": "string"
+      },
+      "expected_revision": {
+        "maxLength": 100,
+        "minLength": 1,
+        "title": "Expected Revision",
+        "type": "string"
+      },
+      "expected_version": {
+        "minimum": 1,
+        "title": "Expected Version",
+        "type": "integer"
+      },
+      "rationale": {
+        "maxLength": 1000,
+        "minLength": 5,
+        "title": "Rationale",
+        "type": "string"
+      }
+    },
+    "required": ["decision", "rationale", "expected_revision", "expected_version"],
+    "title": "ReviewAction",
+    "type": "object"
+  },
+  "RunView": {
+    "properties": {
+      "candidates": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Candidates",
+        "type": "array"
+      },
+      "created_at": {
+        "title": "Created At",
+        "type": "string"
+      },
+      "customers_compared": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Customers Compared",
+        "type": "array"
+      },
+      "customers_with_retrieved_documents": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Customers With Retrieved Documents",
+        "type": "array"
+      },
+      "data_revision": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Data Revision"
+      },
+      "financial_totals": {
+        "additionalProperties": true,
+        "title": "Financial Totals",
+        "type": "object"
+      },
+      "findings": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Findings",
+        "type": "array"
+      },
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "last_event_sequence": {
+        "default": 0,
+        "title": "Last Event Sequence",
+        "type": "integer"
+      },
+      "metrics": {
+        "additionalProperties": true,
+        "title": "Metrics",
+        "type": "object"
+      },
+      "mode": {
+        "enum": ["live", "recorded"],
+        "title": "Mode",
+        "type": "string"
+      },
+      "model": {
+        "title": "Model",
+        "type": "string"
+      },
+      "period": {
+        "title": "Period",
+        "type": "string"
+      },
+      "reason": {
+        "title": "Reason",
+        "type": "string"
+      },
+      "report_event_sequence": {
+        "default": 0,
+        "title": "Report Event Sequence",
+        "type": "integer"
+      },
+      "reviews": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Reviews",
+        "type": "array"
+      },
+      "screening_complete": {
+        "default": false,
+        "title": "Screening Complete",
+        "type": "boolean"
+      },
+      "status": {
+        "title": "Status",
+        "type": "string"
+      }
+    },
+    "required": ["id", "mode", "status", "reason", "created_at", "period", "model"],
+    "title": "RunView",
+    "type": "object"
+  }
+}

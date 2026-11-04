@@ -94,7 +94,7 @@ class Investigator:
             totals = dict(additional_receivables_cad=str(sum((v for v in amounts if v > 0), Decimal('0.00'))),
                           potential_credits_cad=str(-sum((v for v in amounts if v < 0), Decimal('0.00'))),
                           disclaimer='Potential differences only; no cash recovered and no billing records changed')
-            report = dict(run_id=self.journal.run_id, status='completed' if complete else 'incomplete', reason=reason,
+            report = dict(run_id=self.journal.run_id, journal_sequence=self.journal.sequence, status='completed' if complete else 'incomplete', reason=reason,
                           period=self.tools.data.period, data_revision=self.tools.data.revision,
                           customers_compared=sorted(compared),
                           screening_complete=compared == set(self.tools.data.customers),
@@ -138,6 +138,7 @@ class Investigator:
                 if cost + reserve > self.limits.max_cost_usd:
                     reason = 'estimated_cost_limit'; break
                 responses += 1
+                self.journal.emit('api.requested', model=self.model, request_number=responses)
                 try:
                     response = self.client.with_options(timeout=min(remaining, 60), max_retries=0).responses.create(
                         model=self.model, instructions=instructions, input=history, tools=TOOLS,

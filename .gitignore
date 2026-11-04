@@ -6,3 +6,9 @@ __pycache__/
 runs/
 agent-runtime/
 agent-runtime-*/
+node_modules/
+frontend/dist/
+recordings/
+.web-venv/
+
+work/
