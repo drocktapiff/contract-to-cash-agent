@@ -489,7 +489,9 @@ class Enterprise:
             base_url="https://api.openai.com/v1",
             max_retries=0,
         ) as client:
-            with Journal(self.store.settings.root / "analyses" / a["id"]) as journal:
+            with Journal(
+                self.store.settings.root / "analyses" / a["id"], io_lock=self.store.lock
+            ) as journal:
                 journal.run_id = a["id"]
                 return Investigator(
                     client,

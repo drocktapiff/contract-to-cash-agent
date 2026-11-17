@@ -72,8 +72,7 @@ class Store:
                 "Run store is already owned or requires recovery; see local operations documentation"
             ) from None
         try:
-            if (self.settings.root / ".reset-recovery.json").exists():
-                self.accepting_launches = False
+            self.accepting_launches = not (self.settings.root / ".reset-recovery.json").exists()
             self.enterprise.recover()
             # A prior process cannot resume a paid call. Mark retained requests honestly.
             for meta in self.metadata():
@@ -87,13 +86,18 @@ class Store:
             raise
 
     def close(self):
-        if self.worker and self.worker.is_alive():
-            self.worker.join(timeout=5)
-        # Do not release ownership while an in-flight worker still writes.
-        if self.owner_fd is not None and not (self.worker and self.worker.is_alive()):
-            os.close(self.owner_fd)
-            self.owner_fd = None
-            (self.settings.root / ".server.lock").unlink()
+        # Stop new jobs first, then drain WITHOUT holding the lock the worker needs
+        # to commit its terminal state. Returning early would leave SQLite/files open.
+        with self.lock:
+            self.accepting_launches = False
+            worker = self.worker
+        if worker and worker.is_alive():
+            worker.join()
+        with self.lock:
+            if self.owner_fd is not None:
+                os.close(self.owner_fd)
+                self.owner_fd = None
+                (self.settings.root / ".server.lock").unlink()
 
     def public_data(self):
         if (self.settings.data / "sealed_answer_key.json").exists():
@@ -570,7 +574,7 @@ class Store:
         )
         key = os.environ.get("OPENAI_API_KEY") or os.environ.get("CONTRACT_AGENT_API_KEY")
         with OpenAI(api_key=key, base_url="https://api.openai.com/v1", max_retries=0) as client:
-            with Journal(self.directory(run_id)) as journal:
+            with Journal(self.directory(run_id), io_lock=self.lock) as journal:
                 journal.run_id = run_id
                 return Investigator(
                     client, "gpt-6.1-sol", self.investigation_tools(data, journal), journal, limits

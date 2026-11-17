@@ -247,7 +247,7 @@ local retained artifacts for inspection/recovery.
 
 ## Validation
 
-Python 3.13: **78 agent tests, 75 web tests and 18 portable launcher tests pass** with
+Python 3.13: **78 agent tests, 79 web tests and 18 portable launcher tests pass** with
 ResourceWarning treated as error. Two native Windows tests skip on Linux and remain
 in Windows CI. **15 frontend tests**, TypeScript/production build and schema drift checks
 pass. Existing Phase 3.1 and Phase 3.2 browser workflows pass alongside the new connected
@@ -326,3 +326,20 @@ The app remains **strictly bound to 127.0.0.1**, with existing CSRF/Origin/Host/
 protections and server-only credentials. Passwordless persona mode is unsuitable for
 public/network deployment. Proper authentication, authorization and deployment
 security remain mandatory before any future hosted/network-accessible version.
+
+
+### PR #8 CI race repair
+
+Windows exposed concurrent SQLite schema/writer operations and web readers. Journals
+now share the store I/O lock for initialization, event commits, atomic report writes
+and closure. Model requests never hold that lock. Shutdown rejects new launches and
+drains the bounded worker before releasing ownership or allowing directory cleanup;
+it no longer treats an expired five-second join as completed shutdown. Simulated web
+runners use the same lock as production. Four deterministic thread/event regressions
+cover startup, report readers, shutdown expiry and readability during model waits.
+
+The browser case heading renders before its separate source request completes. The
+smoke test now deliberately holds those requests, proves the loading state, releases
+them, then waits for every persisted original document to be open with matching IDs.
+The minimum of two sources is retained and the exact-source assertion is stronger.
+No SQLite failure, cleanup error or missing evidence is suppressed.

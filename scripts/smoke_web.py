@@ -23,6 +23,24 @@ def ready(port):
         connection.close()
 
 
+def expect_open_conflicting_sources(page, dialog, base_url, run_id, finding_id):
+    # The heading is synchronous; evidence arrives in a separate request. Wait for
+    # every persisted original document, not a timer or an immediate DOM count.
+    response = page.request.get(f"{base_url}/api/runs/{run_id}/findings/{finding_id}/evidence")
+    assert response.status == 200
+    documents = [
+        source
+        for source in response.json()
+        if source.get("text") and source.get("kind") != "invoice"
+    ]
+    assert len(documents) >= 2
+    opened = dialog.locator("details.source[open]")
+    expect(opened).to_have_count(len(documents))
+    expect(opened.locator("summary span")).to_have_text(
+        [source["document_id"] for source in documents]
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--server-python", default=sys.executable)
@@ -163,14 +181,34 @@ def main():
                                     "heading", name="Signed amendments disagree", exact=True
                                 )
                             )
-                            conflict.get_by_role(
-                                "button", name="Examine this item →", exact=True
-                            ).click()
+                            # Hold the real browser evidence requests to exercise the
+                            # heading-before-data race deterministically, even locally.
+                            pending_sources = []
+                            source_route = "**/api/runs/*/findings/finding-C007/evidence"
+
+                            def hold_sources(route):
+                                pending_sources.append(route)
+
+                            page.route(source_route, hold_sources)
+                            with page.expect_request(source_route):
+                                conflict.get_by_role(
+                                    "button", name="Examine this item →", exact=True
+                                ).click()
                             dialog = page.get_by_role("dialog")
                             dialog.get_by_role(
                                 "heading", name="Signed amendments disagree", exact=True
                             ).wait_for()
-                            assert dialog.locator("details.source[open]").count() >= 2
+                            expect(
+                                dialog.get_by_text("Retrieving the saved records…", exact=True)
+                            ).to_be_visible()
+                            expect(dialog.locator("details.source")).to_have_count(0)
+                            assert pending_sources
+                            for route in pending_sources:
+                                route.continue_()
+                            page.unroute(source_route, hold_sources)
+                            expect_open_conflicting_sources(
+                                page, dialog, "http://127.0.0.1:8124", run_id, "finding-C007"
+                            )
                             assert (
                                 dialog.get_by_role("button", name="Approve evidence export").count()
                                 == 0

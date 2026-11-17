@@ -9,7 +9,7 @@ import tempfile
 import time
 from urllib.parse import parse_qs, urlparse
 from playwright.sync_api import sync_playwright, expect
-from scripts.smoke_web import ready
+from scripts.smoke_web import ready, expect_open_conflicting_sources
 
 
 def main():
@@ -91,7 +91,9 @@ def main():
                     expect(
                         dialog.get_by_role("heading", name="Your decision is needed", exact=True)
                     ).to_be_visible()
-                    assert dialog.locator("details.source[open]").count() >= 2
+                    expect_open_conflicting_sources(
+                        page, dialog, "http://127.0.0.1:8125", parent_id, "finding-C007"
+                    )
                     assert (
                         dialog.get_by_role(
                             "button", name="Approve evidence export", exact=True

@@ -41,8 +41,8 @@ def group_candidates(data):
     return next(ids for ids in groups.values() if len(ids) >= 3)
 
 
-def enterprise_root_runner(settings, run_id, data, request):
-    with Journal(settings.root / run_id) as journal:
+def enterprise_root_runner(store, run_id, data, request):
+    with Journal(store.settings.root / run_id, io_lock=store.lock) as journal:
         journal.run_id = run_id
         tools = Store.investigation_tools(data, journal)
         group = group_candidates(data)
@@ -117,7 +117,9 @@ def enterprise_root_runner(settings, run_id, data, request):
 
 
 def simulated_analysis(service, a, scenario="success", clients=None):
-    with Journal(service.store.settings.root / "analyses" / a["id"]) as journal:
+    with Journal(
+        service.store.settings.root / "analyses" / a["id"], io_lock=service.store.lock
+    ) as journal:
         journal.run_id = a["id"]
         inputs = a["inputs"]
         tools = AnalysisTools(inputs, a["kind"], journal)
@@ -218,8 +220,10 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
 
     def simulated_runner(self, run_id, data, request):
         if hasattr(data, "authority"):
-            return test_workflow.run_simulated_continuation(self.settings, run_id, data, request)
-        return enterprise_root_runner(self.settings, run_id, data, request)
+            return test_workflow.run_simulated_continuation(
+                self.app.state.store, run_id, data, request
+            )
+        return enterprise_root_runner(self.app.state.store, run_id, data, request)
 
     def age(self):
         store = self.app.state.store

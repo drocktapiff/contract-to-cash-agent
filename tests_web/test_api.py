@@ -73,7 +73,7 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         )
 
     def simulated_runner(self, run_id, data, request):
-        with Journal(self.settings.root / run_id) as journal:
+        with Journal(self.settings.root / run_id, io_lock=self.app.state.store.lock) as journal:
             journal.run_id = run_id
             tools = Tools(data, journal)
 

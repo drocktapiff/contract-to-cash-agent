@@ -74,13 +74,14 @@ if __name__ == "__main__":
 
             def phase32_runner(run_id, data, request):
                 if hasattr(data, "authority"):
-                    return run_simulated_continuation(settings, run_id, data, request)
+                    return run_simulated_continuation(application.state.store, run_id, data, request)
                 return root_runner(run_id, data, request)
 
             runner = phase32_runner
         else:
             runner = fixture.simulated_runner
         application = create_app(settings, runner)
+        fixture.app = application
         if args.phase32:
             from datetime import datetime, timedelta, timezone
 
@@ -104,7 +105,7 @@ if __name__ == "__main__":
 
             store = application.state.store
             store.runner = lambda run_id, data, request: enterprise_root_runner(
-                settings, run_id, data, request
+                store, run_id, data, request
             )
             store.enterprise.runner = lambda analysis: simulated_analysis(
                 store.enterprise, analysis

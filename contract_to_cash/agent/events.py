@@ -3,12 +3,20 @@ from contextlib import closing
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from threading import RLock
 import sqlite3
 from uuid import uuid4
 
 
 class Journal:
-    def __init__(self, directory: Path, sink=None):
+    def __init__(self, directory: Path, sink=None, io_lock=None):
+        # Web readers and writers share this lock, including schema startup and closure.
+        # It is held only for local I/O, never across a model request.
+        self.io_lock = io_lock if io_lock is not None else RLock()
+        with self.io_lock:
+            self._open(directory, sink)
+
+    def _open(self, directory, sink):
         directory.mkdir(parents=True, exist_ok=False)
         self.directory = directory
         self.run_id = uuid4().hex
@@ -24,6 +32,10 @@ class Journal:
         self.events = []
 
     def emit(self, event_type, actor='orchestrator', correlation_id=None, **payload):
+        with self.io_lock:
+            return self._emit(event_type, actor, correlation_id, **payload)
+
+    def _emit(self, event_type, actor, correlation_id, **payload):
         self.sequence += 1
         event = dict(schema_version=1, event_id=uuid4().hex, run_id=self.run_id,
                      sequence=self.sequence, timestamp=datetime.now(timezone.utc).isoformat(),
@@ -40,6 +52,10 @@ class Journal:
         return event
 
     def save_report(self, report):
+        with self.io_lock:
+            self._save_report(report)
+
+    def _save_report(self, report):
         temporary = self.directory / 'report.tmp'
         temporary.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n', encoding='utf-8')
         temporary.replace(self.directory / 'report.json')
@@ -52,4 +68,5 @@ class Journal:
 
     def close(self):
         """Release the database handle; safe to call more than once."""
-        self.db.close()
+        with self.io_lock:
+            self.db.close()
