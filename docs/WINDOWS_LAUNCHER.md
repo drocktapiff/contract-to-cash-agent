@@ -37,6 +37,17 @@ the saved confirmation expires after 24 hours. Employees authorize each paid run
 without entering token prices. Limits and review/export controls remain mandatory.
 See [the Phase 3.1 workflow and screenshot guide](PHASE31.md).
 
+## Enterprise persona demonstration
+
+See [Phase 4](PHASE4.md) for the connected Maya → Sarah → Robert workflow, Python ROI
+scenario, separately confirmed paid analyses and administrator **Reset Demo**. Personas
+are fictional presentation roles, not login identities or RBAC. All share this same
+local instance, run history, pricing and paid limits. Keep the same runtime and runs
+folder when updating. Rebuild the frontend and restart with Ctrl+C as described above.
+Reset archives active history under `runs/web/archives/<id>`; it never deletes the
+source dataset, credentials or pricing, and cannot interrupt active paid work. Archives
+retain journals and decisions. No OpenAI request occurs on switching personas or reset.
+
 ## Human resolution and agent continuation
 
 See [Phase 3.2](PHASE32.md) to register source-verified written authority, resolve an

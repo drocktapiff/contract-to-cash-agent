@@ -60,9 +60,10 @@ def model_result(name, result):
 
 
 class Investigator:
-    def __init__(self, client, model, tools, journal, limits, watch_data=False, clock=time.monotonic):
+    def __init__(self, client, model, tools, journal, limits, watch_data=False, clock=time.monotonic, instructions=None):
         self.client, self.model, self.tools, self.journal = client, model, tools, journal
         self.limits, self.watch_data, self.clock = limits, watch_data, clock
+        self.instructions = instructions
 
     def run(self, objective):
         start = self.clock()
@@ -72,7 +73,8 @@ class Investigator:
         cost_complete = True
         cache_details_complete = True
         reason = 'response_limit'
-        instructions = Path(__file__).with_name('INSTRUCTIONS.md').read_text(encoding='utf-8')
+        instructions = self.instructions or Path(__file__).with_name('INSTRUCTIONS.md').read_text(encoding='utf-8')
+        definitions = list(self.tools.definitions.values())
         history = [dict(role='user', content=f'Audit period: {self.tools.data.period}\nObjective: {objective}')]
         self.journal.emit('investigation.started', objective=objective, model=self.model,
                           period=self.tools.data.period, data_revision=self.tools.data.revision,
@@ -119,6 +121,8 @@ class Investigator:
                                            if self.limits.cached_input_usd_per_million is not None
                                            and cache_details_complete and cost_complete else None,
                                        estimated_api_cost_usd=str(cost), cost_accounting_complete=cost_complete))
+            if hasattr(self.tools, 'finalize_report'):
+                report = self.tools.finalize_report(report)
             self.journal.save_report(report)
             return report
 
@@ -135,7 +139,7 @@ class Investigator:
                         history.append(dict(role='user', content=json.dumps(update)))
                 # Conservative local estimate, not a tokenizer or a provider billing guarantee.
                 # A byte per input token plus framing overhead also includes tool definitions.
-                estimated_input = len(json.dumps([instructions, history, TOOLS], ensure_ascii=True).encode()) + 4096
+                estimated_input = len(json.dumps([instructions, history, definitions], ensure_ascii=True).encode()) + 4096
                 reserve = (Decimal(estimated_input) * self.limits.input_usd_per_million
                            + Decimal(self.limits.max_output_tokens) * self.limits.output_usd_per_million) / 1_000_000
                 if cost + reserve > self.limits.max_cost_usd:
@@ -144,7 +148,7 @@ class Investigator:
                 self.journal.emit('api.requested', model=self.model, request_number=responses)
                 try:
                     response = self.client.with_options(timeout=min(remaining, 60), max_retries=0).responses.create(
-                        model=self.model, instructions=instructions, input=history, tools=TOOLS,
+                        model=self.model, instructions=instructions, input=history, tools=definitions,
                         parallel_tool_calls=True, max_output_tokens=self.limits.max_output_tokens,
                         store=False, include=['reasoning.encrypted_content'],
                         **({'service_tier': self.limits.service_tier} if self.limits.service_tier else {}))

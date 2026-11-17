@@ -20,6 +20,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Simulated authority fixture and elapsed launch cooldown; no production override",
     )
+    parser.add_argument(
+        "--phase4",
+        action="store_true",
+        help="Simulated enterprise SDK/source fixtures and browser-only cooldown override",
+    )
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -91,6 +96,21 @@ if __name__ == "__main__":
                 return original_continue(parent_id, body, pricing)
 
             store.continue_investigation = elapsed_test_cooldown
+        if args.phase4:
+            import sys
+
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from tests_web.test_enterprise import enterprise_root_runner, simulated_analysis
+
+            store = application.state.store
+            store.runner = lambda run_id, data, request: enterprise_root_runner(
+                settings, run_id, data, request
+            )
+            store.enterprise.runner = lambda analysis: simulated_analysis(
+                store.enterprise, analysis
+            )
+            # Ephemeral simulated browser test only. Independent API tests exercise the real throttle.
+            store.check_paid_limits = lambda: None
         os.environ["OPENAI_API_KEY"] = "local-test-placeholder"
         uvicorn.run(
             application,

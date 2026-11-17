@@ -1868,3 +1868,238 @@ textarea {
     flex-direction: column;
   }
 }
+
+/* Enterprise personas share the same Ledgerline workspace and visual language. */
+.topbar {
+  min-height: 100px;
+  height: auto;
+  gap: 18px;
+}
+.persona-switcher {
+  display: grid;
+  gap: 3px;
+  margin-left: auto;
+  max-width: 410px;
+}
+.persona-switcher label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: #647c91;
+}
+.persona-switcher select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #cedce6;
+  border-radius: 8px;
+  background: white;
+  color: #22374c;
+  font: inherit;
+}
+.persona-switcher small {
+  font-size: 10px;
+  color: #6b8195;
+}
+.enterprise-workspace .panel {
+  padding: 28px 30px;
+  margin-bottom: 24px;
+}
+.persona-boundary {
+  padding: 13px 18px;
+  background: #eef5f6;
+  border: 1px solid #d7e4e8;
+  border-radius: 9px;
+  color: #597183;
+  font-size: 12px;
+  margin-bottom: 24px;
+}
+.enterprise-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding: 22px 0;
+}
+.enterprise-metrics.financial {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.enterprise-metrics > div {
+  display: grid;
+  gap: 8px;
+}
+.enterprise-metrics strong {
+  font-size: 42px;
+  letter-spacing: -0.04em;
+  color: #264b4a;
+}
+.enterprise-metrics span {
+  font-size: 13px;
+  color: #668096;
+}
+.workflow-strip,
+.citation-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+.workflow-strip > span {
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: #f0f4f7;
+  font-size: 12px;
+}
+.analysis-launch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+.analysis-launch > div {
+  flex: 1;
+  min-width: 230px;
+}
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+.enterprise-workspace label,
+.reset-preview label {
+  display: grid;
+  gap: 8px;
+  margin: 17px 0;
+  color: #526e85;
+  font-size: 13px;
+}
+.enterprise-workspace input:not([type='checkbox']),
+.enterprise-workspace select,
+.reset-preview input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #c8d8e2;
+  border-radius: 8px;
+  background: white;
+  color: #24384d;
+  font: inherit;
+}
+.enterprise-workspace .checkbox {
+  display: flex;
+  align-items: center;
+}
+.scenario-results {
+  border-left: 1px solid #dce6eb;
+  padding-left: 28px;
+}
+.scenario-results h3 {
+  font-size: 42px;
+  letter-spacing: -0.04em;
+  color: #275853;
+  margin: 20px 0 0;
+}
+.scenario-results dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  margin-top: 30px;
+}
+.scenario-results dd {
+  text-align: right;
+  font-weight: 600;
+}
+.analysis-claims {
+  border-bottom: 1px solid #e1e9ee;
+  padding: 12px 0;
+}
+.analysis-claims article {
+  background: #f8fafb;
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+.enterprise-human-decision {
+  border-top: 1px solid #dde7ed;
+  padding-top: 22px;
+  margin-top: 22px;
+}
+.reference-panel {
+  background: #edf6f4;
+  border: 1px solid #d1e6df;
+  padding: 22px;
+  margin: 20px 0;
+  border-radius: 10px;
+}
+.reference-content {
+  min-width: 0;
+  font-size: 13px;
+}
+.reference-content > div {
+  border-bottom: 1px solid #dce7e5;
+  padding: 8px 0;
+}
+.reference-content details {
+  padding: 8px;
+}
+.reference-content p {
+  margin: 7px 0;
+}
+.department-evidence article {
+  border-top: 1px solid #e1e9ee;
+  padding: 16px 0;
+}
+.enterprise-workspace .section-heading {
+  padding: 0;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.enterprise-workspace .section-heading select {
+  max-width: 350px;
+}
+@media (max-width: 1050px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+  .persona-switcher {
+    margin-left: 0;
+  }
+  .scenario-grid {
+    gap: 22px;
+  }
+}
+@media (max-width: 650px) {
+  .topbar {
+    gap: 12px;
+  }
+  .persona-switcher {
+    order: 3;
+    width: 100%;
+    max-width: none;
+  }
+  .persona-switcher select {
+    font-size: 12px;
+  }
+  .enterprise-workspace .panel {
+    padding: 22px 18px;
+  }
+  .enterprise-metrics,
+  .enterprise-metrics.financial,
+  .scenario-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .enterprise-metrics strong {
+    font-size: 36px;
+  }
+  .scenario-results {
+    border-left: 0;
+    border-top: 1px solid #dce6eb;
+    padding: 18px 0;
+  }
+  .scenario-results dl {
+    font-size: 12px;
+  }
+  .enterprise-workspace .section-heading select {
+    max-width: 100%;
+  }
+}
