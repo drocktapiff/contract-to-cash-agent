@@ -343,3 +343,8 @@ smoke test now deliberately holds those requests, proves the loading state, rele
 them, then waits for every persisted original document to be open with matching IDs.
 The minimum of two sources is retained and the exact-source assertion is stronger.
 No SQLite failure, cleanup error or missing evidence is suppressed.
+
+Windows also reached a previously hidden console-encoding failure after the continuation
+workflow had passed: CP1252 cannot print a Unicode arrow in the success summary.
+Continuation and enterprise console summaries now use ASCII separators; UI/source
+text remains UTF-8. Both smoke workflows are also verified with CP1252 stdout.

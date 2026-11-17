@@ -245,7 +245,7 @@ def main():
                     capture("11-maya-after-archive.png")
                     assert not errors, errors
                     print(
-                        "PASS: three personas share persisted operational → management → executive records; Python ROI, paid confirmations, source-bound decisions, no export approval, reload/mobile and archive-only reset. SDK simulated; no paid calls."
+                        "PASS: three personas share persisted operational -> management -> executive records; Python ROI, paid confirmations, source-bound decisions, no export approval, reload/mobile and archive-only reset. SDK simulated; no paid calls."
                     )
                 finally:
                     browser.close()

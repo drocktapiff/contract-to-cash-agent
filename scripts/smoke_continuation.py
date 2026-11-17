@@ -227,7 +227,7 @@ def main():
                     assert len(page.request.get("http://127.0.0.1:8125/api/runs").json()) == 2
                     assert not errors, errors
                     print(
-                        "Phase 3.2 browser workflow passed: escalation → documented evidence → paid confirmation → scoped tools → revised finding → separate export → history/mobile. Simulated SDK and authority only."
+                        "Phase 3.2 browser workflow passed: escalation -> documented evidence -> paid confirmation -> scoped tools -> revised finding -> separate export -> history/mobile. Simulated SDK and authority only."
                     )
                 finally:
                     browser.close()
