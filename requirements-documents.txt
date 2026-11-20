@@ -1,0 +1,3 @@
+# Optional standalone document foundation; existing web dependencies are unchanged.
+reportlab==5.1.0
+pypdf==7.1.1

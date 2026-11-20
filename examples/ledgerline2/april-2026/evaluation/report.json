@@ -1,0 +1,72 @@
+{
+  "metrics": {
+    "document_classification": {
+      "correct": 149,
+      "total": 149,
+      "accuracy": 1.0
+    },
+    "customer_contract_matching": {
+      "correct": 149,
+      "total": 149,
+      "accuracy": 1.0
+    },
+    "key_field_extraction": {
+      "correct": 2377,
+      "total": 2377,
+      "accuracy": 1.0
+    },
+    "document_relationships": {
+      "correct": 149,
+      "total": 149,
+      "accuracy": 1.0
+    },
+    "work_item_precision": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "work_item_recall": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "financial_accuracy": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "automation_eligibility": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "routing_review": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "action_evidence": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "determinate_financial_calculations": {
+      "correct": 77,
+      "total": 77,
+      "accuracy": 1.0
+    },
+    "evidence_integrity": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    }
+  },
+  "unsafe_automatic_closures": 0,
+  "duplicate_work_items": 0,
+  "parse_failures": 1,
+  "expected_documents": 149,
+  "actual_documents": 149,
+  "failures": [],
+  "passed": true,
+  "paid_model_calls": 0
+}

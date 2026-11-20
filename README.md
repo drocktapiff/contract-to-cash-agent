@@ -36,3 +36,7 @@ Windows Git Bash update/launch commands, safety boundaries and mocked-provider s
 
 [Phase 6.1 evidence drawers and paid-launch availability](docs/PHASE61.md) documents
 the shared status, exact Windows update/launch commands and browser evidence.
+
+[Ledgerline 2.0 Stage 1 — real PDF intake and work-item generation](docs/LEDGERLINE2_STAGE1.md)
+adds a standalone, zero-provider document demonstration, isolated from the existing
+web application and investigation history.

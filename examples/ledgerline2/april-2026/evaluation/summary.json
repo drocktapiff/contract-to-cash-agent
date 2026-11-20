@@ -1,0 +1,86 @@
+{
+  "documents": 149,
+  "document_types": {
+    "invoice": 41,
+    "contract": 39,
+    "pricing": 8,
+    "receipt": 40,
+    "remittance": 6,
+    "amendment": 3,
+    "correspondence": 3,
+    "usage": 2,
+    "renewal": 3,
+    "credit": 4
+  },
+  "customers_matched": 40,
+  "work_items": 102,
+  "routine": 73,
+  "exceptions": 29,
+  "unresolved": 14,
+  "metrics": {
+    "document_classification": {
+      "correct": 149,
+      "total": 149,
+      "accuracy": 1.0
+    },
+    "customer_contract_matching": {
+      "correct": 149,
+      "total": 149,
+      "accuracy": 1.0
+    },
+    "key_field_extraction": {
+      "correct": 2377,
+      "total": 2377,
+      "accuracy": 1.0
+    },
+    "document_relationships": {
+      "correct": 149,
+      "total": 149,
+      "accuracy": 1.0
+    },
+    "work_item_precision": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "work_item_recall": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "financial_accuracy": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "automation_eligibility": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "routing_review": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "action_evidence": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    },
+    "determinate_financial_calculations": {
+      "correct": 77,
+      "total": 77,
+      "accuracy": 1.0
+    },
+    "evidence_integrity": {
+      "correct": 102,
+      "total": 102,
+      "accuracy": 1.0
+    }
+  },
+  "evaluation_passed": true,
+  "parse_failures": 1,
+  "duration_seconds": 1.499,
+  "paid_model_calls": 0
+}

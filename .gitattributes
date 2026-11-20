@@ -1,2 +1,4 @@
 * text=auto eol=lf
 *.pyc -text
+*.pdf binary
+*.png binary

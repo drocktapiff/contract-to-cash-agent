@@ -9,6 +9,7 @@ import tempfile
 import time
 from playwright.sync_api import sync_playwright, expect
 from scripts.smoke_web import ready
+from scripts.browser_helpers import confirm_simulated_stage
 
 
 def main():
@@ -81,13 +82,7 @@ def main():
                     ).to_be_enabled()
                     capture("01-maya-paid-blocked-free-preparation.png")
                     maya.get_by_role("button", name="Complete Maya Demo", exact=True).click()
-                    page.get_by_role(
-                        "dialog", name="Confirm Maya simulated completion"
-                    ).get_by_role(
-                        "button",
-                        name="Confirm Maya simulated completion — no API usage",
-                        exact=True,
-                    ).click()
+                    confirm_simulated_stage(page, "maya")
                     expect(maya).to_contain_text("Maya stage prepared")
                     maya.get_by_role("button", name="Continue to Sarah", exact=True).click()
                     button = page.locator(".shared-insight").get_by_role(
@@ -189,13 +184,7 @@ def main():
                         )
                     ).to_be_disabled()
                     sarah.get_by_role("button", name="Complete Sarah Demo", exact=True).click()
-                    page.get_by_role(
-                        "dialog", name="Confirm Sarah simulated completion"
-                    ).get_by_role(
-                        "button",
-                        name="Confirm Sarah simulated completion — no API usage",
-                        exact=True,
-                    ).click()
+                    confirm_simulated_stage(page, "sarah")
                     expect(sarah).to_contain_text("Sarah stage prepared")
                     sarah.get_by_role("button", name="Continue to Robert", exact=True).click()
                     status = page.get_by_role("region", name="Analysis availability", exact=True)
