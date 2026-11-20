@@ -71,6 +71,9 @@ class AnalysisSchemaTests(unittest.TestCase):
                         limitations=["Prototype evidence only"],
                         **{field: choice}
                     )
+                    if kind == "executive":
+                        from contract_to_cash.web.analysis_tools import BRIEF_SECTIONS
+                        args["brief"] = {s: copy.deepcopy(args["observations"]) for s in BRIEF_SECTIONS}
                     Draft202012Validator(parameters).validate(args)
                     self.assertTrue(tools.execute("save_analysis", args)["saved"])
                     self.assertEqual(tools.result[field], choice)

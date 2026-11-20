@@ -45,6 +45,7 @@ from .enterprise import AnalysisRequest, EnterpriseDecision, ScenarioUpdate, Res
 from .demo_reset import reset_preview, archive_demo
 from .demo_prepare import PrepareDemo, prepare
 from .management import ActionInput, save_action
+from .guided_demo import SarahDemo, complete_sarah
 
 
 def create_app(settings=None, runner=None):
@@ -415,6 +416,14 @@ def create_app(settings=None, runner=None):
     @app.post("/api/admin/prepare-demo", dependencies=[Depends(writer)])
     async def prepare_demo(body: PrepareDemo):
         return prepare(store)
+
+    @app.post("/api/demo/complete-maya", dependencies=[Depends(writer)])
+    async def complete_maya_demo(body: PrepareDemo):
+        return prepare(store)
+
+    @app.post("/api/demo/complete-sarah", dependencies=[Depends(writer)])
+    async def complete_sarah_demo(body: SarahDemo):
+        return complete_sarah(store.enterprise, body)
 
     @app.post("/api/enterprise/actions", dependencies=[Depends(writer)])
     async def management_action(body: ActionInput):

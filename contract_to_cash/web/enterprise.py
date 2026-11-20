@@ -192,6 +192,7 @@ class Enterprise:
 
     def inputs(self, root_run_id, kind):
         from .management import actions
+        from .guided_demo import handoff
         operational = operational_snapshot(self.store, root_run_id)
         references = dict(operational["references"])
         overview = dict(
@@ -237,17 +238,19 @@ class Enterprise:
                     dict(
                         id=a["id"],
                         status=a["status"],
-                        current=a["input_revision"] == current_management_revision,
-                        input_revision=a["input_revision"],
+                        current=a.get("input_revision") == current_management_revision,
+                        input_revision=a.get("input_revision"),
+                        reason=a.get("reason"),
+                        provenance=a.get("provenance"),
                         result=a.get("result"),
                         metrics=a.get("metrics"),
                     )
                     for a in self.analyses()
                     if a["kind"] == "management"
                     and a["root_run_id"] == root_run_id
-                    and a["status"] == "completed"
                 ],
                 actions=actions(self, root_run_id),
+                handoff=handoff(self, root_run_id),
                 decisions=[
                     d
                     for d in self.decisions()
@@ -273,6 +276,7 @@ class Enterprise:
 
     def overview(self, root=None):
         from .management import command_center
+        from .guided_demo import handoff
         with self.store.lock:
             op = operational_snapshot(self.store, root)
             if self.store.settings.mode == "recorded":
@@ -286,12 +290,18 @@ class Enterprise:
                     decisions=[],
                     analysis_revisions={},
                 )
+            center = command_center(self, op)
+            handoff_record = handoff(self, op["root_run_id"]) if op["root_run_id"] else None
+            if handoff_record:
+                fingerprint = digest(dict(source_revision=center["revision"], actions=sorted((a["id"], a["version"]) for a in center["actions"])))
+                handoff_record = dict(handoff_record, current=handoff_record["fingerprint"] == fingerprint)
             return dict(
                 active=bool(self.store.active),
                 epoch=self.epoch(),
                 personas=PERSONAS,
                 operational=op,
-                command_center=command_center(self, op),
+                command_center=center,
+                management_handoff=handoff_record,
                 scenario=self.scenario(),
                 analyses=[self.view(a) for a in self.analyses()],
                 decisions=self.decisions(),
@@ -394,6 +404,7 @@ class Enterprise:
                 idempotency_key=str(body.idempotency_key),
                 request_hash=request_hash,
                 kind=body.kind,
+                provenance=dict(kind="live_openai_analysis", label="OpenAI analysis — interpretations, not financial authority"),
                 root_run_id=body.root_run_id,
                 created_at=timestamp(),
                 status="queued",

@@ -2245,3 +2245,33 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+.guided-demo {
+  border-left: 4px solid #76a59a;
+}
+.guided-demo h2 {
+  margin: 0.4rem 0;
+}
+.guided-demo > div > p {
+  margin: 0.5rem 0;
+}
+.executive-advisor {
+  border-top: 4px solid #214e68;
+  background: #f5f9fc;
+}
+.executive-brief > section {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #e1e8ec;
+}
+.executive-brief h3 {
+  margin: 0.6rem 0;
+}
+.brief-deterministic {
+  background: #eef6f4;
+  padding: 1rem;
+  border-radius: 8px;
+}
+.full-analysis > summary {
+  font-weight: 600;
+  padding: 0.7rem 0;
+  cursor: pointer;
+}
