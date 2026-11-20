@@ -447,6 +447,7 @@ class Enterprise:
                     result=report.get("analysis_result"),
                     result_history=report.get("analysis_history", []),
                     metrics=report["metrics"],
+                    failure_diagnostic=report.get("failure_diagnostic"),
                 )
                 with self.database() as cur:
                     cur.execute("UPDATE analyses SET body=? WHERE id=?", (json.dumps(a), a["id"]))

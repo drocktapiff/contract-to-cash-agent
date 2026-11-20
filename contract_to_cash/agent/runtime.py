@@ -7,6 +7,7 @@ from pathlib import Path
 import time
 
 from .tools import TOOLS, ToolError
+from .diagnostics import diagnose
 
 
 def _json_object(pairs):
@@ -74,7 +75,9 @@ class Investigator:
         cache_details_complete = True
         reason = 'response_limit'
         instructions = self.instructions or Path(__file__).with_name('INSTRUCTIONS.md').read_text(encoding='utf-8')
-        definitions = list(self.tools.definitions.values())
+        definitions = (self.tools.api_definitions() if hasattr(self.tools, "api_definitions")
+                       else list(self.tools.definitions.values()))
+        failure_diagnostic = None
         history = [dict(role='user', content=f'Audit period: {self.tools.data.period}\nObjective: {objective}')]
         self.journal.emit('investigation.started', objective=objective, model=self.model,
                           period=self.tools.data.period, data_revision=self.tools.data.revision,
@@ -121,6 +124,8 @@ class Investigator:
                                            if self.limits.cached_input_usd_per_million is not None
                                            and cache_details_complete and cost_complete else None,
                                        estimated_api_cost_usd=str(cost), cost_accounting_complete=cost_complete))
+            if failure_diagnostic is not None:
+                report['failure_diagnostic'] = failure_diagnostic
             if hasattr(self.tools, 'finalize_report'):
                 report = self.tools.finalize_report(report)
             self.journal.save_report(report)
@@ -156,8 +161,8 @@ class Investigator:
                 except Exception as exc:
                     # Never copy provider exception text: it can contain credentials/request content.
                     cost_complete = False
-                    self.journal.emit('api.failed', error_type=type(exc).__name__,
-                                      http_status=getattr(exc, 'status_code', None),
+                    failure_diagnostic = diagnose(exc)
+                    self.journal.emit('api.failed', diagnostic=failure_diagnostic,
                                       message='API request failed; no model findings inferred')
                     reason = 'api_failure'; break
                 usage = data.get('usage')

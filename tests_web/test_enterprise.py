@@ -167,6 +167,8 @@ def simulated_analysis(service, a, scenario="success", clients=None):
             FakeResponse([selected("save_analysis", output)]),
             FakeResponse([]),
         ]
+        if isinstance(scenario, Exception):
+            script = [scenario]
         if scenario == "api_failure":
             script = [RuntimeError("sensitive provider detail must not escape")]
         if scenario == "no_result":
@@ -279,6 +281,41 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.status_code, 200, result.text)
         return result.json(), body
 
+    def assert_api_tools_compatible(self, client):
+        from contract_to_cash.web.analysis_schema import validate_api_schema
+
+        self.assertGreater(len(client.requests), 0)
+        for request in client.requests:
+            self.assertEqual(len(request["tools"]), 3)
+            for tool in request["tools"]:
+                self.assertIs(tool["strict"], True)
+                validate_api_schema(tool["parameters"])
+                self.assertNotIn('"uniqueItems"', json.dumps(tool))
+
+    async def test_schema_failure_diagnostic_retained_without_sensitive_data(self):
+        import httpx
+        from openai import BadRequestError
+
+        run = await self.settled()
+        secret = "SENSITIVE-KEY-AND-REQUEST"
+        self.analysis_scenario = BadRequestError(
+            secret,
+            response=httpx.Response(
+                400, request=httpx.Request("POST", "https://example.invalid/" + secret)
+            ),
+            body={"code": "invalid_function_parameters", "message": secret},
+        )
+        analysis, _ = await self.launch_analysis(run)
+        self.assertEqual(analysis["reason"], "api_failure")
+        self.assertEqual(analysis["failure_diagnostic"]["category"], "unsupported_request_schema")
+        self.assertEqual(analysis["metrics"]["agent_tool_calls"], 0)
+        self.assertEqual(analysis["metrics"]["output_tokens"], 0)
+        self.assertNotIn(secret, json.dumps(analysis))
+        directory = self.enterprise.store.settings.root / "analyses" / analysis["id"]
+        for path in directory.iterdir():
+            if path.is_file():
+                self.assertNotIn(secret.encode(), path.read_bytes())
+
     async def test_management_grounded_shared_metrics_and_decision_persistence(self):
         run = await self.settled()
         overview = (await self.client.get("/api/enterprise")).json()
@@ -290,6 +327,7 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(op["financial"]["unquantified_cases"], 0)
         self.assertIn("Single-operator", op["limitations"][0])
         a, body = await self.launch_analysis(run)
+        self.assert_api_tools_compatible(self.clients[-1])
         self.assertEqual(a["status"], "completed", a)
         self.assertTrue(a["current"])
         for group in ("observations", "hypotheses", "recommendations"):
@@ -340,6 +378,7 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(scenario.json()["outputs"]["first_year_net_benefit_cad"], "120000.00")
         executive, _ = await self.launch_analysis(run, "executive")
+        self.assert_api_tools_compatible(self.clients[-1])
         self.assertEqual(executive["status"], "completed", executive)
         self.assertTrue(
             any(

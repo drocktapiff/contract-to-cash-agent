@@ -348,3 +348,34 @@ Windows also reached a previously hidden console-encoding failure after the cont
 workflow had passed: CP1252 cannot print a Unicode arrow in the success summary.
 Continuation and enterprise console summaries now use ASCII separators; UI/source
 text remains UTF-8. Both smoke workflows are also verified with CP1252 stdout.
+
+### Enterprise schema compatibility and safe API diagnostics
+
+Sarah and Robert use the same three read-only analysis tools. Their local JSON
+Schemas remain authoritative: citation uniqueness, size bounds, required fields,
+read-before-cite checks and immutable snapshot membership are enforced before
+saving. API-facing schemas are deep copies with `uniqueItems` removed. This
+keyword is outside OpenAI's documented strict Structured Outputs subset:
+https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas
+An offline recursive allowlist rejects newly introduced unsupported keywords
+before an enterprise Responses request. Integration tests inspect the actual
+Responses payload for both personas, rather than merely validating local schemas.
+String/array bounds remain supported for the configured non-fine-tuned models;
+fine-tuned models have additional documented restrictions and are not supported
+by this enterprise schema profile.
+
+An immediate HTTP 400 with no completed tools is consistent with rejected tool
+schemas; the historical run's precise cause cannot be proven without its original
+provider error code. No live or paid API request is required for these regressions.
+
+For new failures, expand **View Technical Activity**. Safe diagnostics distinguish
+schema rejection (known `invalid_function_parameters`/`invalid_json_schema` codes),
+other invalid requests, authentication (401), permissions (403), rate limits/quota
+(429), network/TLS failures, timeouts and provider availability. An unrecognized
+400 is reported as an invalid request, not definitively a schema error. Only
+allowlisted categories, fixed guidance and a bounded HTTP status are persisted in
+the journal/report and shown to the administrator. Provider text, arbitrary error
+codes, URLs, headers, request IDs, credentials and request bodies are not copied.
+Failed runs remain incomplete, retain review safeguards and do not automatically
+retry or authorize decisions. Missing usage is still treated as unknown cost,
+never proof of zero billed cost. Older retained runs may lack these diagnostics.

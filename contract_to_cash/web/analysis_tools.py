@@ -64,6 +64,11 @@ class AnalysisTools:
         self.seen = set()
         self.result, self.history = None, []
 
+    def api_definitions(self):
+        from .analysis_schema import api_definitions
+
+        return api_definitions(self.definitions)
+
     def execute(self, name, arguments):
         if name not in self.definitions or list(
             Draft202012Validator(self.definitions[name]["parameters"]).iter_errors(arguments)

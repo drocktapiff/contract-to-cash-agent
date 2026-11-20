@@ -9,6 +9,7 @@ type Analysis = {
   root_run_id: string;
   status: string;
   reason: string;
+  failure_diagnostic?: { category: string; http_status: number | null; message: string };
   created_at: string;
   input_revision: string;
   current?: boolean;
@@ -928,6 +929,13 @@ export default function EnterpriseWorkspace({
               Analysis {detail.id} · snapshot {detail.input_revision} · {detail.status} ·{' '}
               {detail.reason}
             </p>
+            {detail.failure_diagnostic && (
+              <p role="status">
+                {detail.failure_diagnostic.category} · HTTP{' '}
+                {detail.failure_diagnostic.http_status ?? 'unavailable'}:{' '}
+                {detail.failure_diagnostic.message}
+              </p>
+            )}
             <ol>
               {detail.activity?.map((e) => (
                 <li key={e.sequence}>
