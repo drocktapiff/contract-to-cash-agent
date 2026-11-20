@@ -191,6 +191,7 @@ class Enterprise:
             return record
 
     def inputs(self, root_run_id, kind):
+        from .management import actions
         operational = operational_snapshot(self.store, root_run_id)
         references = dict(operational["references"])
         overview = dict(
@@ -246,6 +247,7 @@ class Enterprise:
                     and a["root_run_id"] == root_run_id
                     and a["status"] == "completed"
                 ],
+                actions=actions(self, root_run_id),
                 decisions=[
                     d
                     for d in self.decisions()
@@ -270,6 +272,7 @@ class Enterprise:
         return payload
 
     def overview(self, root=None):
+        from .management import command_center
         with self.store.lock:
             op = operational_snapshot(self.store, root)
             if self.store.settings.mode == "recorded":
@@ -288,6 +291,7 @@ class Enterprise:
                 epoch=self.epoch(),
                 personas=PERSONAS,
                 operational=op,
+                command_center=command_center(self, op),
                 scenario=self.scenario(),
                 analyses=[self.view(a) for a in self.analyses()],
                 decisions=self.decisions(),
@@ -471,7 +475,7 @@ class Enterprise:
         from openai import OpenAI
         from contract_to_cash.agent.runtime import Investigator, Limits
         from contract_to_cash.agent.events import Journal
-        from .analysis_tools import AnalysisTools, INSTRUCTIONS
+        from .analysis_tools import AnalysisTools
         from decimal import Decimal
 
         rates = a["pricing_verification"]["rates"]
@@ -494,13 +498,14 @@ class Enterprise:
                 self.store.settings.root / "analyses" / a["id"], io_lock=self.store.lock
             ) as journal:
                 journal.run_id = a["id"]
+                tools = AnalysisTools(a["inputs"], a["kind"], journal)
                 return Investigator(
                     client,
                     "gpt-6.1-sol",
-                    AnalysisTools(a["inputs"], a["kind"], journal),
+                    tools,
                     journal,
                     limits,
-                    instructions=INSTRUCTIONS,
+                    instructions=tools.instructions,
                 ).run(
                     "Analyze "
                     + a["kind"]

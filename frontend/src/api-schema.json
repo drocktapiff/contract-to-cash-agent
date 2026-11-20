@@ -1169,6 +1169,19 @@
         "default": null,
         "title": "Pricing Verification"
       },
+      "provenance": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Provenance"
+      },
       "reason": {
         "title": "Reason",
         "type": "string"

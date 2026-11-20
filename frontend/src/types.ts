@@ -137,6 +137,7 @@ export type Metrics = {
   tool_failures?: number;
 };
 export type Run = {
+  provenance?: { kind: string; label: string } | null;
   continuation?: {
     parent_run_id: string;
     parent_finding_id: string;

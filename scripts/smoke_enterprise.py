@@ -112,10 +112,13 @@ def main():
                     page.keyboard.press("Escape")
                     persona.select_option("sarah")
                     page.get_by_role(
-                        "heading", name="See the pattern. Set the priority.", exact=True
+                        "heading", name="Revenue Operations — Department Overview", exact=True
                     ).wait_for()
-                    expect(page.locator(".enterprise-metrics strong").first).to_have_text("40")
+                    expect(
+                        page.get_by_role("heading", name="What Needs Your Attention", exact=True)
+                    ).to_be_visible()
                     capture("03-sarah-management-workspace.png")
+                    page.locator(".analysis-secondary > summary").click()
                     page.get_by_role(
                         "button", name="Analyze Department Performance", exact=True
                     ).click()
@@ -208,8 +211,9 @@ def main():
                     persona = page.get_by_label("Demo persona", exact=True)
                     persona.select_option("sarah")
                     page.get_by_role(
-                        "heading", name="See the pattern. Set the priority.", exact=True
+                        "heading", name="Revenue Operations — Department Overview", exact=True
                     ).wait_for()
+                    page.locator(".analysis-secondary > summary").click()
                     page.locator(".enterprise-human-decision .decision-record").wait_for()
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
                     capture("09-sarah-mobile.png")

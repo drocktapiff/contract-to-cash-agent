@@ -139,6 +139,7 @@ def operational_snapshot(store, selected=None):
             )
             cidref = f"case:{r.id}:{f['finding_id']}:{f['version']}"
             case = dict(
+                provenance=r.provenance,
                 reference_id=cidref,
                 run_id=r.id,
                 finding_id=f["finding_id"],
@@ -175,7 +176,7 @@ def operational_snapshot(store, selected=None):
                         unknown.add(cid)
                     else:
                         amounts[cid] = amount
-                elif row.get("status") != "clean" and state != "dismissed":
+                elif row.get("status") != "clean":
                     unknown.add(cid)
             if (
                 f.get("pattern", {}).get("shared_pattern_verified")
@@ -185,7 +186,8 @@ def operational_snapshot(store, selected=None):
                 if verified:
                     groups.append(
                         dict(
-                            reference_id=cidref,
+                            provenance=r.provenance,
+                reference_id=cidref,
                             customer_ids=relevant,
                             pattern=f["pattern"],
                             caveat="Shared characteristics are correlation; configuration root cause remains unproven.",
@@ -246,25 +248,7 @@ def operational_snapshot(store, selected=None):
     financial = dict(
         potential_receivables_cad=str(sum((a for a in amounts.values() if a > 0), Decimal("0.00"))),
         potential_credits_cad=str(-sum((a for a in amounts.values() if a < 0), Decimal("0.00"))),
-        unresolved_quantifiable_exposure_cad=(
-            str(
-                sum(
-                    (
-                        abs(amounts[cid])
-                        for cid in {
-                            cid
-                            for c in cases
-                            if c["state"] not in ("reviewed", "dismissed")
-                            for cid in c["customer_ids"]
-                        }
-                        if cid in amounts
-                    ),
-                    Decimal("0.00"),
-                )
-            )
-            if amounts
-            else None
-        ),
+        unresolved_quantifiable_exposure_cad=(str(sum((abs(a) for a in amounts.values()), Decimal("0.00"))) if amounts else None),
         unquantified_cases=len(unknown),
         disclaimer="Potential differences only; receivables are not collected revenue and credits are not savings. No amount is assigned to unresolved conflicts or duplicate records.",
     )
@@ -303,6 +287,7 @@ def operational_snapshot(store, selected=None):
     return dict(
         human_history=human_history,
         root_run_id=root.id,
+        provenance=root.provenance,
         period=root.period,
         scope="One originating review and its scoped continuations; overlapping financial cases deduplicated",
         runs=[

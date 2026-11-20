@@ -1,3 +1,4 @@
+import { PrepareDemo } from './ManagementCenter';
 import EnterpriseWorkspace, { ResetDemo } from './EnterpriseWorkspace';
 import { personas, normalizePersona } from './personas.mjs';
 import { CollaborationSummary } from './CaseWorkflow';
@@ -662,6 +663,29 @@ export default function App() {
             </section>
           ) : (
             <>
+              {run?.provenance && scene !== 'advanced' && (
+                <div className="notice demo-banner">
+                  <strong>{run.provenance.label}</strong> · Demo Scenario: April 2026 · Prepared ·
+                  Simulated
+                  <div className="demo-navigation">
+                    <button
+                      className="plain"
+                      onClick={() => {
+                        switchPersona('maya');
+                        setScene('summary');
+                      }}
+                    >
+                      Scenario overview / Maya’s Results
+                    </button>
+                    <button className="plain" onClick={() => switchPersona('sarah')}>
+                      Jump to Sarah
+                    </button>
+                    <button className="plain" onClick={() => switchPersona('robert')}>
+                      Jump to Robert
+                    </button>
+                  </div>
+                </div>
+              )}
               {persona !== 'maya' && scene !== 'advanced' && (
                 <EnterpriseWorkspace
                   key={persona}
@@ -1073,7 +1097,11 @@ export default function App() {
                           <strong>{periodName(item.period)} billing review</strong>
                           <small>
                             {date(item.created_at)}
-                            {item.mode === 'recorded' ? ' · Recorded Investigation' : ''}
+                            {item.provenance
+                              ? ' · Simulated Demo Data'
+                              : item.mode === 'recorded'
+                                ? ' · Recorded Investigation'
+                                : ''}
                           </small>
                         </span>
                         <Badge value={item.status} />
@@ -1235,6 +1263,15 @@ export default function App() {
                     </select>
                     {advancedActivity}
                   </section>
+                  <PrepareDemo
+                    disabled={!!recorded || !!runningRun || enterpriseActive}
+                    onNavigate={(id, next) => {
+                      setRunId(id);
+                      void refreshRun(id);
+                      switchPersona(next);
+                      setScene(next === 'maya' ? 'summary' : 'start');
+                    }}
+                  />
                   <ResetDemo onReset={resetWorkspace} recorded={!!recorded} />
                   <p className="small muted">
                     Passwordless localhost mode is not public authentication. Network or hosted

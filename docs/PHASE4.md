@@ -379,3 +379,26 @@ codes, URLs, headers, request IDs, credentials and request bodies are not copied
 Failed runs remain incomplete, retain review safeguards and do not automatically
 retry or authorize decisions. Missing usage is still treated as unknown cost,
 never proof of zero billed cost. Older retained runs may lack these diagnostics.
+
+### Persona-specific recommendation contract
+
+Sarah's `save_analysis` requires `validation_status`: `more_validation_needed` or
+`ready_for_follow_up`. It describes evidence readiness for operational follow-up,
+not investment approval. Sarah has no `stance` field. Missing evidence should also
+be described in limitations and proposed validation work. Robert's tool instead
+requires an advisory executive `stance`: `pilot_supported`,
+`more_validation_needed` or `defer`; it has no management `validation_status`.
+Only Robert's workflow can produce this structured expansion recommendation.
+Both workflows receive matching persona-specific instructions. Server-side strict
+schemas reject cross-workflow fields and invalid choices; Robert must still read
+the overview, scenario and management context before saving.
+
+Previously the shared schema offered Sarah executive stances that backend rules
+rejected. The separate contracts remove that retry trap without automatic paid
+retries, swallowing tool failures, or increasing run limits. Offline tests exercise
+every advertised choice through local validation and successful saves, and actual
+simulated Responses payloads for both workflows. Saved legacy analyses and human
+decision history remain readable; no old journal is rewritten. New Sarah results
+show evidence readiness in the dashboard. AI analysis never records final strategic
+decisions: human attribution, rationale, version/current-source checks and separate
+export authorization remain mandatory.

@@ -262,7 +262,7 @@ class Store:
             candidates = []
             for event in events:
                 if (
-                    event["type"] == "tool.completed"
+                    event["type"] in ("tool.completed", "demo.tool.completed")
                     and event["payload"]["tool"] == "screen_customers"
                 ):
                     candidates = event["payload"]["result"]["candidates"]
@@ -299,12 +299,13 @@ class Store:
                     review["status"] = "invalidated"
             return RunView(
                 id=run_id,
+                provenance=meta.get("provenance"),
                 mode="live",
                 status=status,
                 reason=reason,
                 created_at=meta["created_at"],
                 period="2026-04",
-                model="gpt-6.1-sol",
+                model="deterministic_demo_fixture" if meta.get("provenance") else "gpt-6.1-sol",
                 data_revision=report.get("data_revision"),
                 pricing_verification=meta.get("pricing_verification"),
                 report_event_sequence=report.get("journal_sequence", 0),
@@ -366,9 +367,9 @@ class Store:
             raise StoreError(409, "This key belongs to a different paid workflow")
 
     def check_paid_limits(self):
-        previous = [meta["created_at"] for meta in self.metadata()]
+        previous = [m["created_at"] for m in self.metadata() if (m.get("provenance") or {}).get("kind") != "simulated_demo"]
         previous += [a["created_at"] for a in self.enterprise.analyses()]
-        previous += [r["created_at"] for r in self.archived_paid_records()]
+        previous += [r["created_at"] for r in self.archived_paid_records() if (r.get("provenance") or {}).get("kind") != "simulated_demo"]
         now_time = datetime.now(timezone.utc)
         recent = [(now_time - datetime.fromisoformat(t)).total_seconds() for t in previous]
         if any(age < 60 for age in recent) or sum(age < 3600 for age in recent) >= 3:

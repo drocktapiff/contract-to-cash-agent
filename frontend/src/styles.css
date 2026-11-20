@@ -2103,3 +2103,145 @@ textarea {
     max-width: 100%;
   }
 }
+
+/* Phase 5: business decisions before optional AI reports. */
+.management-command {
+  display: grid;
+  gap: 1.25rem;
+}
+.shared-insight {
+  border-top: 4px solid var(--accent, #176c64);
+  background: linear-gradient(120deg, #f3faf8, #fff);
+}
+.shared-insight table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.shared-insight th,
+.shared-insight td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #dce6e4;
+}
+.priority-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.priority-card {
+  padding: 1.2rem;
+  border: 1px solid #dce6e4;
+  border-radius: 10px;
+  background: #fff;
+}
+.priority-card h3 {
+  margin: 0.6rem 0;
+}
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem;
+}
+.impact-grid dt {
+  text-transform: capitalize;
+  color: #536663;
+}
+.impact-grid dd {
+  margin: 0.4rem 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+.analysis-secondary > summary {
+  padding: 1.4rem;
+  font-size: 1.1rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.demo-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.source-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 28rem;
+  overflow: auto;
+}
+.management-command form {
+  display: grid;
+  gap: 1rem;
+  max-width: 760px;
+}
+.management-command form label {
+  display: grid;
+  gap: 0.4rem;
+}
+[role='dialog'] {
+  border: 2px solid #708d84;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #f4faf7;
+  margin: 1rem 0;
+}
+@media (max-width: 650px) {
+  .shared-insight {
+    overflow-x: auto;
+  }
+  .shared-insight th,
+  .shared-insight td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+.sarah .enterprise-metrics.financial {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.sarah .persona-boundary {
+  padding: 0.3rem 0;
+  border: none;
+  background: none;
+  margin: 0.1rem 0;
+}
+.sarah .page-heading {
+  margin-bottom: 0.7rem;
+}
+.sarah .page-heading h1 {
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  margin: 0.4rem 0;
+}
+.sarah .page-heading > p {
+  margin: 0.4rem 0;
+}
+.sarah .operational-duration {
+  display: none;
+}
+.demo-banner {
+  padding: 0.7rem 1rem;
+}
+.demo-banner .demo-navigation {
+  margin-top: 0.2rem;
+}
+.management-command button:not(.plain),
+.admin-panel button:not(.plain) {
+  border: 1px solid #a9c1ba;
+  background: #edf6f2;
+  color: #204d46;
+  padding: 0.65rem 0.9rem;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.management-command button:disabled,
+.admin-panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+@media (max-width: 650px) {
+  .sarah .enterprise-metrics.financial {
+    grid-template-columns: 1fr;
+  }
+}

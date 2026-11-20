@@ -44,6 +44,8 @@ def event_view(event):
             + ": "
             + str(payload.get("reason", "unknown"))
         )
+    if payload.get("provenance", {}).get("kind") == "simulated_demo":
+        summary = "Simulated Demo Data: " + ("Python fixture operation " + str(payload.get("tool")) if event["type"] == "demo.tool.completed" else summary)
     return EventView(
         sequence=event["sequence"],
         timestamp=event["timestamp"],
@@ -77,6 +79,7 @@ def finding_view(finding):
         "model_hypothesis",
         "data_revision",
         "origin",
+        "provenance",
         "requires_revalidation",
         "recommendation",
         "recommendation_history",
@@ -93,6 +96,7 @@ def review_view(review):
         "data_revision",
         "decision",
         "boundary",
+        "provenance",
     )
     return {key: review[key] for key in keys if key in review}
 
@@ -101,7 +105,7 @@ def evidence_from_events(events, evidence_ids):
     wanted = set(evidence_ids)
     sources = {}
     for event in events:
-        if event["type"] != "tool.completed":
+        if event["type"] not in ("tool.completed", "demo.tool.completed"):
             continue
         payload = event["payload"]
         result = payload.get("result", {})
