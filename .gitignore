@@ -12,3 +12,6 @@ recordings/
 .web-venv/
 
 work/
+
+# Standalone example processing journals are generated locally, never shipped as history.
+examples/ledgerline2/**/processing/*.sqlite3*

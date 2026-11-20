@@ -1,0 +1,2 @@
+-r requirements-web-test.txt
+-r requirements-documents.txt
