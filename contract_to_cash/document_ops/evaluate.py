@@ -79,6 +79,8 @@ def evaluate(actual, manifest):
         "automation_eligibility": ["automation_eligible", "automatic_closure_allowed"],
         "routing_review": [
             "original_functional_owner",
+            "assigned_role",
+            "business_object_type",
             "human_review_required",
             "intentionally_unresolved",
         ],

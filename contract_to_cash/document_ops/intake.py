@@ -85,6 +85,8 @@ def close_routine(database, work_item_id, actor, rationale):
         raise ValueError("Actor and rationale required")
     with closing(sqlite3.connect(database)) as conn:
         with conn:
+            # Serialize review transitions so simultaneous closures cannot lose audit events.
+            conn.execute("BEGIN IMMEDIATE").close()
             with closing(
                 conn.execute("SELECT body FROM work_items WHERE id=?", (work_item_id,))
             ) as cursor:

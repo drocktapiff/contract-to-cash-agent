@@ -37154,7 +37154,7 @@
       ],
       "customer_id": "NC-2604-012",
       "contract_id": "AGR-2604-012",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "document",
       "business_object_id": "NS-202604-012-AMD-1",
       "category": "document_review",
       "required_action": "Review unsupported or invalid PDF extraction",
@@ -37300,12 +37300,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345170+00:00",
-      "updated_at": "2026-11-20T22:30:45.345170+00:00",
+      "created_at": "2026-11-20T22:33:41.993840+00:00",
+      "updated_at": "2026-11-20T22:33:41.993840+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345170+00:00",
+          "at": "2026-11-20T22:33:41.993840+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -37326,7 +37326,7 @@
       ],
       "customer_id": "NC-2604-001",
       "contract_id": "AGR-2604-001",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-001",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -38039,12 +38039,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345377+00:00",
-      "updated_at": "2026-11-20T22:30:45.345377+00:00",
+      "created_at": "2026-11-20T22:33:41.994334+00:00",
+      "updated_at": "2026-11-20T22:33:41.994334+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345377+00:00",
+          "at": "2026-11-20T22:33:41.994334+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -38064,7 +38064,7 @@
       ],
       "customer_id": "NC-2604-001",
       "contract_id": "AGR-2604-001",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-001-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -38471,12 +38471,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345427+00:00",
-      "updated_at": "2026-11-20T22:30:45.345427+00:00",
+      "created_at": "2026-11-20T22:33:41.994386+00:00",
+      "updated_at": "2026-11-20T22:33:41.994386+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345427+00:00",
+          "at": "2026-11-20T22:33:41.994386+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -38496,7 +38496,7 @@
       ],
       "customer_id": "NC-2604-001",
       "contract_id": "AGR-2604-001",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-001-REM",
       "category": "payment_matching",
       "required_action": "Match advice to receipt without double-counting cash",
@@ -38802,12 +38802,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345453+00:00",
-      "updated_at": "2026-11-20T22:30:45.345453+00:00",
+      "created_at": "2026-11-20T22:33:41.994411+00:00",
+      "updated_at": "2026-11-20T22:33:41.994411+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345453+00:00",
+          "at": "2026-11-20T22:33:41.994411+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -38827,7 +38827,7 @@
       ],
       "customer_id": "NC-2604-002",
       "contract_id": "AGR-2604-002",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-002",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -39342,12 +39342,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345500+00:00",
-      "updated_at": "2026-11-20T22:30:45.345500+00:00",
+      "created_at": "2026-11-20T22:33:41.994529+00:00",
+      "updated_at": "2026-11-20T22:33:41.994529+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345500+00:00",
+          "at": "2026-11-20T22:33:41.994529+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -39367,7 +39367,7 @@
       ],
       "customer_id": "NC-2604-002",
       "contract_id": "AGR-2604-002",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-002-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -39774,12 +39774,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345530+00:00",
-      "updated_at": "2026-11-20T22:30:45.345530+00:00",
+      "created_at": "2026-11-20T22:33:41.994569+00:00",
+      "updated_at": "2026-11-20T22:33:41.994569+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345530+00:00",
+          "at": "2026-11-20T22:33:41.994569+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -39799,7 +39799,7 @@
       ],
       "customer_id": "NC-2604-003",
       "contract_id": "AGR-2604-003",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-003",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -40314,12 +40314,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345571+00:00",
-      "updated_at": "2026-11-20T22:30:45.345571+00:00",
+      "created_at": "2026-11-20T22:33:41.994614+00:00",
+      "updated_at": "2026-11-20T22:33:41.994614+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345571+00:00",
+          "at": "2026-11-20T22:33:41.994614+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -40339,7 +40339,7 @@
       ],
       "customer_id": "NC-2604-003",
       "contract_id": "AGR-2604-003",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-003-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -40746,12 +40746,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345597+00:00",
-      "updated_at": "2026-11-20T22:30:45.345597+00:00",
+      "created_at": "2026-11-20T22:33:41.994640+00:00",
+      "updated_at": "2026-11-20T22:33:41.994640+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345597+00:00",
+          "at": "2026-11-20T22:33:41.994640+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -40773,7 +40773,7 @@
       ],
       "customer_id": "NC-2604-004",
       "contract_id": "AGR-2604-004",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract",
       "business_object_id": "billing:NC-2604-004",
       "category": "contract_conflict",
       "required_action": "Obtain authoritative billing evidence",
@@ -41535,12 +41535,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345614+00:00",
-      "updated_at": "2026-11-20T22:30:45.345614+00:00",
+      "created_at": "2026-11-20T22:33:41.994658+00:00",
+      "updated_at": "2026-11-20T22:33:41.994658+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345614+00:00",
+          "at": "2026-11-20T22:33:41.994658+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -41560,7 +41560,7 @@
       ],
       "customer_id": "NC-2604-004",
       "contract_id": "AGR-2604-004",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-004-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -41967,12 +41967,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345646+00:00",
-      "updated_at": "2026-11-20T22:30:45.345646+00:00",
+      "created_at": "2026-11-20T22:33:41.994693+00:00",
+      "updated_at": "2026-11-20T22:33:41.994693+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345646+00:00",
+          "at": "2026-11-20T22:33:41.994693+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -41992,7 +41992,7 @@
       ],
       "customer_id": "NC-2604-004",
       "contract_id": "AGR-2604-004",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract_amendment",
       "business_object_id": "NS-202604-004-AMD-1",
       "category": "amendment_review",
       "required_action": "Review amendment authority and dates",
@@ -42394,12 +42394,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345660+00:00",
-      "updated_at": "2026-11-20T22:30:45.345660+00:00",
+      "created_at": "2026-11-20T22:33:41.994707+00:00",
+      "updated_at": "2026-11-20T22:33:41.994707+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345660+00:00",
+          "at": "2026-11-20T22:33:41.994707+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -42419,7 +42419,7 @@
       ],
       "customer_id": "NC-2604-004",
       "contract_id": "AGR-2604-004",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract_amendment",
       "business_object_id": "NS-202604-004-AMD-2",
       "category": "amendment_review",
       "required_action": "Review amendment authority and dates",
@@ -42821,12 +42821,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345671+00:00",
-      "updated_at": "2026-11-20T22:30:45.345671+00:00",
+      "created_at": "2026-11-20T22:33:41.994719+00:00",
+      "updated_at": "2026-11-20T22:33:41.994719+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345671+00:00",
+          "at": "2026-11-20T22:33:41.994719+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -42846,7 +42846,7 @@
       ],
       "customer_id": "NC-2604-005",
       "contract_id": "AGR-2604-005",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract",
       "business_object_id": "billing:NC-2604-005",
       "category": "missing_documentation",
       "required_action": "Obtain authoritative billing evidence",
@@ -43356,12 +43356,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345683+00:00",
-      "updated_at": "2026-11-20T22:30:45.345683+00:00",
+      "created_at": "2026-11-20T22:33:41.994733+00:00",
+      "updated_at": "2026-11-20T22:33:41.994733+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345683+00:00",
+          "at": "2026-11-20T22:33:41.994733+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -43381,7 +43381,7 @@
       ],
       "customer_id": "NC-2604-005",
       "contract_id": "AGR-2604-005",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-005-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -43788,12 +43788,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345707+00:00",
-      "updated_at": "2026-11-20T22:30:45.345707+00:00",
+      "created_at": "2026-11-20T22:33:41.994758+00:00",
+      "updated_at": "2026-11-20T22:33:41.994758+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345707+00:00",
+          "at": "2026-11-20T22:33:41.994758+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -43812,7 +43812,7 @@
       ],
       "customer_id": "NC-2604-005",
       "contract_id": "AGR-2604-005",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract",
       "business_object_id": "NS-202604-005-COR",
       "category": "missing_documentation",
       "required_action": "Obtain requested signed documentation",
@@ -43944,12 +43944,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345719+00:00",
-      "updated_at": "2026-11-20T22:30:45.345719+00:00",
+      "created_at": "2026-11-20T22:33:41.994772+00:00",
+      "updated_at": "2026-11-20T22:33:41.994772+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345719+00:00",
+          "at": "2026-11-20T22:33:41.994772+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -43970,7 +43970,7 @@
       ],
       "customer_id": "NC-2604-006",
       "contract_id": "AGR-2604-006",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-006",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -44683,12 +44683,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345757+00:00",
-      "updated_at": "2026-11-20T22:30:45.345757+00:00",
+      "created_at": "2026-11-20T22:33:41.994811+00:00",
+      "updated_at": "2026-11-20T22:33:41.994811+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345757+00:00",
+          "at": "2026-11-20T22:33:41.994811+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -44708,7 +44708,7 @@
       ],
       "customer_id": "NC-2604-006",
       "contract_id": "AGR-2604-006",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-006-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -45115,12 +45115,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345785+00:00",
-      "updated_at": "2026-11-20T22:30:45.345785+00:00",
+      "created_at": "2026-11-20T22:33:41.994840+00:00",
+      "updated_at": "2026-11-20T22:33:41.994840+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345785+00:00",
+          "at": "2026-11-20T22:33:41.994840+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -45140,7 +45140,7 @@
       ],
       "customer_id": "NC-2604-007",
       "contract_id": "AGR-2604-007",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-007",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -45655,12 +45655,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345822+00:00",
-      "updated_at": "2026-11-20T22:30:45.345822+00:00",
+      "created_at": "2026-11-20T22:33:41.994877+00:00",
+      "updated_at": "2026-11-20T22:33:41.994877+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345822+00:00",
+          "at": "2026-11-20T22:33:41.994877+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -45679,7 +45679,7 @@
       ],
       "customer_id": "NC-2604-007",
       "contract_id": "AGR-2604-007",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-007-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -45847,12 +45847,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.345837+00:00",
-      "updated_at": "2026-11-20T22:30:45.345837+00:00",
+      "created_at": "2026-11-20T22:33:41.994894+00:00",
+      "updated_at": "2026-11-20T22:33:41.994894+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345837+00:00",
+          "at": "2026-11-20T22:33:41.994894+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -45873,7 +45873,7 @@
       ],
       "customer_id": "NC-2604-008",
       "contract_id": "AGR-2604-008",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-008",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -46514,12 +46514,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345874+00:00",
-      "updated_at": "2026-11-20T22:30:45.345874+00:00",
+      "created_at": "2026-11-20T22:33:41.994935+00:00",
+      "updated_at": "2026-11-20T22:33:41.994935+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345874+00:00",
+          "at": "2026-11-20T22:33:41.994935+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -46539,7 +46539,7 @@
       ],
       "customer_id": "NC-2604-008",
       "contract_id": "AGR-2604-008",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-008-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -46946,12 +46946,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.345977+00:00",
-      "updated_at": "2026-11-20T22:30:45.345977+00:00",
+      "created_at": "2026-11-20T22:33:41.994961+00:00",
+      "updated_at": "2026-11-20T22:33:41.994961+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.345977+00:00",
+          "at": "2026-11-20T22:33:41.994961+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -46971,7 +46971,7 @@
       ],
       "customer_id": "NC-2604-008",
       "contract_id": "AGR-2604-008",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "usage_statement",
       "business_object_id": "NS-202604-008-USG",
       "category": "usage_validation",
       "required_action": "Validate invoiced usage quantity",
@@ -47349,12 +47349,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346007+00:00",
-      "updated_at": "2026-11-20T22:30:45.346007+00:00",
+      "created_at": "2026-11-20T22:33:41.994977+00:00",
+      "updated_at": "2026-11-20T22:33:41.994977+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346007+00:00",
+          "at": "2026-11-20T22:33:41.994977+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -47374,7 +47374,7 @@
       ],
       "customer_id": "NC-2604-008",
       "contract_id": "AGR-2604-008",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-008-REM",
       "category": "payment_matching",
       "required_action": "Match advice to receipt without double-counting cash",
@@ -47680,12 +47680,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346022+00:00",
-      "updated_at": "2026-11-20T22:30:45.346022+00:00",
+      "created_at": "2026-11-20T22:33:41.994990+00:00",
+      "updated_at": "2026-11-20T22:33:41.994990+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346022+00:00",
+          "at": "2026-11-20T22:33:41.994990+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -47705,7 +47705,7 @@
       ],
       "customer_id": "NC-2604-009",
       "contract_id": "AGR-2604-009",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-009",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -48220,12 +48220,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346064+00:00",
-      "updated_at": "2026-11-20T22:30:45.346064+00:00",
+      "created_at": "2026-11-20T22:33:41.995023+00:00",
+      "updated_at": "2026-11-20T22:33:41.995023+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346064+00:00",
+          "at": "2026-11-20T22:33:41.995023+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -48245,7 +48245,7 @@
       ],
       "customer_id": "NC-2604-009",
       "contract_id": "AGR-2604-009",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-009-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -48652,12 +48652,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346088+00:00",
-      "updated_at": "2026-11-20T22:30:45.346088+00:00",
+      "created_at": "2026-11-20T22:33:41.995046+00:00",
+      "updated_at": "2026-11-20T22:33:41.995046+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346088+00:00",
+          "at": "2026-11-20T22:33:41.995046+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -48676,7 +48676,7 @@
       ],
       "customer_id": "NC-2604-009",
       "contract_id": "AGR-2604-009",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "renewal",
       "business_object_id": "NS-202604-009-REN",
       "category": "renewal_review",
       "required_action": "Review renewal terms",
@@ -48808,12 +48808,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346134+00:00",
-      "updated_at": "2026-11-20T22:30:45.346134+00:00",
+      "created_at": "2026-11-20T22:33:41.995058+00:00",
+      "updated_at": "2026-11-20T22:33:41.995058+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346134+00:00",
+          "at": "2026-11-20T22:33:41.995058+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -48833,7 +48833,7 @@
       ],
       "customer_id": "NC-2604-010",
       "contract_id": "AGR-2604-010",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-010",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -49348,12 +49348,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346175+00:00",
-      "updated_at": "2026-11-20T22:30:45.346175+00:00",
+      "created_at": "2026-11-20T22:33:41.995121+00:00",
+      "updated_at": "2026-11-20T22:33:41.995121+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346175+00:00",
+          "at": "2026-11-20T22:33:41.995121+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -49373,7 +49373,7 @@
       ],
       "customer_id": "NC-2604-010",
       "contract_id": "AGR-2604-010",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-010-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -49780,12 +49780,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346198+00:00",
-      "updated_at": "2026-11-20T22:30:45.346198+00:00",
+      "created_at": "2026-11-20T22:33:41.995150+00:00",
+      "updated_at": "2026-11-20T22:33:41.995150+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346198+00:00",
+          "at": "2026-11-20T22:33:41.995150+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -49805,7 +49805,7 @@
       ],
       "customer_id": "NC-2604-010",
       "contract_id": "AGR-2604-010",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "credit_memo",
       "business_object_id": "NS-202604-010-CR",
       "category": "credit_review",
       "required_action": "Review proposed credit authorization",
@@ -50186,12 +50186,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346216+00:00",
-      "updated_at": "2026-11-20T22:30:45.346216+00:00",
+      "created_at": "2026-11-20T22:33:41.995169+00:00",
+      "updated_at": "2026-11-20T22:33:41.995169+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346216+00:00",
+          "at": "2026-11-20T22:33:41.995169+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -50212,7 +50212,7 @@
       ],
       "customer_id": "NC-2604-011",
       "contract_id": "AGR-2604-011",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-011",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -50925,12 +50925,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346253+00:00",
-      "updated_at": "2026-11-20T22:30:45.346253+00:00",
+      "created_at": "2026-11-20T22:33:41.995210+00:00",
+      "updated_at": "2026-11-20T22:33:41.995210+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346253+00:00",
+          "at": "2026-11-20T22:33:41.995210+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -50950,7 +50950,7 @@
       ],
       "customer_id": "NC-2604-011",
       "contract_id": "AGR-2604-011",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-011-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -51357,12 +51357,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346281+00:00",
-      "updated_at": "2026-11-20T22:30:45.346281+00:00",
+      "created_at": "2026-11-20T22:33:41.995239+00:00",
+      "updated_at": "2026-11-20T22:33:41.995239+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346281+00:00",
+          "at": "2026-11-20T22:33:41.995239+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -51383,7 +51383,7 @@
       ],
       "customer_id": "NC-2604-012",
       "contract_id": "AGR-2604-012",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract_amendment",
       "business_object_id": "billing:NC-2604-012",
       "category": "amendment_review",
       "required_action": "Obtain authoritative billing evidence",
@@ -52021,12 +52021,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346297+00:00",
-      "updated_at": "2026-11-20T22:30:45.346297+00:00",
+      "created_at": "2026-11-20T22:33:41.995256+00:00",
+      "updated_at": "2026-11-20T22:33:41.995256+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346297+00:00",
+          "at": "2026-11-20T22:33:41.995256+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -52046,7 +52046,7 @@
       ],
       "customer_id": "NC-2604-012",
       "contract_id": "AGR-2604-012",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-012-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -52453,12 +52453,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346322+00:00",
-      "updated_at": "2026-11-20T22:30:45.346322+00:00",
+      "created_at": "2026-11-20T22:33:41.995280+00:00",
+      "updated_at": "2026-11-20T22:33:41.995280+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346322+00:00",
+          "at": "2026-11-20T22:33:41.995280+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -52478,7 +52478,7 @@
       ],
       "customer_id": "NC-2604-012",
       "contract_id": "AGR-2604-012",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract_amendment",
       "business_object_id": "NS-202604-012-AMD-1",
       "category": "amendment_review",
       "required_action": "Review amendment authority and dates",
@@ -52882,12 +52882,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346333+00:00",
-      "updated_at": "2026-11-20T22:30:45.346333+00:00",
+      "created_at": "2026-11-20T22:33:41.995291+00:00",
+      "updated_at": "2026-11-20T22:33:41.995291+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346333+00:00",
+          "at": "2026-11-20T22:33:41.995291+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -52906,7 +52906,7 @@
       ],
       "customer_id": "NC-2604-012",
       "contract_id": "AGR-2604-012",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract",
       "business_object_id": "NS-202604-012-COR",
       "category": "missing_documentation",
       "required_action": "Obtain requested signed documentation",
@@ -53038,12 +53038,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346353+00:00",
-      "updated_at": "2026-11-20T22:30:45.346353+00:00",
+      "created_at": "2026-11-20T22:33:41.995338+00:00",
+      "updated_at": "2026-11-20T22:33:41.995338+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346353+00:00",
+          "at": "2026-11-20T22:33:41.995338+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -53062,7 +53062,7 @@
       ],
       "customer_id": "NC-2604-013",
       "contract_id": "AGR-2604-013",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract",
       "business_object_id": "billing:NC-2604-013",
       "category": "missing_documentation",
       "required_action": "Obtain authoritative billing evidence",
@@ -53314,12 +53314,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346364+00:00",
-      "updated_at": "2026-11-20T22:30:45.346364+00:00",
+      "created_at": "2026-11-20T22:33:41.995350+00:00",
+      "updated_at": "2026-11-20T22:33:41.995350+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346364+00:00",
+          "at": "2026-11-20T22:33:41.995350+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -53339,7 +53339,7 @@
       ],
       "customer_id": "NC-2604-013",
       "contract_id": "AGR-2604-013",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-013-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -53746,12 +53746,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346384+00:00",
-      "updated_at": "2026-11-20T22:30:45.346384+00:00",
+      "created_at": "2026-11-20T22:33:41.995369+00:00",
+      "updated_at": "2026-11-20T22:33:41.995369+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346384+00:00",
+          "at": "2026-11-20T22:33:41.995369+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -53770,7 +53770,7 @@
       ],
       "customer_id": "NC-2604-013",
       "contract_id": "AGR-2604-013",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "contract",
       "business_object_id": "NS-202604-013-COR",
       "category": "missing_documentation",
       "required_action": "Obtain requested signed documentation",
@@ -53902,12 +53902,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346394+00:00",
-      "updated_at": "2026-11-20T22:30:45.346394+00:00",
+      "created_at": "2026-11-20T22:33:41.995380+00:00",
+      "updated_at": "2026-11-20T22:33:41.995380+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346394+00:00",
+          "at": "2026-11-20T22:33:41.995380+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -53928,7 +53928,7 @@
       ],
       "customer_id": "NC-2604-014",
       "contract_id": "AGR-2604-014",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-014",
       "category": "invoice_reconciliation",
       "required_action": "Obtain authoritative billing evidence",
@@ -54672,12 +54672,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346404+00:00",
-      "updated_at": "2026-11-20T22:30:45.346404+00:00",
+      "created_at": "2026-11-20T22:33:41.995391+00:00",
+      "updated_at": "2026-11-20T22:33:41.995391+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346404+00:00",
+          "at": "2026-11-20T22:33:41.995391+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -54698,7 +54698,7 @@
       ],
       "customer_id": "NC-2604-014",
       "contract_id": "AGR-2604-014",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-014-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -55334,12 +55334,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": true,
-      "created_at": "2026-11-20T22:30:45.346427+00:00",
-      "updated_at": "2026-11-20T22:30:45.346427+00:00",
+      "created_at": "2026-11-20T22:33:41.995413+00:00",
+      "updated_at": "2026-11-20T22:33:41.995413+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346427+00:00",
+          "at": "2026-11-20T22:33:41.995413+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -55360,7 +55360,7 @@
       ],
       "customer_id": "NC-2604-015",
       "contract_id": "AGR-2604-015",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-015",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -56001,12 +56001,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346468+00:00",
-      "updated_at": "2026-11-20T22:30:45.346468+00:00",
+      "created_at": "2026-11-20T22:33:41.995461+00:00",
+      "updated_at": "2026-11-20T22:33:41.995461+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346468+00:00",
+          "at": "2026-11-20T22:33:41.995461+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -56026,7 +56026,7 @@
       ],
       "customer_id": "NC-2604-015",
       "contract_id": "AGR-2604-015",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-015-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -56433,12 +56433,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346497+00:00",
-      "updated_at": "2026-11-20T22:30:45.346497+00:00",
+      "created_at": "2026-11-20T22:33:41.995487+00:00",
+      "updated_at": "2026-11-20T22:33:41.995487+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346497+00:00",
+          "at": "2026-11-20T22:33:41.995487+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -56458,7 +56458,7 @@
       ],
       "customer_id": "NC-2604-015",
       "contract_id": "AGR-2604-015",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "usage_statement",
       "business_object_id": "NS-202604-015-USG",
       "category": "usage_validation",
       "required_action": "Validate invoiced usage quantity",
@@ -56836,12 +56836,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346510+00:00",
-      "updated_at": "2026-11-20T22:30:45.346510+00:00",
+      "created_at": "2026-11-20T22:33:41.995500+00:00",
+      "updated_at": "2026-11-20T22:33:41.995500+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346510+00:00",
+          "at": "2026-11-20T22:33:41.995500+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -56861,7 +56861,7 @@
       ],
       "customer_id": "NC-2604-015",
       "contract_id": "AGR-2604-015",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-015-REM",
       "category": "payment_matching",
       "required_action": "Match advice to receipt without double-counting cash",
@@ -57167,12 +57167,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346521+00:00",
-      "updated_at": "2026-11-20T22:30:45.346521+00:00",
+      "created_at": "2026-11-20T22:33:41.995513+00:00",
+      "updated_at": "2026-11-20T22:33:41.995513+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346521+00:00",
+          "at": "2026-11-20T22:33:41.995513+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -57193,7 +57193,7 @@
       ],
       "customer_id": "NC-2604-016",
       "contract_id": "AGR-2604-016",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-016",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -57906,12 +57906,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346560+00:00",
-      "updated_at": "2026-11-20T22:30:45.346560+00:00",
+      "created_at": "2026-11-20T22:33:41.995550+00:00",
+      "updated_at": "2026-11-20T22:33:41.995550+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346560+00:00",
+          "at": "2026-11-20T22:33:41.995550+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -57931,7 +57931,7 @@
       ],
       "customer_id": "NC-2604-016",
       "contract_id": "AGR-2604-016",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-016-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -58338,12 +58338,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346587+00:00",
-      "updated_at": "2026-11-20T22:30:45.346587+00:00",
+      "created_at": "2026-11-20T22:33:41.995575+00:00",
+      "updated_at": "2026-11-20T22:33:41.995575+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346587+00:00",
+          "at": "2026-11-20T22:33:41.995575+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -58363,7 +58363,7 @@
       ],
       "customer_id": "NC-2604-017",
       "contract_id": "AGR-2604-017",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-017",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -58878,12 +58878,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346619+00:00",
-      "updated_at": "2026-11-20T22:30:45.346619+00:00",
+      "created_at": "2026-11-20T22:33:41.995606+00:00",
+      "updated_at": "2026-11-20T22:33:41.995606+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346619+00:00",
+          "at": "2026-11-20T22:33:41.995606+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -58903,7 +58903,7 @@
       ],
       "customer_id": "NC-2604-017",
       "contract_id": "AGR-2604-017",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-017-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -59310,12 +59310,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346643+00:00",
-      "updated_at": "2026-11-20T22:30:45.346643+00:00",
+      "created_at": "2026-11-20T22:33:41.995628+00:00",
+      "updated_at": "2026-11-20T22:33:41.995628+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346643+00:00",
+          "at": "2026-11-20T22:33:41.995628+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -59335,7 +59335,7 @@
       ],
       "customer_id": "NC-2604-018",
       "contract_id": "AGR-2604-018",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-018",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -59850,12 +59850,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346673+00:00",
-      "updated_at": "2026-11-20T22:30:45.346673+00:00",
+      "created_at": "2026-11-20T22:33:41.995659+00:00",
+      "updated_at": "2026-11-20T22:33:41.995659+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346673+00:00",
+          "at": "2026-11-20T22:33:41.995659+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -59875,7 +59875,7 @@
       ],
       "customer_id": "NC-2604-018",
       "contract_id": "AGR-2604-018",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-018-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -60282,12 +60282,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346694+00:00",
-      "updated_at": "2026-11-20T22:30:45.346694+00:00",
+      "created_at": "2026-11-20T22:33:41.995679+00:00",
+      "updated_at": "2026-11-20T22:33:41.995679+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346694+00:00",
+          "at": "2026-11-20T22:33:41.995679+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -60307,7 +60307,7 @@
       ],
       "customer_id": "NC-2604-019",
       "contract_id": "AGR-2604-019",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-019",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -60822,12 +60822,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346726+00:00",
-      "updated_at": "2026-11-20T22:30:45.346726+00:00",
+      "created_at": "2026-11-20T22:33:41.995713+00:00",
+      "updated_at": "2026-11-20T22:33:41.995713+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346726+00:00",
+          "at": "2026-11-20T22:33:41.995713+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -60847,7 +60847,7 @@
       ],
       "customer_id": "NC-2604-019",
       "contract_id": "AGR-2604-019",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-019-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -61254,12 +61254,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346750+00:00",
-      "updated_at": "2026-11-20T22:30:45.346750+00:00",
+      "created_at": "2026-11-20T22:33:41.995733+00:00",
+      "updated_at": "2026-11-20T22:33:41.995733+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346750+00:00",
+          "at": "2026-11-20T22:33:41.995733+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -61279,7 +61279,7 @@
       ],
       "customer_id": "NC-2604-020",
       "contract_id": "AGR-2604-020",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-020",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -61794,12 +61794,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346781+00:00",
-      "updated_at": "2026-11-20T22:30:45.346781+00:00",
+      "created_at": "2026-11-20T22:33:41.995764+00:00",
+      "updated_at": "2026-11-20T22:33:41.995764+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346781+00:00",
+          "at": "2026-11-20T22:33:41.995764+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -61819,7 +61819,7 @@
       ],
       "customer_id": "NC-2604-020",
       "contract_id": "AGR-2604-020",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-020-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -62226,12 +62226,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346803+00:00",
-      "updated_at": "2026-11-20T22:30:45.346803+00:00",
+      "created_at": "2026-11-20T22:33:41.995786+00:00",
+      "updated_at": "2026-11-20T22:33:41.995786+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346803+00:00",
+          "at": "2026-11-20T22:33:41.995786+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -62252,7 +62252,7 @@
       ],
       "customer_id": "NC-2604-021",
       "contract_id": "AGR-2604-021",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-021",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -62965,12 +62965,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346838+00:00",
-      "updated_at": "2026-11-20T22:30:45.346838+00:00",
+      "created_at": "2026-11-20T22:33:41.995821+00:00",
+      "updated_at": "2026-11-20T22:33:41.995821+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346838+00:00",
+          "at": "2026-11-20T22:33:41.995821+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -62990,7 +62990,7 @@
       ],
       "customer_id": "NC-2604-021",
       "contract_id": "AGR-2604-021",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-021-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -63397,12 +63397,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346864+00:00",
-      "updated_at": "2026-11-20T22:30:45.346864+00:00",
+      "created_at": "2026-11-20T22:33:41.995847+00:00",
+      "updated_at": "2026-11-20T22:33:41.995847+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346864+00:00",
+          "at": "2026-11-20T22:33:41.995847+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -63422,7 +63422,7 @@
       ],
       "customer_id": "NC-2604-022",
       "contract_id": "AGR-2604-022",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-022",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -63937,12 +63937,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346895+00:00",
-      "updated_at": "2026-11-20T22:30:45.346895+00:00",
+      "created_at": "2026-11-20T22:33:41.995879+00:00",
+      "updated_at": "2026-11-20T22:33:41.995879+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346895+00:00",
+          "at": "2026-11-20T22:33:41.995879+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -63962,7 +63962,7 @@
       ],
       "customer_id": "NC-2604-022",
       "contract_id": "AGR-2604-022",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-022-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -64369,12 +64369,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346915+00:00",
-      "updated_at": "2026-11-20T22:30:45.346915+00:00",
+      "created_at": "2026-11-20T22:33:41.995900+00:00",
+      "updated_at": "2026-11-20T22:33:41.995900+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346915+00:00",
+          "at": "2026-11-20T22:33:41.995900+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -64394,7 +64394,7 @@
       ],
       "customer_id": "NC-2604-022",
       "contract_id": "AGR-2604-022",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-022-REM",
       "category": "payment_matching",
       "required_action": "Match advice to receipt without double-counting cash",
@@ -64700,12 +64700,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346929+00:00",
-      "updated_at": "2026-11-20T22:30:45.346929+00:00",
+      "created_at": "2026-11-20T22:33:41.995914+00:00",
+      "updated_at": "2026-11-20T22:33:41.995914+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346929+00:00",
+          "at": "2026-11-20T22:33:41.995914+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -64725,7 +64725,7 @@
       ],
       "customer_id": "NC-2604-023",
       "contract_id": "AGR-2604-023",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-023",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -65240,12 +65240,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346958+00:00",
-      "updated_at": "2026-11-20T22:30:45.346958+00:00",
+      "created_at": "2026-11-20T22:33:41.995948+00:00",
+      "updated_at": "2026-11-20T22:33:41.995948+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346958+00:00",
+          "at": "2026-11-20T22:33:41.995948+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -65265,7 +65265,7 @@
       ],
       "customer_id": "NC-2604-023",
       "contract_id": "AGR-2604-023",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-023-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -65672,12 +65672,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346979+00:00",
-      "updated_at": "2026-11-20T22:30:45.346979+00:00",
+      "created_at": "2026-11-20T22:33:41.995971+00:00",
+      "updated_at": "2026-11-20T22:33:41.995971+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346979+00:00",
+          "at": "2026-11-20T22:33:41.995971+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -65697,7 +65697,7 @@
       ],
       "customer_id": "NC-2604-023",
       "contract_id": "AGR-2604-023",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "credit_memo",
       "business_object_id": "NS-202604-023-CR",
       "category": "credit_review",
       "required_action": "Review proposed credit authorization",
@@ -66078,12 +66078,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.346996+00:00",
-      "updated_at": "2026-11-20T22:30:45.346996+00:00",
+      "created_at": "2026-11-20T22:33:41.995986+00:00",
+      "updated_at": "2026-11-20T22:33:41.995986+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.346996+00:00",
+          "at": "2026-11-20T22:33:41.995986+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -66103,7 +66103,7 @@
       ],
       "customer_id": "NC-2604-024",
       "contract_id": "AGR-2604-024",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-024",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -66618,12 +66618,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347023+00:00",
-      "updated_at": "2026-11-20T22:30:45.347023+00:00",
+      "created_at": "2026-11-20T22:33:41.996016+00:00",
+      "updated_at": "2026-11-20T22:33:41.996016+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347023+00:00",
+          "at": "2026-11-20T22:33:41.996016+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -66643,7 +66643,7 @@
       ],
       "customer_id": "NC-2604-024",
       "contract_id": "AGR-2604-024",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-024-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -67050,12 +67050,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347043+00:00",
-      "updated_at": "2026-11-20T22:30:45.347043+00:00",
+      "created_at": "2026-11-20T22:33:41.996035+00:00",
+      "updated_at": "2026-11-20T22:33:41.996035+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347043+00:00",
+          "at": "2026-11-20T22:33:41.996035+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -67075,7 +67075,7 @@
       ],
       "customer_id": "NC-2604-025",
       "contract_id": "AGR-2604-025",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-025",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -67590,12 +67590,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347071+00:00",
-      "updated_at": "2026-11-20T22:30:45.347071+00:00",
+      "created_at": "2026-11-20T22:33:41.996065+00:00",
+      "updated_at": "2026-11-20T22:33:41.996065+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347071+00:00",
+          "at": "2026-11-20T22:33:41.996065+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -67615,7 +67615,7 @@
       ],
       "customer_id": "NC-2604-025",
       "contract_id": "AGR-2604-025",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-025-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -68022,12 +68022,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347112+00:00",
-      "updated_at": "2026-11-20T22:30:45.347112+00:00",
+      "created_at": "2026-11-20T22:33:41.996105+00:00",
+      "updated_at": "2026-11-20T22:33:41.996105+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347112+00:00",
+          "at": "2026-11-20T22:33:41.996105+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -68048,7 +68048,7 @@
       ],
       "customer_id": "NC-2604-026",
       "contract_id": "AGR-2604-026",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-026",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -68761,12 +68761,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347149+00:00",
-      "updated_at": "2026-11-20T22:30:45.347149+00:00",
+      "created_at": "2026-11-20T22:33:41.996143+00:00",
+      "updated_at": "2026-11-20T22:33:41.996143+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347149+00:00",
+          "at": "2026-11-20T22:33:41.996143+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -68786,7 +68786,7 @@
       ],
       "customer_id": "NC-2604-026",
       "contract_id": "AGR-2604-026",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-026-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -69193,12 +69193,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347177+00:00",
-      "updated_at": "2026-11-20T22:30:45.347177+00:00",
+      "created_at": "2026-11-20T22:33:41.996168+00:00",
+      "updated_at": "2026-11-20T22:33:41.996168+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347177+00:00",
+          "at": "2026-11-20T22:33:41.996168+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -69218,7 +69218,7 @@
       ],
       "customer_id": "NC-2604-027",
       "contract_id": "AGR-2604-027",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-027",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -69733,12 +69733,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347207+00:00",
-      "updated_at": "2026-11-20T22:30:45.347207+00:00",
+      "created_at": "2026-11-20T22:33:41.996198+00:00",
+      "updated_at": "2026-11-20T22:33:41.996198+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347207+00:00",
+          "at": "2026-11-20T22:33:41.996198+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -69758,7 +69758,7 @@
       ],
       "customer_id": "NC-2604-027",
       "contract_id": "AGR-2604-027",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-027-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -70165,12 +70165,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347229+00:00",
-      "updated_at": "2026-11-20T22:30:45.347229+00:00",
+      "created_at": "2026-11-20T22:33:41.996217+00:00",
+      "updated_at": "2026-11-20T22:33:41.996217+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347229+00:00",
+          "at": "2026-11-20T22:33:41.996217+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -70190,7 +70190,7 @@
       ],
       "customer_id": "NC-2604-028",
       "contract_id": "AGR-2604-028",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-028",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -70705,12 +70705,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347260+00:00",
-      "updated_at": "2026-11-20T22:30:45.347260+00:00",
+      "created_at": "2026-11-20T22:33:41.996249+00:00",
+      "updated_at": "2026-11-20T22:33:41.996249+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347260+00:00",
+          "at": "2026-11-20T22:33:41.996249+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -70730,7 +70730,7 @@
       ],
       "customer_id": "NC-2604-028",
       "contract_id": "AGR-2604-028",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-028-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -71137,12 +71137,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347282+00:00",
-      "updated_at": "2026-11-20T22:30:45.347282+00:00",
+      "created_at": "2026-11-20T22:33:41.996273+00:00",
+      "updated_at": "2026-11-20T22:33:41.996273+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347282+00:00",
+          "at": "2026-11-20T22:33:41.996273+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -71162,7 +71162,7 @@
       ],
       "customer_id": "NC-2604-028",
       "contract_id": "AGR-2604-028",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "credit_memo",
       "business_object_id": "NS-202604-028-CR",
       "category": "credit_review",
       "required_action": "Review proposed credit authorization",
@@ -71543,12 +71543,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347297+00:00",
-      "updated_at": "2026-11-20T22:30:45.347297+00:00",
+      "created_at": "2026-11-20T22:33:41.996289+00:00",
+      "updated_at": "2026-11-20T22:33:41.996289+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347297+00:00",
+          "at": "2026-11-20T22:33:41.996289+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -71568,7 +71568,7 @@
       ],
       "customer_id": "NC-2604-029",
       "contract_id": "AGR-2604-029",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-029",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -72083,12 +72083,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347326+00:00",
-      "updated_at": "2026-11-20T22:30:45.347326+00:00",
+      "created_at": "2026-11-20T22:33:41.996320+00:00",
+      "updated_at": "2026-11-20T22:33:41.996320+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347326+00:00",
+          "at": "2026-11-20T22:33:41.996320+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -72108,7 +72108,7 @@
       ],
       "customer_id": "NC-2604-029",
       "contract_id": "AGR-2604-029",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-029-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -72515,12 +72515,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347346+00:00",
-      "updated_at": "2026-11-20T22:30:45.347346+00:00",
+      "created_at": "2026-11-20T22:33:41.996341+00:00",
+      "updated_at": "2026-11-20T22:33:41.996341+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347346+00:00",
+          "at": "2026-11-20T22:33:41.996341+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -72540,7 +72540,7 @@
       ],
       "customer_id": "NC-2604-029",
       "contract_id": "AGR-2604-029",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-029-REM",
       "category": "payment_matching",
       "required_action": "Match advice to receipt without double-counting cash",
@@ -72846,12 +72846,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347361+00:00",
-      "updated_at": "2026-11-20T22:30:45.347361+00:00",
+      "created_at": "2026-11-20T22:33:41.996356+00:00",
+      "updated_at": "2026-11-20T22:33:41.996356+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347361+00:00",
+          "at": "2026-11-20T22:33:41.996356+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -72871,7 +72871,7 @@
       ],
       "customer_id": "NC-2604-030",
       "contract_id": "AGR-2604-030",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-030",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -73386,12 +73386,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347402+00:00",
-      "updated_at": "2026-11-20T22:30:45.347402+00:00",
+      "created_at": "2026-11-20T22:33:41.996386+00:00",
+      "updated_at": "2026-11-20T22:33:41.996386+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347402+00:00",
+          "at": "2026-11-20T22:33:41.996386+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -73411,7 +73411,7 @@
       ],
       "customer_id": "NC-2604-030",
       "contract_id": "AGR-2604-030",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-030-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -73818,12 +73818,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347425+00:00",
-      "updated_at": "2026-11-20T22:30:45.347425+00:00",
+      "created_at": "2026-11-20T22:33:41.996409+00:00",
+      "updated_at": "2026-11-20T22:33:41.996409+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347425+00:00",
+          "at": "2026-11-20T22:33:41.996409+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -73844,7 +73844,7 @@
       ],
       "customer_id": "NC-2604-031",
       "contract_id": "AGR-2604-031",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-031",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -74557,12 +74557,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347460+00:00",
-      "updated_at": "2026-11-20T22:30:45.347460+00:00",
+      "created_at": "2026-11-20T22:33:41.996442+00:00",
+      "updated_at": "2026-11-20T22:33:41.996442+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347460+00:00",
+          "at": "2026-11-20T22:33:41.996442+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -74582,7 +74582,7 @@
       ],
       "customer_id": "NC-2604-031",
       "contract_id": "AGR-2604-031",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-031-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -74989,12 +74989,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347486+00:00",
-      "updated_at": "2026-11-20T22:30:45.347486+00:00",
+      "created_at": "2026-11-20T22:33:41.996467+00:00",
+      "updated_at": "2026-11-20T22:33:41.996467+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347486+00:00",
+          "at": "2026-11-20T22:33:41.996467+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -75014,7 +75014,7 @@
       ],
       "customer_id": "NC-2604-032",
       "contract_id": "AGR-2604-032",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-032",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -75529,12 +75529,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347516+00:00",
-      "updated_at": "2026-11-20T22:30:45.347516+00:00",
+      "created_at": "2026-11-20T22:33:41.996501+00:00",
+      "updated_at": "2026-11-20T22:33:41.996501+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347516+00:00",
+          "at": "2026-11-20T22:33:41.996501+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -75554,7 +75554,7 @@
       ],
       "customer_id": "NC-2604-032",
       "contract_id": "AGR-2604-032",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-032-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -75961,12 +75961,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347537+00:00",
-      "updated_at": "2026-11-20T22:30:45.347537+00:00",
+      "created_at": "2026-11-20T22:33:41.996524+00:00",
+      "updated_at": "2026-11-20T22:33:41.996524+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347537+00:00",
+          "at": "2026-11-20T22:33:41.996524+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -75985,7 +75985,7 @@
       ],
       "customer_id": "NC-2604-032",
       "contract_id": "AGR-2604-032",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "renewal",
       "business_object_id": "NS-202604-032-REN",
       "category": "renewal_review",
       "required_action": "Review renewal terms",
@@ -76117,12 +76117,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347550+00:00",
-      "updated_at": "2026-11-20T22:30:45.347550+00:00",
+      "created_at": "2026-11-20T22:33:41.996535+00:00",
+      "updated_at": "2026-11-20T22:33:41.996535+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347550+00:00",
+          "at": "2026-11-20T22:33:41.996535+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -76142,7 +76142,7 @@
       ],
       "customer_id": "NC-2604-033",
       "contract_id": "AGR-2604-033",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-033",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -76657,12 +76657,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347580+00:00",
-      "updated_at": "2026-11-20T22:30:45.347580+00:00",
+      "created_at": "2026-11-20T22:33:41.996564+00:00",
+      "updated_at": "2026-11-20T22:33:41.996564+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347580+00:00",
+          "at": "2026-11-20T22:33:41.996564+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -76682,7 +76682,7 @@
       ],
       "customer_id": "NC-2604-033",
       "contract_id": "AGR-2604-033",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-033-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -77089,12 +77089,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347602+00:00",
-      "updated_at": "2026-11-20T22:30:45.347602+00:00",
+      "created_at": "2026-11-20T22:33:41.996583+00:00",
+      "updated_at": "2026-11-20T22:33:41.996583+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347602+00:00",
+          "at": "2026-11-20T22:33:41.996583+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -77113,7 +77113,7 @@
       ],
       "customer_id": "NC-2604-033",
       "contract_id": "AGR-2604-033",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "renewal",
       "business_object_id": "NS-202604-033-REN",
       "category": "renewal_review",
       "required_action": "Review renewal terms",
@@ -77245,12 +77245,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347614+00:00",
-      "updated_at": "2026-11-20T22:30:45.347614+00:00",
+      "created_at": "2026-11-20T22:33:41.996611+00:00",
+      "updated_at": "2026-11-20T22:33:41.996611+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347614+00:00",
+          "at": "2026-11-20T22:33:41.996611+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -77270,7 +77270,7 @@
       ],
       "customer_id": "NC-2604-034",
       "contract_id": "AGR-2604-034",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-034",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -77785,12 +77785,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347648+00:00",
-      "updated_at": "2026-11-20T22:30:45.347648+00:00",
+      "created_at": "2026-11-20T22:33:41.996642+00:00",
+      "updated_at": "2026-11-20T22:33:41.996642+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347648+00:00",
+          "at": "2026-11-20T22:33:41.996642+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -77810,7 +77810,7 @@
       ],
       "customer_id": "NC-2604-034",
       "contract_id": "AGR-2604-034",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-034-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -78217,12 +78217,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347672+00:00",
-      "updated_at": "2026-11-20T22:30:45.347672+00:00",
+      "created_at": "2026-11-20T22:33:41.996661+00:00",
+      "updated_at": "2026-11-20T22:33:41.996661+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347672+00:00",
+          "at": "2026-11-20T22:33:41.996661+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -78242,7 +78242,7 @@
       ],
       "customer_id": "NC-2604-035",
       "contract_id": "AGR-2604-035",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-035",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -78757,12 +78757,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347703+00:00",
-      "updated_at": "2026-11-20T22:30:45.347703+00:00",
+      "created_at": "2026-11-20T22:33:41.996691+00:00",
+      "updated_at": "2026-11-20T22:33:41.996691+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347703+00:00",
+          "at": "2026-11-20T22:33:41.996691+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -78782,7 +78782,7 @@
       ],
       "customer_id": "NC-2604-035",
       "contract_id": "AGR-2604-035",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-035-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -79189,12 +79189,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347722+00:00",
-      "updated_at": "2026-11-20T22:30:45.347722+00:00",
+      "created_at": "2026-11-20T22:33:41.996709+00:00",
+      "updated_at": "2026-11-20T22:33:41.996709+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347722+00:00",
+          "at": "2026-11-20T22:33:41.996709+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -79215,7 +79215,7 @@
       ],
       "customer_id": "NC-2604-036",
       "contract_id": "AGR-2604-036",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-036",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -79928,12 +79928,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347756+00:00",
-      "updated_at": "2026-11-20T22:30:45.347756+00:00",
+      "created_at": "2026-11-20T22:33:41.996753+00:00",
+      "updated_at": "2026-11-20T22:33:41.996753+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347756+00:00",
+          "at": "2026-11-20T22:33:41.996753+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -79953,7 +79953,7 @@
       ],
       "customer_id": "NC-2604-036",
       "contract_id": "AGR-2604-036",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-036-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -80360,12 +80360,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347783+00:00",
-      "updated_at": "2026-11-20T22:30:45.347783+00:00",
+      "created_at": "2026-11-20T22:33:41.997039+00:00",
+      "updated_at": "2026-11-20T22:33:41.997039+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347783+00:00",
+          "at": "2026-11-20T22:33:41.997039+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -80385,7 +80385,7 @@
       ],
       "customer_id": "NC-2604-036",
       "contract_id": "AGR-2604-036",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-036-REM",
       "category": "payment_matching",
       "required_action": "Match advice to receipt without double-counting cash",
@@ -80691,12 +80691,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347797+00:00",
-      "updated_at": "2026-11-20T22:30:45.347797+00:00",
+      "created_at": "2026-11-20T22:33:41.997060+00:00",
+      "updated_at": "2026-11-20T22:33:41.997060+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347797+00:00",
+          "at": "2026-11-20T22:33:41.997060+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -80716,7 +80716,7 @@
       ],
       "customer_id": "NC-2604-037",
       "contract_id": "AGR-2604-037",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-037",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -81231,12 +81231,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347829+00:00",
-      "updated_at": "2026-11-20T22:30:45.347829+00:00",
+      "created_at": "2026-11-20T22:33:41.997133+00:00",
+      "updated_at": "2026-11-20T22:33:41.997133+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347829+00:00",
+          "at": "2026-11-20T22:33:41.997133+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -81256,7 +81256,7 @@
       ],
       "customer_id": "NC-2604-037",
       "contract_id": "AGR-2604-037",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-037-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -81663,12 +81663,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347847+00:00",
-      "updated_at": "2026-11-20T22:30:45.347847+00:00",
+      "created_at": "2026-11-20T22:33:41.997156+00:00",
+      "updated_at": "2026-11-20T22:33:41.997156+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347847+00:00",
+          "at": "2026-11-20T22:33:41.997156+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -81688,7 +81688,7 @@
       ],
       "customer_id": "NC-2604-038",
       "contract_id": "AGR-2604-038",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-038",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -82203,12 +82203,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347876+00:00",
-      "updated_at": "2026-11-20T22:30:45.347876+00:00",
+      "created_at": "2026-11-20T22:33:41.997190+00:00",
+      "updated_at": "2026-11-20T22:33:41.997190+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347876+00:00",
+          "at": "2026-11-20T22:33:41.997190+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -82228,7 +82228,7 @@
       ],
       "customer_id": "NC-2604-038",
       "contract_id": "AGR-2604-038",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-038-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -82635,12 +82635,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347892+00:00",
-      "updated_at": "2026-11-20T22:30:45.347892+00:00",
+      "created_at": "2026-11-20T22:33:41.997210+00:00",
+      "updated_at": "2026-11-20T22:33:41.997210+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347892+00:00",
+          "at": "2026-11-20T22:33:41.997210+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -82660,7 +82660,7 @@
       ],
       "customer_id": "NC-2604-039",
       "contract_id": "AGR-2604-039",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-039",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -83175,12 +83175,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347921+00:00",
-      "updated_at": "2026-11-20T22:30:45.347921+00:00",
+      "created_at": "2026-11-20T22:33:41.997242+00:00",
+      "updated_at": "2026-11-20T22:33:41.997242+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347921+00:00",
+          "at": "2026-11-20T22:33:41.997242+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -83200,7 +83200,7 @@
       ],
       "customer_id": "NC-2604-039",
       "contract_id": "AGR-2604-039",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-039-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -83607,12 +83607,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347936+00:00",
-      "updated_at": "2026-11-20T22:30:45.347936+00:00",
+      "created_at": "2026-11-20T22:33:41.997260+00:00",
+      "updated_at": "2026-11-20T22:33:41.997260+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347936+00:00",
+          "at": "2026-11-20T22:33:41.997260+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -83632,7 +83632,7 @@
       ],
       "customer_id": "NC-2604-040",
       "contract_id": "AGR-2604-040",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "invoice",
       "business_object_id": "billing:NC-2604-040",
       "category": "contract_price_validation",
       "required_action": "Validate contractual invoice charges",
@@ -84147,12 +84147,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347959+00:00",
-      "updated_at": "2026-11-20T22:30:45.347959+00:00",
+      "created_at": "2026-11-20T22:33:41.997287+00:00",
+      "updated_at": "2026-11-20T22:33:41.997287+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347959+00:00",
+          "at": "2026-11-20T22:33:41.997287+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -84172,7 +84172,7 @@
       ],
       "customer_id": "NC-2604-040",
       "contract_id": "AGR-2604-040",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "payment",
       "business_object_id": "NS-202604-040-PAY",
       "category": "payment_matching",
       "required_action": "Reconcile receipt allocation",
@@ -84579,12 +84579,12 @@
       "human_review_required": false,
       "automatic_closure_allowed": true,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347974+00:00",
-      "updated_at": "2026-11-20T22:30:45.347974+00:00",
+      "created_at": "2026-11-20T22:33:41.997303+00:00",
+      "updated_at": "2026-11-20T22:33:41.997303+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347974+00:00",
+          "at": "2026-11-20T22:33:41.997303+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }
@@ -84604,7 +84604,7 @@
       ],
       "customer_id": "NC-2604-040",
       "contract_id": "AGR-2604-040",
-      "business_object_type": "revenue_operations",
+      "business_object_type": "credit_memo",
       "business_object_id": "NS-202604-040-CR",
       "category": "credit_review",
       "required_action": "Review proposed credit authorization",
@@ -84985,12 +84985,12 @@
       "human_review_required": true,
       "automatic_closure_allowed": false,
       "intentionally_unresolved": false,
-      "created_at": "2026-11-20T22:30:45.347986+00:00",
-      "updated_at": "2026-11-20T22:30:45.347986+00:00",
+      "created_at": "2026-11-20T22:33:41.997316+00:00",
+      "updated_at": "2026-11-20T22:33:41.997316+00:00",
       "event_history": [
         {
           "event": "generated_from_pdf_evidence",
-          "at": "2026-11-20T22:30:45.347986+00:00",
+          "at": "2026-11-20T22:33:41.997316+00:00",
           "actor": "deterministic_rules",
           "financial_action_executed": false
         }

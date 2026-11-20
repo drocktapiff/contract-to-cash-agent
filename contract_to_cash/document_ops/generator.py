@@ -639,6 +639,20 @@ def batch_documents(ledger):
                     ),
                 )
             )
+    for work in expected:
+        work["business_object_type"] = {
+            "contract_price_validation": "invoice",
+            "invoice_reconciliation": "invoice",
+            "contract_conflict": "contract",
+            "missing_documentation": "contract",
+            "amendment_review": "contract_amendment",
+            "payment_matching": "payment",
+            "credit_review": "credit_memo",
+            "usage_validation": "usage_statement",
+            "renewal_review": "renewal",
+            "document_review": "document",
+        }[work["category"]]
+        work["assigned_role"] = "Revenue Operations Specialist"
     return docs, expected
 
 
