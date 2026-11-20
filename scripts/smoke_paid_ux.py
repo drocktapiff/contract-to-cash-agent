@@ -129,6 +129,12 @@ def main():
                         expect(drawer.locator(".impact-grid")).to_contain_text("$1,000.00")
                         expect(drawer.locator(".source-text").first).to_contain_text(customer)
                     capture("02-sarah-desktop-evidence-drawer.png")
+                    close = drawer.get_by_role("button", name="Close evidence", exact=True)
+                    close.focus()
+                    page.keyboard.press("Shift+Tab")
+                    expect(drawer.locator("summary").last).to_be_focused()
+                    page.keyboard.press("Tab")
+                    expect(close).to_be_focused()
                     page.get_by_label("Demo persona", exact=True).evaluate("(el)=>el.focus()")
                     assert page.evaluate(
                         "!!document.activeElement.closest('dialog.evidence-drawer')"
