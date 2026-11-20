@@ -40,8 +40,9 @@ class Settings:
 
 
 class StoreError(ValueError):
-    def __init__(self, status, message):
+    def __init__(self, status, message, paid_run_created=False):
         self.status, self.message = status, message
+        self.paid_run_created = paid_run_created
         super().__init__(message)
 
 
@@ -366,17 +367,17 @@ class Store:
         if any(r["idempotency_key"] == str(key) for r in other):
             raise StoreError(409, "This key belongs to a different paid workflow")
 
+    def paid_rate_status(self, at=None):
+        from .paid_availability import rate_status
+        return rate_status(self, at)
+
     def check_paid_limits(self):
-        previous = [m["created_at"] for m in self.metadata() if (m.get("provenance") or {}).get("kind") != "simulated_demo"]
-        previous += [a["created_at"] for a in self.enterprise.analyses()]
-        previous += [r["created_at"] for r in self.archived_paid_records() if (r.get("provenance") or {}).get("kind") != "simulated_demo"]
-        now_time = datetime.now(timezone.utc)
-        recent = [(now_time - datetime.fromisoformat(t)).total_seconds() for t in previous]
-        if any(age < 60 for age in recent) or sum(age < 3600 for age in recent) >= 3:
-            raise StoreError(
-                429,
-                "Local launch limit reached. At most one per minute and three per hour, shared by investigations and analyses.",
-            )
+        try:
+            rate = self.paid_rate_status()
+        except (ValueError, KeyError, TypeError, OSError, sqlite3.Error):
+            raise StoreError(503, "Launch history could not be verified; no paid request started") from None
+        if not rate["available"]:
+            raise StoreError(429, "Local launch limit reached. At most one per minute and three per hour, shared by investigations and analyses.")
 
     def launch(self, request, pricing_verification=None, continuation=None, data_override=None):
         with self.lock:
@@ -440,6 +441,7 @@ class Store:
                     raise StoreError(
                         503,
                         "Paid authorization could not be journaled; no continuation was started",
+                        paid_run_created=True,
                     ) from None
                 mirror(directory, event)
             self.active = run_id
@@ -451,7 +453,7 @@ class Store:
                 meta.update(status="failed", reason="worker_start_failed")
                 self.write_meta(meta)
                 raise StoreError(
-                    503, "Investigation could not start; request is retained for audit"
+                    503, "Investigation could not start; request is retained for audit", paid_run_created=True
                 ) from None
             return self.snapshot(run_id)
 

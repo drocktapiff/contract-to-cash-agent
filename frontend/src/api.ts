@@ -1,4 +1,13 @@
 import type { Session } from './types';
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public rejection?: { code?: string; availability?: unknown; paid_run_created?: boolean },
+  ) {
+    super(message);
+  }
+}
 let csrf: string | null = null;
 export function setCsrf(value: string | null) {
   csrf = value;
@@ -9,14 +18,30 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (csrf && options.method && options.method !== 'GET') headers.set('X-CSRF-Token', csrf);
   const response = await fetch('/api' + path, { ...options, headers, credentials: 'same-origin' });
   if (response.status === 401) window.dispatchEvent(new Event('ctc-session-expired'));
+  if (
+    options.method &&
+    options.method !== 'GET' &&
+    /^\/(billing-reviews|runs|enterprise\/analyses|admin\/(pricing|reset))/.test(path)
+  ) {
+    window.dispatchEvent(new Event('ctc-paid-availability-changed'));
+  }
   if (!response.ok) {
     let message = 'The service could not complete this request.';
+    let rejection:
+      | { code?: string; availability?: unknown; paid_run_created?: boolean }
+      | undefined;
     try {
-      message = (await response.json()).detail ?? message;
+      const body = await response.json();
+      message = typeof body.detail === 'string' ? body.detail : message;
+      rejection = {
+        code: body.code,
+        availability: body.availability,
+        paid_run_created: body.paid_run_created,
+      };
     } catch {
       /* no raw server HTML */
     }
-    throw new Error(message);
+    throw new ApiError(message, response.status, rejection);
   }
   return response.json() as Promise<T>;
 }

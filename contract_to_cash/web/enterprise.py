@@ -441,7 +441,7 @@ class Enterprise:
                 with self.database() as cur:
                     cur.execute("UPDATE analyses SET body=? WHERE id=?", (json.dumps(a), aid))
                 raise StoreError(
-                    503, "Analysis could not start; authorization is retained"
+                    503, "Analysis could not start; authorization is retained", paid_run_created=True
                 ) from None
             return self.view(a)
 

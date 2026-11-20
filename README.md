@@ -33,3 +33,6 @@ Full Demo**. See [Phase 5 preparation and presentation guide](docs/PHASE5.md).
 
 [Phase 6 guided persona flow and Executive Decision Brief](docs/PHASE6.md) includes
 Windows Git Bash update/launch commands, safety boundaries and mocked-provider screenshots.
+
+[Phase 6.1 evidence drawers and paid-launch availability](docs/PHASE61.md) documents
+the shared status, exact Windows update/launch commands and browser evidence.

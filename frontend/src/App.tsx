@@ -1,3 +1,4 @@
+import PaidLaunchStatus, { usePaidAvailability } from './PaidAvailability';
 import GuidedDemo from './GuidedDemo';
 import { PrepareDemo } from './ManagementCenter';
 import EnterpriseWorkspace, { ResetDemo } from './EnterpriseWorkspace';
@@ -96,6 +97,7 @@ export default function App() {
   selectedRun.current = runId;
   const recorded = session?.mode === 'recorded';
   const ready = !!session && (session.authenticated || recorded);
+  const paidAvailability = usePaidAvailability(!!ready);
   const active = !!run && isActive(run.status);
   const currentFinding = run?.findings.find((f) => f.finding_id === selectedId);
   const reviewFor = (finding: Finding) =>
@@ -314,6 +316,7 @@ export default function App() {
     } catch (e) {
       setError((e as Error).message);
       setConfirmation(false);
+      void paidAvailability.refresh();
       void loadWorkspace();
     } finally {
       setBusy(false);
@@ -764,6 +767,10 @@ export default function App() {
                           <span>≋ Amendments</span>
                           <span>▤ {dataset?.invoice_count ?? '—'} invoices</span>
                         </div>
+                        <PaidLaunchStatus
+                          value={paidAvailability}
+                          label="Paid launch availability"
+                        />
                         <div className="start-actions">
                           {runningRun ? (
                             <button className="primary" onClick={() => selectRun(runningRun)}>
@@ -777,9 +784,12 @@ export default function App() {
                                 enterpriseActive ||
                                 recorded ||
                                 !health?.launch_available ||
-                                !pricing?.ready
+                                !pricing?.ready ||
+                                !paidAvailability.available
                               }
-                              onClick={() => {
+                              onClick={async () => {
+                                const latest = await paidAvailability.refresh();
+                                if (!latest?.available) return;
                                 setAuthorized(false);
                                 setConfirmation(true);
                               }}
@@ -1327,6 +1337,9 @@ export default function App() {
             </button>
             <span className="eyebrow">START THE WORK</span>
             <h2 id="confirm-title">Start Billing Review</h2>
+            {!paidAvailability.available && (
+              <PaidLaunchStatus value={paidAvailability} label="Paid launch availability" />
+            )}
             <p>
               Analyze customer agreements and invoices for discrepancies. The agent investigates;
               you retain judgment and authorization.
@@ -1349,7 +1362,7 @@ export default function App() {
             </p>
             <button
               className="primary"
-              disabled={busy || !authorized || !pricing?.ready}
+              disabled={busy || !authorized || !pricing?.ready || !paidAvailability.available}
               onClick={() => void beginReview()}
             >
               {busy ? 'Starting…' : 'Begin authorized review'} <span>→</span>

@@ -1,3 +1,6 @@
+import PaidLaunchStatus, { usePaidAvailability } from './PaidAvailability';
+import { EvidenceDrawer, EvidenceSources, RecordView } from './EvidenceDrawer';
+import type { Evidence } from './types';
 import GuidedDemo from './GuidedDemo';
 import ExecutiveBrief, { type Brief } from './ExecutiveBrief';
 import ManagementCenter, { type Center } from './ManagementCenter';
@@ -250,6 +253,7 @@ export default function EnterpriseWorkspace({
   onOperational: (runId?: string) => void;
 }) {
   const kind = persona === 'sarah' ? 'management' : 'executive';
+  const paidAvailability = usePaidAvailability();
   const [overview, setOverview] = useState<Overview | null>(null),
     [error, setError] = useState(''),
     [selectedId, setSelectedId] = useState(''),
@@ -259,7 +263,11 @@ export default function EnterpriseWorkspace({
     [busy, setBusy] = useState(false),
     [reference, setReference] = useState<string | null>(null),
     [scenario, setScenario] = useState<Scenario['assumptions'] | null>(null),
-    [evidence, setEvidence] = useState<Record<string, unknown>[]>([]);
+    [evidence, setEvidence] = useState<Evidence[]>([]);
+  const [evidenceCase, setEvidenceCase] = useState<Case | null>(null),
+    [sourceLoading, setSourceLoading] = useState(false),
+    [sourceError, setSourceError] = useState('');
+  const sourceRequest = useRef(0);
   const [action, setAction] = useState(persona === 'sarah' ? 'prioritize' : 'request_validation'),
     [owner, setOwner] = useState(''),
     [rationale, setRationale] = useState(''),
@@ -294,15 +302,7 @@ export default function EnterpriseWorkspace({
     );
     return () => cancelAnimationFrame(frame);
   }, [confirm]);
-  useEffect(() => {
-    if (!reference) return;
-    const frame = requestAnimationFrame(() =>
-      document
-        .querySelector('.reference-panel')
-        ?.scrollIntoView({ block: 'center', behavior: 'smooth' }),
-    );
-    return () => cancelAnimationFrame(frame);
-  }, [reference]);
+
   useEffect(() => {
     void load();
   }, [runId, kind]);
@@ -355,6 +355,9 @@ export default function EnterpriseWorkspace({
       setConfirm(false);
     } catch (e) {
       setError((e as Error).message);
+      setConfirm(false);
+      setPaid(false);
+      await paidAvailability.refresh();
       await load();
     } finally {
       setBusy(false);
@@ -413,12 +416,20 @@ export default function EnterpriseWorkspace({
     }
   }
   async function inspect(c: Case) {
+    const version = ++sourceRequest.current;
+    setEvidenceCase(c);
+    setEvidence([]);
+    setSourceLoading(true);
+    setSourceError('');
     try {
-      setEvidence(
-        await api(`/runs/${c.run_id}/findings/${encodeURIComponent(c.finding_id)}/evidence`),
+      const result = await api<Evidence[]>(
+        `/runs/${c.run_id}/findings/${encodeURIComponent(c.finding_id)}/evidence`,
       );
+      if (sourceRequest.current === version) setEvidence(result);
     } catch (e) {
-      setError((e as Error).message);
+      if (sourceRequest.current === version) setSourceError((e as Error).message);
+    } finally {
+      if (sourceRequest.current === version) setSourceLoading(false);
     }
   }
   if (!overview)
@@ -436,6 +447,7 @@ export default function EnterpriseWorkspace({
     (d) => d.analysis_id === detail?.id && d.recommendation_index === recommendation,
   );
   const canAnalyze =
+    paidAvailability.available &&
     !working &&
     !!op.root_run_id &&
     !!op.cases.length &&
@@ -583,7 +595,8 @@ export default function EnterpriseWorkspace({
           <button
             className="primary"
             disabled={!canAnalyze || busy}
-            onClick={() => {
+            onClick={async () => {
+              if (!(await paidAvailability.refresh())?.available) return;
               launchKey.current = crypto.randomUUID();
               setConfirm(true);
               setPaid(false);
@@ -591,6 +604,7 @@ export default function EnterpriseWorkspace({
           >
             Generate Executive Decision Brief
           </button>
+          <PaidLaunchStatus value={paidAvailability} />
           {working && (
             <p role="status" className="notice">
               Generating the grounded brief.{' '}
@@ -624,6 +638,7 @@ export default function EnterpriseWorkspace({
           aria-label="Authorize enterprise analysis"
         >
           <h2>Authorize one paid {kind} analysis</h2>
+          {!paidAvailability.available && <PaidLaunchStatus value={paidAvailability} />}
           <p>
             Uses only this review's saved evidence
             {persona === 'robert' ? ', management context and illustrative scenario' : ''}. Up to 3
@@ -634,13 +649,54 @@ export default function EnterpriseWorkspace({
             <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />I
             authorize this paid analysis.
           </label>
-          <button className="primary" disabled={!paid || busy} onClick={() => void launch()}>
+          <button
+            className="primary"
+            disabled={!paid || busy || !paidAvailability.available}
+            onClick={() => void launch()}
+          >
             Begin authorized analysis
           </button>
           <button className="plain" onClick={() => setConfirm(false)}>
             Cancel
           </button>
         </section>
+      )}
+      {reference && (
+        <EvidenceDrawer
+          title="Supporting input"
+          subtitle={reference}
+          onClose={() => setReference(null)}
+        >
+          {ref ? (
+            <>
+              <h3>{ref.kind.replaceAll('_', ' ')}</h3>
+              <RecordView value={ref.body} />
+            </>
+          ) : (
+            <p role="alert">This saved reference is unavailable; no evidence has been inferred.</p>
+          )}
+        </EvidenceDrawer>
+      )}
+      {evidenceCase && (
+        <EvidenceDrawer
+          title="Supporting Evidence — Operational Case"
+          subtitle={evidenceCase.customer_ids.join(' · ')}
+          onClose={() => {
+            sourceRequest.current++;
+            setEvidenceCase(null);
+          }}
+        >
+          {sourceLoading ? (
+            <p role="status">Loading saved supporting evidence…</p>
+          ) : sourceError ? (
+            <div role="alert">
+              <p>{sourceError}</p>
+              <button onClick={() => void inspect(evidenceCase)}>Retry evidence retrieval</button>
+            </div>
+          ) : (
+            <EvidenceSources sources={evidence} />
+          )}
+        </EvidenceDrawer>
       )}
       <div className="persona-boundary small muted">
         Fictional demo persona · local operator authority is unchanged. These are single-operator
@@ -814,11 +870,13 @@ export default function EnterpriseWorkspace({
                 : 'Ask AI to weigh observed results, Sarah’s saved decisions and your last saved financial assumptions.'}
             </p>
           </div>
+          {persona === 'sarah' && <PaidLaunchStatus value={paidAvailability} />}
           {persona === 'sarah' && (
             <button
               className="primary"
               disabled={!canAnalyze || busy}
-              onClick={() => {
+              onClick={async () => {
+                if (!(await paidAvailability.refresh())?.available) return;
                 launchKey.current = crypto.randomUUID();
                 setConfirm(true);
                 setPaid(false);
@@ -1078,16 +1136,6 @@ export default function EnterpriseWorkspace({
                   </ul>
                 </details>
               </details>
-              {reference && ref && (
-                <section className="reference-panel">
-                  <h3>Supporting input · {ref.kind.replaceAll('_', ' ')}</h3>
-                  <p className="break small muted">{reference}</p>
-                  <ReferenceBody value={ref.body} />
-                  <button className="plain" onClick={() => setReference(null)}>
-                    Close supporting input
-                  </button>
-                </section>
-              )}
               {persona === 'sarah' && decisionPanel}
             </>
           )}
@@ -1136,16 +1184,6 @@ export default function EnterpriseWorkspace({
             </button>
           </article>
         ))}
-        {evidence.map((source, i) => (
-          <details className="source" key={i}>
-            <summary>{String(source.document_id)}</summary>
-            {source.text ? (
-              <p className="source-text">{String(source.text)}</p>
-            ) : (
-              <ReferenceBody value={(source.record ?? source) as Record<string, unknown>} />
-            )}
-          </details>
-        ))}
       </details>
       <details className="panel">
         <summary>Measurement scope and limitations</summary>
@@ -1164,36 +1202,5 @@ export default function EnterpriseWorkspace({
         </ul>
       </details>
     </section>
-  );
-}
-function ReferenceBody({ value }: { value: Record<string, unknown> }) {
-  return (
-    <div className="reference-content">
-      {Object.entries(value).map(([key, v]) => (
-        <div key={key}>
-          <strong>{key.replaceAll('_', ' ')}</strong>
-          {typeof v === 'object' && v !== null ? (
-            <details>
-              <summary>View saved supporting detail</summary>
-              {Array.isArray(v) ? (
-                v.map((row, i) => (
-                  <div key={i}>
-                    {typeof row === 'object' && row !== null ? (
-                      <ReferenceBody value={row as Record<string, unknown>} />
-                    ) : (
-                      <p>{String(row)}</p>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <ReferenceBody value={v as Record<string, unknown>} />
-              )}
-            </details>
-          ) : (
-            <p className="break source-text">{v == null ? 'Not established' : String(v)}</p>
-          )}
-        </div>
-      ))}
-    </div>
   );
 }

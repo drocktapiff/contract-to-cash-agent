@@ -43,6 +43,7 @@ from .resolution_evidence import registered_evidence
 
 from .enterprise import AnalysisRequest, EnterpriseDecision, ScenarioUpdate, ResetRequest
 from .demo_reset import reset_preview, archive_demo
+from .paid_availability import availability
 from .demo_prepare import PrepareDemo, prepare
 from .management import ActionInput, save_action
 from .guided_demo import SarahDemo, complete_sarah
@@ -114,7 +115,12 @@ def create_app(settings=None, runner=None):
 
     @app.exception_handler(StoreError)
     async def store_error(request, exc):
-        return JSONResponse({"detail": exc.message}, status_code=exc.status)
+        body = {"detail": exc.message}
+        paid_path = request.url.path in ("/api/runs", "/api/billing-reviews", "/api/enterprise/analyses") or request.url.path.endswith("/continue")
+        if request.method == "POST" and paid_path and exc.status in (409, 429, 503):
+            state = availability(store)
+            body.update(code="paid_launch_retained_failure" if exc.paid_run_created else "paid_launch_rejected", availability=state, paid_run_created=exc.paid_run_created)
+        return JSONResponse(body, status_code=exc.status)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, exc):
@@ -385,6 +391,10 @@ def create_app(settings=None, runner=None):
     )
     async def prepare_recommendation(run_id: str, finding_id: str, body: PrepareGuidance):
         return prepare_guidance(store, run_id, finding_id, body)
+
+    @app.get("/api/paid-launch-availability", dependencies=[Depends(reader)])
+    async def paid_launch_availability():
+        return availability(store)
 
     @app.get("/api/enterprise/state", dependencies=[Depends(reader)])
     async def enterprise_state():
