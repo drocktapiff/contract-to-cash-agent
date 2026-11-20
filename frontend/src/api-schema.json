@@ -1,4 +1,46 @@
 {
+  "AnalysisRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_paid": {
+        "const": true,
+        "title": "Acknowledge Paid",
+        "type": "boolean"
+      },
+      "expected_revision": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Expected Revision",
+        "type": "string"
+      },
+      "idempotency_key": {
+        "format": "uuid",
+        "title": "Idempotency Key",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "management",
+          "executive"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "root_run_id": {
+        "pattern": "^[0-9a-f]{32}$",
+        "title": "Root Run Id",
+        "type": "string"
+      }
+    },
+    "required": [
+      "idempotency_key",
+      "acknowledge_paid",
+      "kind",
+      "root_run_id",
+      "expected_revision"
+    ],
+    "title": "AnalysisRequest",
+    "type": "object"
+  },
   "AuthorityAssertion": {
     "additionalProperties": false,
     "properties": {
@@ -184,6 +226,79 @@
       "message"
     ],
     "title": "DatasetView",
+    "type": "object"
+  },
+  "EnterpriseDecision": {
+    "additionalProperties": false,
+    "properties": {
+      "action": {
+        "enum": [
+          "prioritize",
+          "follow_up",
+          "assign_owner",
+          "request_investigation",
+          "dismiss",
+          "approve_pilot",
+          "request_validation",
+          "defer"
+        ],
+        "title": "Action",
+        "type": "string"
+      },
+      "expected_revision": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Expected Revision",
+        "type": "string"
+      },
+      "idempotency_key": {
+        "format": "uuid",
+        "title": "Idempotency Key",
+        "type": "string"
+      },
+      "owner": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Owner"
+      },
+      "rationale": {
+        "maxLength": 1000,
+        "minLength": 5,
+        "title": "Rationale",
+        "type": "string"
+      },
+      "recommendation_index": {
+        "maximum": 7,
+        "minimum": 0,
+        "title": "Recommendation Index",
+        "type": "integer"
+      },
+      "supporting_references": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 12,
+        "minItems": 1,
+        "title": "Supporting References",
+        "type": "array"
+      }
+    },
+    "required": [
+      "idempotency_key",
+      "recommendation_index",
+      "expected_revision",
+      "action",
+      "rationale",
+      "supporting_references"
+    ],
+    "title": "EnterpriseDecision",
     "type": "object"
   },
   "EventView": {
@@ -872,6 +987,32 @@
     "title": "PricingState",
     "type": "object"
   },
+  "ResetRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_archive": {
+        "const": true,
+        "title": "Acknowledge Archive",
+        "type": "boolean"
+      },
+      "confirmation": {
+        "const": "ARCHIVE DEMO HISTORY",
+        "title": "Confirmation",
+        "type": "string"
+      },
+      "expected_epoch": {
+        "title": "Expected Epoch",
+        "type": "string"
+      }
+    },
+    "required": [
+      "acknowledge_archive",
+      "confirmation",
+      "expected_epoch"
+    ],
+    "title": "ResetRequest",
+    "type": "object"
+  },
   "ReviewAction": {
     "additionalProperties": false,
     "properties": {
@@ -1065,6 +1206,218 @@
       "model"
     ],
     "title": "RunView",
+    "type": "object"
+  },
+  "Scenario": {
+    "additionalProperties": false,
+    "properties": {
+      "annual_software_cad": {
+        "anyOf": [
+          {
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "default": "5000",
+        "title": "Annual Software Cad"
+      },
+      "assumed_workload_reduction_percent": {
+        "anyOf": [
+          {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Assumed Workload Reduction Percent"
+      },
+      "basis": {
+        "const": "illustrative_assumptions",
+        "default": "illustrative_assumptions",
+        "title": "Basis",
+        "type": "string"
+      },
+      "implementation_total_cad": {
+        "anyOf": [
+          {
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "default": "0",
+        "title": "Implementation Total Cad"
+      },
+      "redesigned_employment_cad": {
+        "anyOf": [
+          {
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "default": "90000",
+        "title": "Redesigned Employment Cad"
+      },
+      "teams": {
+        "default": 1,
+        "maximum": 10000,
+        "minimum": 1,
+        "title": "Teams",
+        "type": "integer"
+      },
+      "traditional_employment_cad": {
+        "anyOf": [
+          {
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "default": "180000",
+        "title": "Traditional Employment Cad"
+      }
+    },
+    "title": "Scenario",
+    "type": "object"
+  },
+  "ScenarioUpdate": {
+    "$defs": {
+      "Scenario": {
+        "additionalProperties": false,
+        "properties": {
+          "annual_software_cad": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "5000",
+            "title": "Annual Software Cad"
+          },
+          "assumed_workload_reduction_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Assumed Workload Reduction Percent"
+          },
+          "basis": {
+            "const": "illustrative_assumptions",
+            "default": "illustrative_assumptions",
+            "title": "Basis",
+            "type": "string"
+          },
+          "implementation_total_cad": {
+            "anyOf": [
+              {
+                "maximum": 1000000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Implementation Total Cad"
+          },
+          "redesigned_employment_cad": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "90000",
+            "title": "Redesigned Employment Cad"
+          },
+          "teams": {
+            "default": 1,
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Teams",
+            "type": "integer"
+          },
+          "traditional_employment_cad": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "180000",
+            "title": "Traditional Employment Cad"
+          }
+        },
+        "title": "Scenario",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "expected_epoch": {
+        "title": "Expected Epoch",
+        "type": "string"
+      },
+      "expected_version": {
+        "minimum": 0,
+        "title": "Expected Version",
+        "type": "integer"
+      },
+      "scenario": {
+        "$ref": "#/$defs/Scenario"
+      }
+    },
+    "required": [
+      "expected_epoch",
+      "expected_version",
+      "scenario"
+    ],
+    "title": "ScenarioUpdate",
     "type": "object"
   }
 }

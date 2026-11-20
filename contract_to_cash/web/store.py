@@ -55,6 +55,9 @@ class Store:
         self.accepting_launches = True
         self.owner_fd = None
         self.index = settings.root / "index"
+        from .enterprise import Enterprise
+
+        self.enterprise = Enterprise(self)
 
     def open(self):
         if self.settings.mode == "recorded":
@@ -68,20 +71,33 @@ class Store:
             raise RuntimeError(
                 "Run store is already owned or requires recovery; see local operations documentation"
             ) from None
-        # A prior process cannot resume a paid call. Mark retained requests honestly.
-        for meta in self.metadata():
-            if meta["status"] in ("queued", "running"):
-                meta.update(status="interrupted", reason="server_restart_no_resume")
-                self.write_meta(meta)
-
-    def close(self):
-        if self.worker and self.worker.is_alive():
-            self.worker.join(timeout=5)
-        # Do not release ownership while an in-flight worker still writes.
-        if self.owner_fd is not None and not (self.worker and self.worker.is_alive()):
+        try:
+            self.accepting_launches = not (self.settings.root / ".reset-recovery.json").exists()
+            self.enterprise.recover()
+            # A prior process cannot resume a paid call. Mark retained requests honestly.
+            for meta in self.metadata():
+                if meta["status"] in ("queued", "running"):
+                    meta.update(status="interrupted", reason="server_restart_no_resume")
+                    self.write_meta(meta)
+        except BaseException:
             os.close(self.owner_fd)
             self.owner_fd = None
             (self.settings.root / ".server.lock").unlink()
+            raise
+
+    def close(self):
+        # Stop new jobs first, then drain WITHOUT holding the lock the worker needs
+        # to commit its terminal state. Returning early would leave SQLite/files open.
+        with self.lock:
+            self.accepting_launches = False
+            worker = self.worker
+        if worker and worker.is_alive():
+            worker.join()
+        with self.lock:
+            if self.owner_fd is not None:
+                os.close(self.owner_fd)
+                self.owner_fd = None
+                (self.settings.root / ".server.lock").unlink()
 
     def public_data(self):
         if (self.settings.data / "sealed_answer_key.json").exists():
@@ -113,6 +129,10 @@ class Store:
         )
 
     def metadata(self):
+        with self.lock:
+            return self._metadata()
+
+    def _metadata(self):
         if not self.index.exists():
             return []
         return [
@@ -153,6 +173,10 @@ class Store:
         return json.loads(path.read_text(encoding="utf-8"))
 
     def events(self, run_id, after=0):
+        with self.lock:
+            return self._events(run_id, after)
+
+    def _events(self, run_id, after=0):
         if self.settings.mode == "recorded":
             return [e.model_dump() for e in self.recording(run_id).events if e.sequence > after]
         directory = self.directory(run_id)
@@ -300,6 +324,10 @@ class Store:
             )
 
     def list_runs(self):
+        with self.lock:
+            return self._list_runs()
+
+    def _list_runs(self):
         if self.settings.mode == "recorded":
             return [
                 self.recording(p.stem).run for p in sorted(self.settings.recordings.glob("*.json"))
@@ -309,6 +337,45 @@ class Store:
             key=lambda r: r.created_at,
             reverse=True,
         )
+
+    def archived_paid_records(self):
+        records = []
+        for archive in (self.settings.root / "archives").glob("*"):
+            for path in (archive / "index").glob("*.json"):
+                records.append(json.loads(path.read_text(encoding="utf-8")))
+            database = archive / "enterprise.sqlite3"
+            if database.exists():
+                with closing(
+                    sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True)
+                ) as db:
+                    with closing(db.cursor()) as cur:
+                        records += [
+                            json.loads(row[0])
+                            for row in cur.execute("SELECT body FROM analyses").fetchall()
+                        ]
+        return records
+
+    def ensure_new_paid_key(self, key, kind):
+        if any(r["idempotency_key"] == str(key) for r in self.archived_paid_records()):
+            raise StoreError(
+                409,
+                "This paid request was archived. Review the new workspace and explicitly authorize a new request.",
+            )
+        other = self.metadata() if kind == "analysis" else self.enterprise.analyses()
+        if any(r["idempotency_key"] == str(key) for r in other):
+            raise StoreError(409, "This key belongs to a different paid workflow")
+
+    def check_paid_limits(self):
+        previous = [meta["created_at"] for meta in self.metadata()]
+        previous += [a["created_at"] for a in self.enterprise.analyses()]
+        previous += [r["created_at"] for r in self.archived_paid_records()]
+        now_time = datetime.now(timezone.utc)
+        recent = [(now_time - datetime.fromisoformat(t)).total_seconds() for t in previous]
+        if any(age < 60 for age in recent) or sum(age < 3600 for age in recent) >= 3:
+            raise StoreError(
+                429,
+                "Local launch limit reached. At most one per minute and three per hour, shared by investigations and analyses.",
+            )
 
     def launch(self, request, pricing_verification=None, continuation=None, data_override=None):
         with self.lock:
@@ -322,6 +389,7 @@ class Store:
                             409, "This launch key belongs to a different investigation request"
                         )
                     return self.snapshot(meta["id"])
+            self.ensure_new_paid_key(request.idempotency_key, "investigation")
             if self.active:
                 raise StoreError(
                     409, "An investigation is already running; no second paid run was started"
@@ -331,15 +399,7 @@ class Store:
                     503,
                     "OpenAI credentials are absent. Configure them on the server before launching.",
                 )
-            timestamp = datetime.now(timezone.utc)
-            recent = [
-                (timestamp - datetime.fromisoformat(meta["created_at"])).total_seconds()
-                for meta in previous
-            ]
-            if any(age < 60 for age in recent) or sum(age < 3600 for age in recent) >= 3:
-                raise StoreError(
-                    429, "Local launch limit reached. At most one per minute and three per hour."
-                )
+            self.check_paid_limits()
             data = data_override if data_override is not None else self.public_data()
             run_id = uuid4().hex
             meta = dict(
@@ -514,7 +574,7 @@ class Store:
         )
         key = os.environ.get("OPENAI_API_KEY") or os.environ.get("CONTRACT_AGENT_API_KEY")
         with OpenAI(api_key=key, base_url="https://api.openai.com/v1", max_retries=0) as client:
-            with Journal(self.directory(run_id)) as journal:
+            with Journal(self.directory(run_id), io_lock=self.lock) as journal:
                 journal.run_id = run_id
                 return Investigator(
                     client, "gpt-6.1-sol", self.investigation_tools(data, journal), journal, limits

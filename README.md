@@ -22,3 +22,8 @@ workspace, administrator pricing setup, Windows updates and labeled test screens
 [Phase 3.2 human resolution and scoped agent continuation](docs/PHASE32.md) adds
 evidence-supported decisions, explicit paid continuation and a persisted before/after
 summary, with Windows instructions and labeled test screenshots.
+
+[Phase 4 enterprise personas](docs/PHASE4.md) connects Maya’s operational review,
+Sarah’s management analysis and Robert’s financial scenario/strategic decision in
+one persisted local workspace. The guide includes Windows setup, demo steps,
+archive reset, limitations and labeled simulated-SDK screenshots.

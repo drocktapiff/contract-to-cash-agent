@@ -13,6 +13,13 @@ from contract_to_cash.web.models import (
     RunView,
 )
 
+from contract_to_cash.web.enterprise import (
+    AnalysisRequest,
+    EnterpriseDecision,
+    ScenarioUpdate,
+    ResetRequest,
+)
+from contract_to_cash.web.enterprise_metrics import Scenario
 from contract_to_cash.web.workflow import HumanIntervention, ContinueInvestigation, PrepareGuidance
 from contract_to_cash.web.resolution_evidence import AuthorityAssertion
 from contract_to_cash.web.pricing import BillingReviewRequest, PricingConfirmation, PricingState
@@ -36,6 +43,11 @@ def public_schema():
             PrepareGuidance,
             ContinueInvestigation,
             AuthorityAssertion,
+            AnalysisRequest,
+            EnterpriseDecision,
+            ScenarioUpdate,
+            ResetRequest,
+            Scenario,
         )
     }
 

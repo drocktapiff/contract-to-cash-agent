@@ -41,6 +41,9 @@ from .workflow import (
 )
 from .resolution_evidence import registered_evidence
 
+from .enterprise import AnalysisRequest, EnterpriseDecision, ScenarioUpdate, ResetRequest
+from .demo_reset import reset_preview, archive_demo
+
 
 def create_app(settings=None, runner=None):
     settings = settings or Settings(
@@ -140,6 +143,8 @@ def create_app(settings=None, runner=None):
             raise HTTPException(
                 403, "Recorded mode is read-only; paid execution and decisions are disabled"
             )
+        if (settings.root / ".reset-recovery.json").exists():
+            raise HTTPException(503, "Workspace reset requires recovery; writes are blocked")
         item = session(request)
         if not secrets.compare_digest(request.headers.get("x-csrf-token", ""), item["csrf"]):
             raise HTTPException(403, "Operator CSRF token required")
@@ -377,6 +382,44 @@ def create_app(settings=None, runner=None):
     )
     async def prepare_recommendation(run_id: str, finding_id: str, body: PrepareGuidance):
         return prepare_guidance(store, run_id, finding_id, body)
+
+    @app.get("/api/enterprise/state", dependencies=[Depends(reader)])
+    async def enterprise_state():
+        return dict(
+            epoch=store.enterprise.epoch() if settings.mode == "operator" else "recorded",
+            active=bool(store.active),
+        )
+
+    @app.get("/api/enterprise", dependencies=[Depends(reader)])
+    async def enterprise_overview(root_run_id: str | None = None):
+        return store.enterprise.overview(root_run_id)
+
+    @app.put("/api/enterprise/scenario", dependencies=[Depends(writer)])
+    async def update_scenario(body: ScenarioUpdate):
+        return store.enterprise.set_scenario(body)
+
+    @app.post("/api/enterprise/analyses", status_code=202, dependencies=[Depends(writer)])
+    async def analyze(body: AnalysisRequest):
+        return store.enterprise.start(body, pricing_state(settings.root, settings.mode))
+
+    @app.get("/api/enterprise/analyses/{analysis_id}", dependencies=[Depends(reader)])
+    async def analysis_detail(analysis_id: str):
+        return store.enterprise.detail(analysis_id)
+
+    @app.post("/api/enterprise/analyses/{analysis_id}/decisions", dependencies=[Depends(writer)])
+    async def enterprise_decision(analysis_id: str, body: EnterpriseDecision):
+        return store.enterprise.decide(analysis_id, body)
+
+    @app.get("/api/admin/reset", dependencies=[Depends(reader)])
+    async def preview_reset():
+        if settings.mode != "operator":
+            raise StoreError(403, "Recorded mode cannot reset a live workspace")
+        with store.lock:
+            return reset_preview(store)
+
+    @app.post("/api/admin/reset", dependencies=[Depends(writer)])
+    async def reset(body: ResetRequest):
+        return archive_demo(store, body)
 
     @app.get("/api/resolution-evidence", dependencies=[Depends(reader)])
     async def authority_records():

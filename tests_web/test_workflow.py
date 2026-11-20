@@ -47,8 +47,8 @@ def authority_assertion(data, cid="C007", choose=0):
     )
 
 
-def run_simulated_continuation(settings, run_id, data, request, scenario="success", clients=None):
-    with Journal(settings.root / run_id) as journal:
+def run_simulated_continuation(store, run_id, data, request, scenario="success", clients=None):
+    with Journal(store.settings.root / run_id, io_lock=store.lock) as journal:
         journal.run_id = run_id
         tools = Store.investigation_tools(data, journal)
         cid = next(iter(data.customers))
@@ -130,7 +130,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
     def simulated_runner(self, run_id, data, request):
         if hasattr(data, "authority"):
             return run_simulated_continuation(
-                self.settings,
+                self.app.state.store,
                 run_id,
                 data,
                 request,

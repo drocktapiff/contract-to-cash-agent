@@ -1,3 +1,5 @@
+import EnterpriseWorkspace, { ResetDemo } from './EnterpriseWorkspace';
+import { personas, normalizePersona } from './personas.mjs';
 import { CollaborationSummary } from './CaseWorkflow';
 import { useEffect, useRef, useState } from 'react';
 import { api, bootstrapSession, setCsrf } from './api';
@@ -41,7 +43,25 @@ function Badge({ value }: { value: string }) {
   return <span className={'badge ' + value}>{statusLabel(value)}</span>;
 }
 
+type Persona = 'maya' | 'sarah' | 'robert';
 export default function App() {
+  const [persona, setPersona] = useState<Persona>(
+    () => normalizePersona(localStorage.getItem('ledgerline-persona')) as Persona,
+  );
+  const [enterpriseActive, setEnterpriseActive] = useState(false);
+  const workspaceEpoch = useRef<string | null>(null);
+  function switchPersona(next: Persona) {
+    setPersona(next);
+    localStorage.setItem('ledgerline-persona', next);
+    setScene('start');
+    setSelectedId('');
+    setConfirmation(false);
+  }
+  function resetWorkspace() {
+    localStorage.removeItem('ledgerline-persona');
+    location.replace('/#start');
+  }
+
   const [scene, setScene] = useState<Scene>(() =>
     ['start', 'working', 'summary', 'attention', 'history', 'advanced'].includes(
       location.hash.slice(1),
@@ -108,6 +128,30 @@ export default function App() {
   const runningRun = runs.find((r) => isActive(r.status));
   const selectedPeriod = periodName(dataset?.period ?? run?.period);
 
+  useEffect(() => {
+    if (!ready) return;
+    let active = true;
+    const check = () =>
+      void api<{ epoch: string; active: boolean }>('/enterprise/state')
+        .then((state) => {
+          if (!active) return;
+          if (workspaceEpoch.current !== null && workspaceEpoch.current !== state.epoch) {
+            resetWorkspace();
+            return;
+          }
+          workspaceEpoch.current = state.epoch;
+          setEnterpriseActive(state.active);
+        })
+        .catch(() => {
+          /* existing errors/actions remain explicit; never retry paid work */
+        });
+    check();
+    const timer = setInterval(check, 2500);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [ready]);
   async function loadWorkspace() {
     const [data, list, settings] = await Promise.allSettled([
       api<Dataset>('/dataset'),
@@ -483,29 +527,40 @@ export default function App() {
             Your judgment at the center.
           </p>
         </div>
-        <nav aria-label="Main navigation">
-          <button
-            className={
-              ['start', 'working', 'summary'].includes(scene) ? 'nav-item active' : 'nav-item'
-            }
-            onClick={() => setScene('start')}
-          >
-            <span aria-hidden="true">▤</span>Billing review
-          </button>
-          <button
-            className={scene === 'attention' ? 'nav-item active' : 'nav-item'}
-            onClick={() => setScene('attention')}
-          >
-            <span aria-hidden="true">◇</span>Needs your attention
-            {attention.length > 0 && <b>{attention.length}</b>}
-          </button>
-          <button
-            className={scene === 'history' ? 'nav-item active' : 'nav-item'}
-            onClick={() => setScene('history')}
-          >
-            <span aria-hidden="true">↶</span>Past reviews
-          </button>
-        </nav>
+        {persona !== 'maya' ? (
+          <nav aria-label="Main navigation">
+            <button className="nav-item active" onClick={() => setScene('start')}>
+              {persona === 'sarah' ? 'Department overview' : 'Expansion opportunity'}
+            </button>
+            <button className="nav-item" onClick={() => switchPersona('maya')}>
+              Maya’s operational review →
+            </button>
+          </nav>
+        ) : (
+          <nav aria-label="Main navigation">
+            <button
+              className={
+                ['start', 'working', 'summary'].includes(scene) ? 'nav-item active' : 'nav-item'
+              }
+              onClick={() => setScene('start')}
+            >
+              <span aria-hidden="true">▤</span>Billing review
+            </button>
+            <button
+              className={scene === 'attention' ? 'nav-item active' : 'nav-item'}
+              onClick={() => setScene('attention')}
+            >
+              <span aria-hidden="true">◇</span>Needs your attention
+              {attention.length > 0 && <b>{attention.length}</b>}
+            </button>
+            <button
+              className={scene === 'history' ? 'nav-item active' : 'nav-item'}
+              onClick={() => setScene('history')}
+            >
+              <span aria-hidden="true">↶</span>Past reviews
+            </button>
+          </nav>
+        )}
         <div className="sidebar-promise">
           <span className="promise-icon">✓</span>
           <strong>
@@ -520,14 +575,14 @@ export default function App() {
         </button>
         <div className="local-profile">
           <span className="avatar">
-            {(session?.reviewer ?? 'Local operator')
+            {personas[persona].name
               .split(' ')
               .map((s) => s[0])
               .slice(0, 2)
               .join('')}
           </span>
           <div>
-            {session?.reviewer ?? 'Local operator'}
+            {personas[persona].name}
             <small>
               {recorded ? 'Recorded investigation' : 'Local workspace · no billing writes'}
             </small>
@@ -540,15 +595,34 @@ export default function App() {
             Contract & Billing Operations{' '}
             <span className="crumb">
               /{' '}
-              {scene === 'attention'
-                ? 'Your decisions'
-                : scene === 'advanced'
-                  ? 'Administrator settings'
-                  : scene === 'history'
-                    ? 'Review history'
-                    : 'Monthly review'}
+              {persona !== 'maya' && scene !== 'advanced'
+                ? persona === 'sarah'
+                  ? 'Department performance'
+                  : 'Expansion planning'
+                : scene === 'attention'
+                  ? 'Your decisions'
+                  : scene === 'advanced'
+                    ? 'Administrator settings'
+                    : scene === 'history'
+                      ? 'Review history'
+                      : 'Monthly review'}
             </span>
           </span>
+          <div className="persona-switcher">
+            <label htmlFor="persona-select">Demo persona</label>
+            <select
+              id="persona-select"
+              value={persona}
+              onChange={(e) => switchPersona(e.target.value as Persona)}
+            >
+              {Object.entries(personas).map(([id, p]) => (
+                <option key={id} value={id}>
+                  {p.name} · {p.role}
+                </option>
+              ))}
+            </select>
+            <small>Fictional roles · not authenticated identities</small>
+          </div>
           <span className="local-pill">
             <i />
             {recorded ? 'Recorded Investigation' : 'Local workspace'}
@@ -588,7 +662,23 @@ export default function App() {
             </section>
           ) : (
             <>
-              {scene === 'start' && (
+              {persona !== 'maya' && scene !== 'advanced' && (
+                <EnterpriseWorkspace
+                  key={persona}
+                  persona={persona}
+                  runId={runId}
+                  pricingReady={!!pricing?.ready && !!health?.api_key_configured}
+                  recorded={!!recorded}
+                  onOperational={(id) => {
+                    switchPersona('maya');
+                    if (id) {
+                      setRunId(id);
+                      setScene('summary');
+                    }
+                  }}
+                />
+              )}
+              {persona === 'maya' && scene === 'start' && (
                 <section className="start-scene">
                   <div className="page-heading">
                     <span className="eyebrow">YOUR MONTHLY BILLING REVIEW</span>
@@ -639,7 +729,11 @@ export default function App() {
                             <button
                               className="primary"
                               disabled={
-                                busy || recorded || !health?.launch_available || !pricing?.ready
+                                busy ||
+                                enterpriseActive ||
+                                recorded ||
+                                !health?.launch_available ||
+                                !pricing?.ready
                               }
                               onClick={() => {
                                 setAuthorized(false);
@@ -737,7 +831,7 @@ export default function App() {
                   )}
                 </section>
               )}
-              {scene === 'working' && (
+              {persona === 'maya' && scene === 'working' && (
                 <section className="work-scene">
                   <div className="page-heading">
                     <span className="eyebrow">REVIEW IN PROGRESS</span>
@@ -792,7 +886,7 @@ export default function App() {
                   {advancedActivity}
                 </section>
               )}
-              {scene === 'summary' && (
+              {persona === 'maya' && scene === 'summary' && (
                 <section className="summary-scene">
                   <div className="page-heading">
                     <span className="eyebrow">YOUR SAVED REVIEW</span>
@@ -888,7 +982,7 @@ export default function App() {
                   )}
                 </section>
               )}
-              {scene === 'attention' && (
+              {persona === 'maya' && scene === 'attention' && (
                 <section className="attention-scene">
                   <div className="page-heading">
                     <span className="eyebrow">THIS IS WHERE YOU COME IN</span>
@@ -962,7 +1056,7 @@ export default function App() {
                   )}
                 </section>
               )}
-              {scene === 'history' && (
+              {persona === 'maya' && scene === 'history' && (
                 <section className="history-scene">
                   <div className="page-heading">
                     <span className="eyebrow">RETAINED WORK & DECISIONS</span>
@@ -1141,6 +1235,7 @@ export default function App() {
                     </select>
                     {advancedActivity}
                   </section>
+                  <ResetDemo onReset={resetWorkspace} recorded={!!recorded} />
                   <p className="small muted">
                     Passwordless localhost mode is not public authentication. Network or hosted
                     deployment requires proper identity and authentication first.
