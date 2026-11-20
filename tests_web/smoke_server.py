@@ -25,6 +25,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Simulated enterprise SDK/source fixtures and browser-only cooldown override",
     )
+    parser.add_argument(
+        "--paid-ux-limit",
+        action="store_true",
+        help="Ephemeral test-only persisted admission fixtures, never provider calls",
+    )
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -74,7 +79,9 @@ if __name__ == "__main__":
 
             def phase32_runner(run_id, data, request):
                 if hasattr(data, "authority"):
-                    return run_simulated_continuation(application.state.store, run_id, data, request)
+                    return run_simulated_continuation(
+                        application.state.store, run_id, data, request
+                    )
                 return root_runner(run_id, data, request)
 
             runner = phase32_runner
@@ -112,6 +119,45 @@ if __name__ == "__main__":
             )
             # Ephemeral simulated browser test only. Independent API tests exercise the real throttle.
             store.check_paid_limits = lambda: None
+        if args.phase4 or args.phase32:
+            # Explicit existing simulated browser cooldown override, mirrored by admission display.
+            # Production availability/limits are exercised by API and dedicated UX tests.
+            store = application.state.store
+            store.paid_rate_status = lambda at=None: dict(
+                available=True,
+                reasons=[],
+                next_eligible_at=None,
+                minute_launches=0,
+                hour_launches=0,
+            )
+        if args.paid_ux_limit:
+            import json
+            from datetime import datetime, timedelta, timezone
+            from uuid import uuid4
+
+            with application.state.store.enterprise.database() as cur:
+                for minutes, kind in ((5, "management"), (10, "executive"), (15, "management")):
+                    record = dict(
+                        id=uuid4().hex,
+                        idempotency_key=str(uuid4()),
+                        root_run_id="0" * 32,
+                        kind=kind,
+                        status="incomplete",
+                        reason="test_admission_fixture",
+                        input_revision="0" * 64,
+                        created_at=(
+                            datetime.now(timezone.utc) - timedelta(minutes=minutes)
+                        ).isoformat(),
+                        result=None,
+                        provenance=dict(
+                            kind="test_admission_fixture",
+                            label="Test-only admission history — no provider calls",
+                        ),
+                    )
+                    cur.execute(
+                        "INSERT INTO analyses VALUES (?,?,?)",
+                        (record["id"], record["idempotency_key"], json.dumps(record)),
+                    )
         os.environ["OPENAI_API_KEY"] = "local-test-placeholder"
         uvicorn.run(
             application,

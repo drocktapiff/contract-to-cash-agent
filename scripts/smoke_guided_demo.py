@@ -164,8 +164,8 @@ def main():
                     assert len(paid) == 1, paid
                     capture("06-robert-mocked-executive-brief.png")
                     brief.locator(".citation-buttons button").first.click()
-                    expect(page.locator(".reference-panel")).to_be_visible()
-                    page.get_by_role("button", name="Close supporting input", exact=True).click()
+                    expect(page.get_by_role("dialog",name="Supporting input",exact=True)).to_be_visible()
+                    page.get_by_role("button", name="Close evidence", exact=True).click()
                     page.get_by_label("Decision action", exact=True).select_option(
                         "request_validation"
                     )

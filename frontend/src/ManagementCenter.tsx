@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { EvidenceDrawer, EvidenceSources } from './EvidenceDrawer';
+import type { Evidence } from './types';
 import { api } from './api';
 
 type Row = {
@@ -75,19 +77,51 @@ export default function ManagementCenter({
   const [selected, setSelected] = useState<Issue | null>(null),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
-  const [sources, setSources] = useState<Record<string, unknown>[] | null>(null);
+  const [sources, setSources] = useState<Evidence[]>([]);
+  const [evidenceIssue, setEvidenceIssue] = useState<Issue | null>(null),
+    [customer, setCustomer] = useState(''),
+    [evidenceLoading, setEvidenceLoading] = useState(false),
+    [evidenceError, setEvidenceError] = useState('');
+  const request = useRef<AbortController | null>(null),
+    version = useRef(0);
+  useEffect(
+    () => () => {
+      version.current++;
+      request.current?.abort();
+    },
+    [],
+  );
+  function closeEvidence() {
+    version.current++;
+    request.current?.abort();
+    setEvidenceIssue(null);
+  }
   async function evidence(issue: Issue) {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    const current = ++version.current;
+    setEvidenceIssue(issue);
+    setCustomer(issue.customer_ids[0]);
+    setSources([]);
+    setEvidenceLoading(true);
+    setEvidenceError('');
     try {
-      setError('');
       const matching = cases.filter((c) => issue.references.includes(c.reference_id));
       const data = await Promise.all(
         matching.map((c) =>
-          api<Record<string, unknown>[]>(`/runs/${c.run_id}/findings/${c.finding_id}/evidence`),
+          api<Evidence[]>(`/runs/${c.run_id}/findings/${c.finding_id}/evidence`, {
+            signal: controller.signal,
+          }),
         ),
       );
-      setSources(data.flat());
+      if (current === version.current)
+        setSources([...new Map(data.flat().map((s) => [s.document_id, s])).values()]);
     } catch (e) {
-      setError((e as Error).message);
+      if (current === version.current && !controller.signal.aborted)
+        setEvidenceError((e as Error).message);
+    } finally {
+      if (current === version.current) setEvidenceLoading(false);
     }
   }
   async function save(event: React.FormEvent<HTMLFormElement>) {
@@ -172,7 +206,7 @@ export default function ManagementCenter({
             A common configuration defect is a hypothesis, not a proven root cause. No invoice has
             been corrected and no cash collection is established.
           </p>
-          <button onClick={() => void evidence(shared)}>Inspect shared pricing evidence</button>
+          <button onClick={() => void evidence(shared)}>View Supporting Evidence</button>
         </section>
       )}
       <section className="panel">
@@ -291,21 +325,65 @@ export default function ManagementCenter({
           </form>
         </section>
       )}
-      {sources && (
-        <section className="panel">
-          <h2>Supporting contracts and invoice records</h2>
-          <button className="plain" onClick={() => setSources(null)}>
-            Close evidence
-          </button>
-          {sources.map((s, i) => (
-            <details open key={i}>
-              <summary>{String(s.document_id)}</summary>
-              <pre className="source-text">
-                {String(s.text ?? JSON.stringify(s.record, null, 2))}
-              </pre>
-            </details>
-          ))}
-        </section>
+      {evidenceIssue && (
+        <EvidenceDrawer
+          title={
+            evidenceIssue.id.startsWith('shared:')
+              ? 'Supporting Evidence — Shared Pricing Discrepancy'
+              : 'Supporting Evidence — ' + evidenceIssue.title
+          }
+          subtitle={evidenceIssue.customer_ids.join(' · ')}
+          onClose={closeEvidence}
+        >
+          <label>
+            Selected customer account
+            <select
+              aria-label="Selected customer account"
+              value={customer}
+              onChange={(e) => setCustomer(e.target.value)}
+            >
+              {evidenceIssue.customer_ids.map((cid) => (
+                <option key={cid}>{cid}</option>
+              ))}
+            </select>
+          </label>
+          <p>
+            {evidenceIssue.evidence_status}. Matching discrepancies do not establish a shared
+            configuration defect.
+          </p>
+          {evidenceIssue.comparisons
+            .filter((r) => r.customer_id === customer)
+            .map((row) => (
+              <dl className="impact-grid" key={row.customer_id}>
+                <div>
+                  <dt>Documented contract amount</dt>
+                  <dd>{money(row.expected_cad)}</dd>
+                </div>
+                <div>
+                  <dt>Invoiced amount</dt>
+                  <dd>{money(row.billed_cad)}</dd>
+                </div>
+                <div>
+                  <dt>Potential difference</dt>
+                  <dd>{money(row.difference_cad)}</dd>
+                </div>
+              </dl>
+            ))}
+          {evidenceLoading && <p role="status">Loading saved supporting evidence…</p>}
+          {evidenceError && (
+            <div role="alert" className="notice error">
+              <p>{evidenceError}</p>
+              <button onClick={() => void evidence(evidenceIssue)}>Retry evidence retrieval</button>
+            </div>
+          )}
+          {!evidenceLoading && !evidenceError && (
+            <EvidenceSources
+              sources={sources.filter(
+                (source) => (source.customer_id ?? source.record?.customer_id) === customer,
+              )}
+            />
+          )}
+        </EvidenceDrawer>
       )}
       <section className="panel">
         <h2>Corrective Actions</h2>

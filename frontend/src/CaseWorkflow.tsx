@@ -1,3 +1,4 @@
+import PaidLaunchStatus, { usePaidAvailability } from './PaidAvailability';
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import type { Finding, Run, AuthorityRecord, CollaborativeOutcome } from './types';
@@ -123,6 +124,7 @@ export default function CaseWorkflow({
     [paid, setPaid] = useState(false);
   const request = useRef({ fingerprint: '', key: '' });
   const continuationKey = useRef(crypto.randomUUID());
+  const paidAvailability = usePaidAvailability();
   const history = (run.interventions ?? []).filter((r) => r.finding_id === finding.finding_id);
   const latest = history.at(-1);
   const conflict = (finding.comparisons ?? [finding.comparison]).some(
@@ -216,6 +218,9 @@ export default function CaseWorkflow({
       onContinue(child);
     } catch (e) {
       setError((e as Error).message);
+      setConfirming(false);
+      setPaid(false);
+      void paidAvailability.refresh();
     } finally {
       setBusy(false);
     }
@@ -391,6 +396,7 @@ export default function CaseWorkflow({
       )}
       {available && latest?.action === 'resolve' && (
         <div className="continuation-card">
+          <PaidLaunchStatus value={paidAvailability} label="Paid launch availability" />
           <h4>
             {existingContinuation
               ? 'Your continued investigation is saved'
@@ -422,8 +428,9 @@ export default function CaseWorkflow({
               ) : (
                 <button
                   className="primary"
-                  disabled={!continuationsLoaded}
-                  onClick={() => {
+                  disabled={!continuationsLoaded || !paidAvailability.available}
+                  onClick={async () => {
+                    if (!(await paidAvailability.refresh())?.available) return;
                     setConfirming(true);
                     setPaid(false);
                   }}
@@ -447,7 +454,11 @@ export default function CaseWorkflow({
             <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />I
             authorize this paid continuation.
           </label>
-          <button className="primary" disabled={busy || !paid} onClick={() => void continueRun()}>
+          <button
+            className="primary"
+            disabled={busy || !paid || !paidAvailability.available}
+            onClick={() => void continueRun()}
+          >
             Begin authorized continuation
           </button>
           <button className="plain" onClick={() => setConfirming(false)}>

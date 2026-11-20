@@ -75,11 +75,15 @@ def main():
                     expect(shared).to_contain_text("C010")
                     expect(shared).to_contain_text("$3,000.00")
                     expect(page.locator(".analysis-secondary")).not_to_have_attribute("open", "")
-                    shared.get_by_role("button", name="Inspect shared pricing evidence").click()
-                    expect(
-                        page.get_by_role("heading", name="Supporting contracts and invoice records")
-                    ).to_be_visible()
-                    expect(page.locator(".source-text").first).to_be_visible()
+                    shared.get_by_role("button", name="View Supporting Evidence").click()
+                    drawer = page.get_by_role(
+                        "dialog",
+                        name="Supporting Evidence — Shared Pricing Discrepancy",
+                        exact=True,
+                    )
+                    expect(drawer).to_be_visible()
+                    expect(drawer.locator(".source-text").first).to_be_visible()
+                    drawer.get_by_role("button", name="Close evidence", exact=True).click()
                     shared_issue = page.locator(".priority-card").filter(
                         has=page.get_by_role(
                             "heading", name="Investigate shared pricing configuration", exact=True
