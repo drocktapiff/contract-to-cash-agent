@@ -170,7 +170,7 @@ def main():
                     expect(page.locator(".scenario-results h3")).to_have_text("$170,000.00")
                     capture("06-robert-saved-financial-scenario.png")
                     page.get_by_role(
-                        "button", name="Evaluate AI Expansion Opportunity", exact=True
+                        "button", name="Generate Executive Decision Brief", exact=True
                     ).click()
                     paid = page.get_by_role(
                         "dialog", name="Authorize enterprise analysis", exact=True
@@ -178,7 +178,7 @@ def main():
                     paid.get_by_label("I authorize this paid analysis.", exact=True).check()
                     paid.get_by_role("button", name="Begin authorized analysis", exact=True).click()
                     page.get_by_role(
-                        "heading", name="Record the strategic decision", exact=True
+                        "heading", name="Executive Decision", exact=True
                     ).wait_for()
                     page.get_by_label("Decision action", exact=True).select_option("approve_pilot")
                     page.get_by_label("Decision rationale", exact=True).fill(

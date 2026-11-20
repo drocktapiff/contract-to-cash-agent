@@ -30,3 +30,6 @@ archive reset, limitations and labeled simulated-SDK screenshots.
 
 For a zero-provider three-persona presentation, use **Advanced Settings → Prepare
 Full Demo**. See [Phase 5 preparation and presentation guide](docs/PHASE5.md).
+
+[Phase 6 guided persona flow and Executive Decision Brief](docs/PHASE6.md) includes
+Windows Git Bash update/launch commands, safety boundaries and mocked-provider screenshots.

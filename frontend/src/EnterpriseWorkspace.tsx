@@ -1,3 +1,5 @@
+import GuidedDemo from './GuidedDemo';
+import ExecutiveBrief, { type Brief } from './ExecutiveBrief';
 import ManagementCenter, { type Center } from './ManagementCenter';
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
@@ -5,6 +7,7 @@ import { api } from './api';
 type Ref = { kind: string; body: Record<string, unknown>; run_id?: string };
 type Claim = { text: string; citations: string[] };
 type Analysis = {
+  provenance?: { label: string };
   id: string;
   kind: string;
   root_run_id: string;
@@ -15,6 +18,7 @@ type Analysis = {
   input_revision: string;
   current?: boolean;
   result: null | {
+    brief?: Brief;
     observations: Claim[];
     hypotheses: Claim[];
     recommendations: Claim[];
@@ -64,6 +68,13 @@ type Decision = {
   scope: string;
 };
 type Overview = {
+  management_handoff?: {
+    current: boolean;
+    root_run_id: string;
+    version: number;
+    prepared_at: string;
+    provenance: { label: string };
+  } | null;
   command_center?: Center;
   epoch: string;
   active: boolean;
@@ -229,7 +240,9 @@ export default function EnterpriseWorkspace({
   pricingReady,
   recorded,
   onOperational,
+  onNext,
 }: {
+  onNext: (persona: 'maya' | 'sarah' | 'robert') => void;
   persona: 'sarah' | 'robert';
   runId: string;
   pricingReady: boolean;
@@ -274,6 +287,22 @@ export default function EnterpriseWorkspace({
       setError((e as Error).message);
     }
   }
+  useEffect(() => {
+    if (!confirm) return;
+    const frame = requestAnimationFrame(() =>
+      document.querySelector('.paid-confirmation')?.scrollIntoView({ block: 'center' }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [confirm]);
+  useEffect(() => {
+    if (!reference) return;
+    const frame = requestAnimationFrame(() =>
+      document
+        .querySelector('.reference-panel')
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [reference]);
   useEffect(() => {
     void load();
   }, [runId, kind]);
@@ -416,6 +445,107 @@ export default function EnterpriseWorkspace({
   const available = overview.analyses.filter(
     (a) => a.kind === kind && a.root_run_id === op.root_run_id,
   );
+  const decisionPanel =
+    result && detail ? (
+      <section className="enterprise-human-decision">
+        <h3>{persona === 'sarah' ? 'Set a management priority' : 'Executive Decision'}</h3>
+        <p>
+          Internal demonstration record only. No email, ticket, budget allocation, workforce change,
+          billing correction or export approval is executed.
+        </p>
+        <label>
+          Recommendation
+          <select
+            aria-label="Recommendation to decide"
+            value={recommendation}
+            onChange={(e) => {
+              setRecommendation(Number(e.target.value));
+              setSupport(false);
+            }}
+          >
+            {result.recommendations.map((r, i) => (
+              <option key={i} value={i}>
+                {r.text.slice(0, 110)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {savedDecision ? (
+          <div className="decision-record">
+            <strong>{title(savedDecision.action)}</strong>
+            <p>{savedDecision.rationale}</p>
+            {savedDecision.owner && <p>Internal owner: {savedDecision.owner}</p>}
+            <small>
+              {savedDecision.persona.name} · local operator: {savedDecision.reviewer} ·{' '}
+              {new Date(savedDecision.created_at).toLocaleString()}
+            </small>
+          </div>
+        ) : (
+          <>
+            <label>
+              Decision
+              <select
+                aria-label="Decision action"
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+              >
+                {(persona === 'sarah'
+                  ? ['prioritize', 'follow_up', 'assign_owner', 'request_investigation', 'dismiss']
+                  : ['approve_pilot', 'request_validation', 'defer']
+                ).map((a) => (
+                  <option key={a} value={a}>
+                    {title(a)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {persona === 'sarah' && (
+              <label>
+                Internal investigation owner
+                <input
+                  value={owner}
+                  maxLength={200}
+                  onChange={(e) => setOwner(e.target.value)}
+                  placeholder="Name or department — nothing will be sent"
+                />
+              </label>
+            )}
+            <label>
+              Decision rationale
+              <textarea
+                value={rationale}
+                maxLength={1000}
+                onChange={(e) => setRationale(e.target.value)}
+              />
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={support}
+                onChange={(e) => setSupport(e.target.checked)}
+              />
+              I considered this recommendation's cited supporting inputs.
+            </label>
+            <button
+              className="primary"
+              disabled={
+                busy ||
+                !support ||
+                rationale.trim().length < 5 ||
+                detail?.status !== 'completed' ||
+                !detail.current ||
+                recorded ||
+                (['follow_up', 'assign_owner', 'request_investigation'].includes(action) &&
+                  !owner.trim())
+              }
+              onClick={() => void decide()}
+            >
+              {persona === 'sarah' ? 'Save management decision' : 'Save strategic decision'}
+            </button>
+          </>
+        )}
+      </section>
+    ) : null;
   const ref = reference && detail?.references?.[reference];
   return (
     <section className={'enterprise-workspace ' + persona}>
@@ -434,6 +564,84 @@ export default function EnterpriseWorkspace({
             : 'Use observed results and explicit assumptions to decide what deserves further investment.'}
         </p>
       </div>
+      {persona === 'robert' && (
+        <section className="panel executive-advisor">
+          <span className="eyebrow">MAYA → SARAH → ROBERT · EXECUTIVE DECISION</span>
+          <h2>Turn operational evidence into an investment decision.</h2>
+          <p>
+            Selected scenario: {op.root_run_id ?? 'none'} ·{' '}
+            {op.provenance ? 'Simulated Demo Data' : 'Saved actual investigation'} ·{' '}
+            {overview.management_handoff?.current
+              ? 'Management handoff prepared'
+              : 'Saved management context available; missing work remains a limitation'}
+            .
+          </p>
+          <p>
+            Challenge ROI assumptions, weigh Sarah’s priorities and choose a bounded pilot, more
+            validation or deferral. No recommendation authorizes spending.
+          </p>
+          <button
+            className="primary"
+            disabled={!canAnalyze || busy}
+            onClick={() => {
+              launchKey.current = crypto.randomUUID();
+              setConfirm(true);
+              setPaid(false);
+            }}
+          >
+            Generate Executive Decision Brief
+          </button>
+          {working && (
+            <p role="status" className="notice">
+              Generating the grounded brief.{' '}
+              {detail?.activity?.filter((e) => e.type === 'tool.completed').length ?? 0} snapshot
+              tool operations completed. The activity log records actual model choices; no
+              remaining-work estimate is inferred.
+            </p>
+          )}
+          {detail && !working && detail.status !== 'completed' && (
+            <p className="notice error">
+              This brief is incomplete. Saved work and earlier successful briefs are retained; no
+              strategic decision is enabled. {detail.failure_diagnostic?.message}
+            </p>
+          )}
+          {!canAnalyze && (
+            <p className="small muted">
+              Browsing and the Python scenario remain available. A new AI brief requires current
+              evidence, idle worker, server credentials, fresh pricing and explicit paid
+              authorization.
+            </p>
+          )}
+          <button className="plain" onClick={() => onNext('sarah')}>
+            Return to Sarah’s Management Review
+          </button>
+        </section>
+      )}
+      {confirm && (
+        <section
+          className="paid-confirmation panel"
+          role="dialog"
+          aria-label="Authorize enterprise analysis"
+        >
+          <h2>Authorize one paid {kind} analysis</h2>
+          <p>
+            Uses only this review's saved evidence
+            {persona === 'robert' ? ', management context and illustrative scenario' : ''}. Up to 3
+            minutes, 35 tools, 40 model requests and US$1 estimated cost. No financial correction,
+            external assignment or strategic decision is automatic.
+          </p>
+          <label className="checkbox">
+            <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />I
+            authorize this paid analysis.
+          </label>
+          <button className="primary" disabled={!paid || busy} onClick={() => void launch()}>
+            Begin authorized analysis
+          </button>
+          <button className="plain" onClick={() => setConfirm(false)}>
+            Cancel
+          </button>
+        </section>
+      )}
       <div className="persona-boundary small muted">
         Fictional demo persona · local operator authority is unchanged. These are single-operator
         prototype records, not measured departmental performance.
@@ -523,6 +731,17 @@ export default function EnterpriseWorkspace({
           Open the originating billing review →
         </button>
       </section>
+      {persona === 'sarah' && (
+        <GuidedDemo
+          stage="sarah"
+          root={op.root_run_id}
+          simulated={!!op.provenance}
+          ready={!!overview.management_handoff?.current}
+          disabled={recorded || overview.active}
+          onPrepared={() => void load()}
+          onContinue={() => onNext('robert')}
+        />
+      )}
       {overview.command_center && persona === 'sarah' && (
         <ManagementCenter
           center={overview.command_center}
@@ -546,6 +765,39 @@ export default function EnterpriseWorkspace({
           </p>
         </section>
       )}
+      {persona === 'robert' && result?.brief && detail && (
+        <ExecutiveBrief
+          brief={result.brief}
+          stance={result.stance}
+          recommendations={result.recommendations}
+          analysis={detail}
+          onReference={setReference}
+          financial={
+            <p>
+              Current potential receivables: {currency(financial.potential_receivables_cad)} ·
+              credits: {currency(financial.potential_credits_cad)} · quantifiable exposure:{' '}
+              {currency(financial.unresolved_quantifiable_exposure_cad)} · unknown:{' '}
+              {financial.unquantified_cases} case(s).
+            </p>
+          }
+          scenario={
+            <p>
+              Current illustrative recurring annual net benefit:{' '}
+              {currency(overview.scenario.outputs.recurring_annual_net_benefit_cad)}.{' '}
+              {detail.current === false
+                ? 'Current numbers are not the historical brief’s source snapshot.'
+                : ''}
+            </p>
+          }
+        />
+      )}
+      {persona === 'robert' && decisionPanel}
+      {persona === 'robert' && result && !result.brief && (
+        <p className="notice">
+          This retained analysis predates the structured brief. Expand the full AI analysis to
+          inspect its original content; no new reasoning has been inferred.
+        </p>
+      )}
       <details className="analysis-secondary" open={persona === 'robert'}>
         <summary>AI Findings &amp; Supporting Evidence</summary>
         <section className="panel analysis-launch">
@@ -562,19 +814,21 @@ export default function EnterpriseWorkspace({
                 : 'Ask AI to weigh observed results, Sarah’s saved decisions and your last saved financial assumptions.'}
             </p>
           </div>
-          <button
-            className="primary"
-            disabled={!canAnalyze || busy}
-            onClick={() => {
-              launchKey.current = crypto.randomUUID();
-              setConfirm(true);
-              setPaid(false);
-            }}
-          >
-            {persona === 'sarah'
-              ? 'Analyze Department Performance'
-              : 'Evaluate AI Expansion Opportunity'}
-          </button>
+          {persona === 'sarah' && (
+            <button
+              className="primary"
+              disabled={!canAnalyze || busy}
+              onClick={() => {
+                launchKey.current = crypto.randomUUID();
+                setConfirm(true);
+                setPaid(false);
+              }}
+            >
+              {persona === 'sarah'
+                ? 'Analyze Department Performance'
+                : 'Generate Executive Decision Brief'}
+            </button>
+          )}
           {!canAnalyze && (
             <p className="small muted">
               A saved current billing review, idle workspace, server API configuration and fresh
@@ -582,31 +836,6 @@ export default function EnterpriseWorkspace({
             </p>
           )}
         </section>
-        {confirm && (
-          <section
-            className="paid-confirmation panel"
-            role="dialog"
-            aria-label="Authorize enterprise analysis"
-          >
-            <h2>Authorize one paid {kind} analysis</h2>
-            <p>
-              Uses only this review's saved evidence
-              {persona === 'robert' ? ', management context and illustrative scenario' : ''}. Up to
-              3 minutes, 35 tools, 40 model requests and US$1 estimated cost. No financial
-              correction, external assignment or strategic decision is automatic.
-            </p>
-            <label className="checkbox">
-              <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />I
-              authorize this paid analysis.
-            </label>
-            <button className="primary" disabled={!paid || busy} onClick={() => void launch()}>
-              Begin authorized analysis
-            </button>
-            <button className="plain" onClick={() => setConfirm(false)}>
-              Cancel
-            </button>
-          </section>
-        )}
         {persona === 'robert' && scenario && (
           <section className="panel scenario-panel">
             <span className="eyebrow">ILLUSTRATIVE FINANCIAL SCENARIO · CAD</span>
@@ -815,36 +1044,39 @@ export default function EnterpriseWorkspace({
                 AI interpretation of cited inputs. Suggested causes and actions are hypotheses, not
                 verified financial facts.
               </p>
-              {(['observations', 'hypotheses', 'recommendations'] as const).map((category) => (
-                <section className="analysis-claims" key={category}>
-                  <h3>
-                    {category === 'observations'
-                      ? 'Observed evidence — AI interpretation'
-                      : category === 'hypotheses'
-                        ? 'Hypotheses to test'
-                        : 'Suggested next actions'}
-                  </h3>
-                  {result[category].map((claim, i) => (
-                    <article key={i}>
-                      <p>{claim.text}</p>
-                      <div className="citation-buttons">
-                        {claim.citations.map((ref, j) => (
-                          <button className="plain" key={ref} onClick={() => setReference(ref)}>
-                            Supporting input {j + 1} ↗
-                          </button>
-                        ))}
-                      </div>
-                    </article>
-                  ))}
-                </section>
-              ))}
-              <details>
-                <summary>Limitations to consider</summary>
-                <ul>
-                  {result.limitations.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
+              <details className="full-analysis">
+                <summary>Full AI analysis, hypotheses and limitations</summary>
+                {(['observations', 'hypotheses', 'recommendations'] as const).map((category) => (
+                  <section className="analysis-claims" key={category}>
+                    <h3>
+                      {category === 'observations'
+                        ? 'Observed evidence — AI interpretation'
+                        : category === 'hypotheses'
+                          ? 'Hypotheses to test'
+                          : 'Suggested next actions'}
+                    </h3>
+                    {result[category].map((claim, i) => (
+                      <article key={i}>
+                        <p>{claim.text}</p>
+                        <div className="citation-buttons">
+                          {claim.citations.map((ref, j) => (
+                            <button className="plain" key={ref} onClick={() => setReference(ref)}>
+                              Supporting input {j + 1} ↗
+                            </button>
+                          ))}
+                        </div>
+                      </article>
+                    ))}
+                  </section>
+                ))}
+                <details>
+                  <summary>Limitations to consider</summary>
+                  <ul>
+                    {result.limitations.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </details>
               </details>
               {reference && ref && (
                 <section className="reference-panel">
@@ -856,114 +1088,7 @@ export default function EnterpriseWorkspace({
                   </button>
                 </section>
               )}
-              <section className="enterprise-human-decision">
-                <h3>
-                  {persona === 'sarah'
-                    ? 'Set a management priority'
-                    : 'Record the strategic decision'}
-                </h3>
-                <p>
-                  Internal demonstration record only. No email, ticket, budget allocation, workforce
-                  change, billing correction or export approval is executed.
-                </p>
-                <label>
-                  Recommendation
-                  <select
-                    aria-label="Recommendation to decide"
-                    value={recommendation}
-                    onChange={(e) => {
-                      setRecommendation(Number(e.target.value));
-                      setSupport(false);
-                    }}
-                  >
-                    {result.recommendations.map((r, i) => (
-                      <option key={i} value={i}>
-                        {r.text.slice(0, 110)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {savedDecision ? (
-                  <div className="decision-record">
-                    <strong>{title(savedDecision.action)}</strong>
-                    <p>{savedDecision.rationale}</p>
-                    {savedDecision.owner && <p>Internal owner: {savedDecision.owner}</p>}
-                    <small>
-                      {savedDecision.persona.name} · local operator: {savedDecision.reviewer} ·{' '}
-                      {new Date(savedDecision.created_at).toLocaleString()}
-                    </small>
-                  </div>
-                ) : (
-                  <>
-                    <label>
-                      Decision
-                      <select
-                        aria-label="Decision action"
-                        value={action}
-                        onChange={(e) => setAction(e.target.value)}
-                      >
-                        {(persona === 'sarah'
-                          ? [
-                              'prioritize',
-                              'follow_up',
-                              'assign_owner',
-                              'request_investigation',
-                              'dismiss',
-                            ]
-                          : ['approve_pilot', 'request_validation', 'defer']
-                        ).map((a) => (
-                          <option key={a} value={a}>
-                            {title(a)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {persona === 'sarah' && (
-                      <label>
-                        Internal investigation owner
-                        <input
-                          value={owner}
-                          maxLength={200}
-                          onChange={(e) => setOwner(e.target.value)}
-                          placeholder="Name or department — nothing will be sent"
-                        />
-                      </label>
-                    )}
-                    <label>
-                      Decision rationale
-                      <textarea
-                        value={rationale}
-                        maxLength={1000}
-                        onChange={(e) => setRationale(e.target.value)}
-                      />
-                    </label>
-                    <label className="checkbox">
-                      <input
-                        type="checkbox"
-                        checked={support}
-                        onChange={(e) => setSupport(e.target.checked)}
-                      />
-                      I considered this recommendation's cited supporting inputs.
-                    </label>
-                    <button
-                      className="primary"
-                      disabled={
-                        busy ||
-                        !support ||
-                        rationale.trim().length < 5 ||
-                        detail?.status !== 'completed' ||
-                        !detail.current ||
-                        recorded ||
-                        (['follow_up', 'assign_owner', 'request_investigation'].includes(action) &&
-                          !owner.trim())
-                      }
-                      onClick={() => void decide()}
-                    >
-                      {persona === 'sarah' ? 'Save management decision' : 'Save strategic decision'}
-                    </button>
-                  </>
-                )}
-              </section>
+              {persona === 'sarah' && decisionPanel}
             </>
           )}
           {detail && (

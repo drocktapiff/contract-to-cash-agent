@@ -1,3 +1,4 @@
+import GuidedDemo from './GuidedDemo';
 import { PrepareDemo } from './ManagementCenter';
 import EnterpriseWorkspace, { ResetDemo } from './EnterpriseWorkspace';
 import { personas, normalizePersona } from './personas.mjs';
@@ -686,6 +687,24 @@ export default function App() {
                   </div>
                 </div>
               )}
+              {persona === 'maya' && scene !== 'advanced' && (
+                <GuidedDemo
+                  stage="maya"
+                  root={runId || null}
+                  simulated={!!run?.provenance}
+                  ready={!!run?.provenance && run.status === 'completed' && !stale}
+                  disabled={!!recorded || !!runningRun || enterpriseActive}
+                  onPrepared={(id) => {
+                    setRunId(id);
+                    void refreshRun(id);
+                    setScene('summary');
+                  }}
+                  onContinue={(id) => {
+                    setRunId(id);
+                    switchPersona('sarah');
+                  }}
+                />
+              )}
               {persona !== 'maya' && scene !== 'advanced' && (
                 <EnterpriseWorkspace
                   key={persona}
@@ -693,6 +712,7 @@ export default function App() {
                   runId={runId}
                   pricingReady={!!pricing?.ready && !!health?.api_key_configured}
                   recorded={!!recorded}
+                  onNext={(next) => switchPersona(next)}
                   onOperational={(id) => {
                     switchPersona('maya');
                     if (id) {

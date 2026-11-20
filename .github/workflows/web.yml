@@ -38,3 +38,4 @@ jobs:
       - run: python -m scripts.smoke_continuation
       - run: python -m scripts.smoke_enterprise
       - run: python -m scripts.smoke_full_demo
+      - run: python -m scripts.smoke_guided_demo

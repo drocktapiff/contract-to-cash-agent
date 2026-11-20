@@ -20,6 +20,7 @@ type Issue = {
   next_action: string;
 };
 type Action = {
+  provenance?: { kind: string; label?: string };
   id: string;
   issue_id: string;
   version: number;
@@ -316,6 +317,11 @@ export default function ManagementCenter({
             <h3>
               {a.owner} · {a.status}
             </h3>
+            <p className="small muted">
+              {a.provenance?.kind === 'simulated_demo_action'
+                ? 'Simulated Demo Data · proposed fixture action, not a human decision or external assignment'
+                : 'Actual local human management record · reviewer attribution in audit history'}
+            </p>
             <p>
               Priority {a.priority} · target {a.target_date} · {a.rationale}
             </p>

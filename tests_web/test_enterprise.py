@@ -121,6 +121,9 @@ def simulated_analysis(service, a, scenario="success", clients=None):
         service.store.settings.root / "analyses" / a["id"], io_lock=service.store.lock
     ) as journal:
         journal.run_id = a["id"]
+        a["provenance"] = dict(
+            kind="mocked_provider", label="Mocked provider response — not live AI"
+        )
         inputs = a["inputs"]
         tools = AnalysisTools(inputs, a["kind"], journal)
         selected = lambda name, args: dict(call(name, args), call_id=uuid4().hex)
@@ -132,6 +135,13 @@ def simulated_analysis(service, a, scenario="success", clients=None):
         refs = [case]
         if a["kind"] == "executive":
             refs += [inputs["scenario_reference"], inputs["management_reference"]]
+            refs += [
+                next(
+                    r
+                    for r, value in inputs["references"].items()
+                    if value["kind"] == "original_evidence"
+                )
+            ]
         claim = lambda text, cites: dict(text="SIMULATED SDK: " + text, citations=cites)
         output = dict(
             observations=[
@@ -165,6 +175,33 @@ def simulated_analysis(service, a, scenario="success", clients=None):
                 else {"stance": "more_validation_needed"}
             ),
         )
+        if a["kind"] == "executive":
+            from contract_to_cash.web.analysis_tools import BRIEF_SECTIONS
+
+            texts = {
+                "executive_assessment": "Mocked provider: the prototype demonstrates evidence-linked comparisons and human escalation. Investment requires further validation of workload and correction outcomes.",
+                "maya_demonstrated": f"Mocked provider: {inputs['operational']['metrics']['customers_screened']} customers were screened in this snapshot. Conflicting authority and invoice ambiguity remain unresolved; no period-wide collection success is established.",
+                "sarah_changed": f"Mocked provider: {len((inputs.get('management') or {}).get('actions', []))} internal action records are available. Prioritize shared-template investigation, retain owner accountability and require evidence before treating any task as a correction.",
+                "financial_opportunity": "Mocked provider: the Python exposure snapshot identifies potential differences, not collected cash. Staffing and workload assumptions in the scenario are unmeasured; projected benefits are not realized savings.",
+                "risks_missing_evidence": "Mocked provider: measure baseline review effort, source-backed corrections, collection outcomes and pilot operating costs. Resolve signed authority and invoice-record ambiguity before claiming defensible ROI or expansion readiness.",
+            }
+            output["brief"] = {
+                section: [
+                    claim(
+                        texts[section],
+                        [
+                            inputs["overview_reference"],
+                            inputs["management_reference"],
+                            inputs["scenario_reference"],
+                        ],
+                    )
+                ]
+                for section in BRIEF_SECTIONS
+            }
+            output["brief"]["maya_demonstrated"][0]["citations"] = [case, refs[-1]]
+
+        if scenario == "defer" and a["kind"] == "executive":
+            output["stance"] = "defer"
         script = [
             FakeResponse([selected("get_analysis_overview", {})]),
             FakeResponse([selected("get_analysis_reference", dict(reference_id=r)) for r in refs]),
