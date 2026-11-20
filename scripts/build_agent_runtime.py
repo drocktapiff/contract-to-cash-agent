@@ -13,7 +13,7 @@ def build(destination: Path):
     target = destination / 'contract_to_cash'
     paths = ['__init__.py', 'billing_engine.py',
              'agent/__init__.py', 'agent/__main__.py', 'agent/runtime.py', 'agent/tools.py',
-             'agent/events.py', 'agent/review.py', 'agent/INSTRUCTIONS.md',
+             'agent/events.py', 'agent/review.py', 'agent/diagnostics.py', 'agent/INSTRUCTIONS.md',
              'data/contracts.json', 'data/amendments.json', 'data/invoices.json',
              'data/document_hashes.json']
     # Document IDs come exclusively from the manifest, validated below by PublicData.

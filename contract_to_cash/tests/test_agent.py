@@ -269,6 +269,12 @@ class AgentTests(unittest.TestCase):
 
     def test_runtime_bundle_excludes_key_generator_tests_and_prompts(self):
         target = build(self.root / 'bundle')
+        import subprocess
+        import sys
+
+        # Import in isolation so the source checkout cannot mask a missing bundled dependency.
+        subprocess.run([sys.executable, '-c', 'from contract_to_cash.agent.runtime import Investigator'],
+                       cwd=target, check=True, capture_output=True)
         names = [str(p.relative_to(target)) for p in target.rglob('*') if p.is_file()]
         for forbidden in ('sealed_answer_key', 'generate_data', 'test_foundation', 'USER_PROMPTS'):
             self.assertFalse(any(forbidden in name for name in names))

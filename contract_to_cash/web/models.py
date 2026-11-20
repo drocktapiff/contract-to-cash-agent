@@ -75,6 +75,7 @@ class EventView(BaseModel):
 
 
 class RunView(BaseModel):
+    provenance: dict | None = None
     id: str
     mode: Literal["live", "recorded"]
     status: str

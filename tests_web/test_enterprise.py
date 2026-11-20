@@ -18,7 +18,7 @@ from contract_to_cash.agent.events import Journal
 from contract_to_cash.agent.runtime import Investigator, Limits
 from contract_to_cash.agent.tools import ToolError
 from contract_to_cash.billing_engine import expected_amount, ConflictError
-from contract_to_cash.web.analysis_tools import AnalysisTools, INSTRUCTIONS
+from contract_to_cash.web.analysis_tools import AnalysisTools
 from contract_to_cash.web.enterprise_metrics import Scenario, roi
 from contract_to_cash.web.enterprise import Enterprise
 from contract_to_cash.web.store import Store, StoreError
@@ -159,7 +159,11 @@ def simulated_analysis(service, a, scenario="success", clients=None):
             limitations=[
                 "SIMULATED SDK: source review is incomplete; staffing/ROI are assumptions and no collections or external assignments occurred."
             ],
-            stance="not_applicable" if a["kind"] == "management" else "more_validation_needed",
+            **(
+                {"validation_status": "more_validation_needed"}
+                if a["kind"] == "management"
+                else {"stance": "more_validation_needed"}
+            ),
         )
         script = [
             FakeResponse([selected("get_analysis_overview", {})]),
@@ -197,7 +201,7 @@ def simulated_analysis(service, a, scenario="success", clients=None):
             tools,
             journal,
             limits,
-            instructions=INSTRUCTIONS,
+            instructions=tools.instructions,
         ).run("SIMULATED SDK " + a["kind"] + " analysis")
 
 
@@ -290,6 +294,12 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
             for tool in request["tools"]:
                 self.assertIs(tool["strict"], True)
                 validate_api_schema(tool["parameters"])
+                if tool["name"] == "save_analysis":
+                    properties = tool["parameters"]["properties"]
+                    field = "validation_status" if "validation_status" in properties else "stance"
+                    self.assertIn(field, request["instructions"])
+                    self.assertNotIn("not_applicable", properties[field]["enum"])
+                    self.assertEqual("stance" in properties, field == "stance")
                 self.assertNotIn('"uniqueItems"', json.dumps(tool))
 
     async def test_schema_failure_diagnostic_retained_without_sensitive_data(self):
@@ -329,6 +339,10 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
         a, body = await self.launch_analysis(run)
         self.assert_api_tools_compatible(self.clients[-1])
         self.assertEqual(a["status"], "completed", a)
+        self.assertEqual(a["result"]["validation_status"], "more_validation_needed")
+        self.assertNotIn("stance", a["result"])
+        self.assertEqual(a["metrics"]["tool_failures"], 0)
+        self.assertEqual(len(self.clients[-1].requests), 4)
         self.assertTrue(a["current"])
         for group in ("observations", "hypotheses", "recommendations"):
             self.assertTrue(
@@ -380,6 +394,10 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
         executive, _ = await self.launch_analysis(run, "executive")
         self.assert_api_tools_compatible(self.clients[-1])
         self.assertEqual(executive["status"], "completed", executive)
+        self.assertEqual(executive["result"]["stance"], "more_validation_needed")
+        self.assertNotIn("validation_status", executive["result"])
+        self.assertEqual(executive["metrics"]["tool_failures"], 0)
+        self.assertEqual(len(self.clients[-1].requests), 4)
         self.assertTrue(
             any(
                 r["kind"] == "persisted_management_context"
@@ -759,7 +777,7 @@ class EnterpriseTests(unittest.IsolatedAsyncioTestCase):
                     journal,
                     Limits(**values),
                     clock=clock,
-                    instructions=INSTRUCTIONS,
+                    instructions=tools.instructions,
                 ).run("SIMULATED limits")
                 self.assertEqual(report["status"], "incomplete")
                 self.assertIn(

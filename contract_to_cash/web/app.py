@@ -43,6 +43,8 @@ from .resolution_evidence import registered_evidence
 
 from .enterprise import AnalysisRequest, EnterpriseDecision, ScenarioUpdate, ResetRequest
 from .demo_reset import reset_preview, archive_demo
+from .demo_prepare import PrepareDemo, prepare
+from .management import ActionInput, save_action
 
 
 def create_app(settings=None, runner=None):
@@ -409,6 +411,14 @@ def create_app(settings=None, runner=None):
     @app.post("/api/enterprise/analyses/{analysis_id}/decisions", dependencies=[Depends(writer)])
     async def enterprise_decision(analysis_id: str, body: EnterpriseDecision):
         return store.enterprise.decide(analysis_id, body)
+
+    @app.post("/api/admin/prepare-demo", dependencies=[Depends(writer)])
+    async def prepare_demo(body: PrepareDemo):
+        return prepare(store)
+
+    @app.post("/api/enterprise/actions", dependencies=[Depends(writer)])
+    async def management_action(body: ActionInput):
+        return save_action(store.enterprise, body)
 
     @app.get("/api/admin/reset", dependencies=[Depends(reader)])
     async def preview_reset():

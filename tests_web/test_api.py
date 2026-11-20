@@ -292,7 +292,7 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
 
         gate = threading.Event()
         original = self.app.state.store.runner
-        self.app.state.store.runner = lambda *args: (gate.wait(timeout=2), original(*args))[1]
+        self.app.state.store.runner = lambda *args: (gate.wait(), original(*args))[1]
         payload = self.payload()
         first = await self.client.post("/api/runs", headers=self.headers, json=payload)
         try:
@@ -306,10 +306,13 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
             )
         finally:
             gate.set()
-        for _ in range(150):
-            if self.app.state.store.active is None:
-                break
-            await asyncio.sleep(0.01)
+        # The Windows SQLite/filesystem path can outlast the old 1.5-second poll.
+        # Wait for actual worker completion without blocking the ASGI event loop.
+        worker = self.app.state.store.worker
+        self.assertIsNotNone(worker)
+        await asyncio.to_thread(worker.join, 30)
+        self.assertFalse(worker.is_alive(), "Simulated worker did not complete")
+        self.assertIsNone(self.app.state.store.active)
         self.assertEqual(
             (
                 await self.client.post("/api/runs", headers=self.headers, json=self.payload())

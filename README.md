@@ -27,3 +27,6 @@ summary, with Windows instructions and labeled test screenshots.
 Sarah’s management analysis and Robert’s financial scenario/strategic decision in
 one persisted local workspace. The guide includes Windows setup, demo steps,
 archive reset, limitations and labeled simulated-SDK screenshots.
+
+For a zero-provider three-persona presentation, use **Advanced Settings → Prepare
+Full Demo**. See [Phase 5 preparation and presentation guide](docs/PHASE5.md).
