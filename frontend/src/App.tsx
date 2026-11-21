@@ -62,7 +62,7 @@ export default function App() {
   }
   function resetWorkspace() {
     localStorage.removeItem('ledgerline-persona');
-    location.replace('/#start');
+    location.replace('/legacy#start');
   }
 
   const [scene, setScene] = useState<Scene>(() =>
@@ -575,6 +575,9 @@ export default function App() {
           </strong>
           <p>The agent checks the records. You handle the judgment and authorization.</p>
         </div>
+        <a className="advanced-link" href="/">
+          Revenue Operations — My Work ↗
+        </a>
         <button className="advanced-link" onClick={() => setScene('advanced')}>
           Advanced Settings <span aria-hidden="true">↗</span>
         </button>

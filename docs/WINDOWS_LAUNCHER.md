@@ -7,6 +7,10 @@ API and built frontend respond. **No operator password, Credential Manager looku
 browser login is required.** Startup never makes an OpenAI call, starts a paid run,
 approves a finding, authorizes an export or deletes history.
 
+The default dashboard is now [Maya’s document-driven My Work workspace](LEDGERLINE2_STAGE2.md).
+The original paid investigation/persona application remains at `/legacy`. Reinstall
+`requirements-web.txt` after updating to include the PDF parser dependencies.
+
 ## One-time setup (Windows Git Bash / Python 3.13)
 
 Install Python 3.13 and Node.js 22.12+. From the checkout:

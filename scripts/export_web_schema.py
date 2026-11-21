@@ -13,6 +13,8 @@ from contract_to_cash.web.models import (
     RunView,
 )
 
+from contract_to_cash.web.document_workspace import WorkspaceCommand
+
 from contract_to_cash.web.enterprise import (
     AnalysisRequest,
     EnterpriseDecision,
@@ -29,6 +31,7 @@ def public_schema():
     return {
         model.__name__: model.model_json_schema()
         for model in (
+            WorkspaceCommand,
             DatasetView,
             EventView,
             Health,

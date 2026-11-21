@@ -2,6 +2,14 @@
 Contract-to-cash-agent
 
 
+## Revenue Operations — My Work (Ledgerline 2.0 Stage 2)
+
+The default dashboard now processes real document-derived work: load the 149 sample
+PDFs, inspect evidence, complete permitted checks, review exceptions and escalate to
+Sarah’s persisted inbox. [Windows setup, demo flow, safeguards and screenshots](docs/LEDGERLINE2_STAGE2.md).
+The original Phase 6.1 application remains at `/legacy`; existing history is preserved.
+No OpenAI calls are needed for the document workflow.
+
 ## Local operations console (Phase 3)
 
 A React/TypeScript workspace and protected FastAPI adapter build on the existing

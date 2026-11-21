@@ -30,6 +30,7 @@ if __name__ == "__main__":
         action="store_true",
         help="Ephemeral test-only persisted admission fixtures, never provider calls",
     )
+    parser.add_argument("--document-workspace", action="store_true", help="Synthetic browser interactions, real PDF intake; no provider calls")
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -89,6 +90,8 @@ if __name__ == "__main__":
             runner = fixture.simulated_runner
         application = create_app(settings, runner)
         fixture.app = application
+        if args.document_workspace:
+            application.state.document_workspace.interaction_kind = "simulated_fixture"
         if args.phase32:
             from datetime import datetime, timedelta, timezone
 

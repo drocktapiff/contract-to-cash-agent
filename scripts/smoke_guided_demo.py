@@ -59,7 +59,7 @@ def main():
                             else None
                         ),
                     )
-                    page.goto("http://127.0.0.1:8128", wait_until="networkidle")
+                    page.goto("http://127.0.0.1:8128/legacy", wait_until="networkidle")
 
                     def capture(name):
                         if args.screenshots:

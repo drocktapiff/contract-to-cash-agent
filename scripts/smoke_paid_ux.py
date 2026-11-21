@@ -58,7 +58,7 @@ def main():
                             args.screenshots.mkdir(parents=True, exist_ok=True)
                             page.screenshot(path=str(args.screenshots / name), full_page=not bool(page.locator("dialog[open]").count()))
 
-                    page.goto("http://127.0.0.1:8129", wait_until="networkidle")
+                    page.goto("http://127.0.0.1:8129/legacy", wait_until="networkidle")
                     session = page.request.get("http://127.0.0.1:8129/api/session").json()
                     headers = {"x-csrf-token": session["csrf_token"]}
                     assert page.request.put(

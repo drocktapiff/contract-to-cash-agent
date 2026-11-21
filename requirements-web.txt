@@ -3,3 +3,6 @@ fastapi==0.141.1
 uvicorn==0.52.1
 httpx==0.28.1
 pydantic==2.14.2
+
+# Document workspace uses actual PDF intake; never an optional fake-data fallback.
+-r requirements-documents.txt
