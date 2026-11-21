@@ -46,7 +46,7 @@ def main():
                             args.screenshots.mkdir(parents=True, exist_ok=True)
                             page.screenshot(path=str(args.screenshots / name), full_page=True)
 
-                    page.goto("http://127.0.0.1:8127", wait_until="networkidle")
+                    page.goto("http://127.0.0.1:8127/legacy", wait_until="networkidle")
                     page.get_by_role("button", name="Advanced Settings", exact=True).click()
                     page.get_by_role("button", name="Prepare Full Demo", exact=True).click()
                     dialog = page.get_by_role("dialog", name="Confirm simulated demo preparation")

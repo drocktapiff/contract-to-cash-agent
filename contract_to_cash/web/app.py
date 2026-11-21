@@ -47,6 +47,7 @@ from .paid_availability import availability
 from .demo_prepare import PrepareDemo, prepare
 from .management import ActionInput, save_action
 from .guided_demo import SarahDemo, complete_sarah
+from .document_workspace import DocumentWorkspace, WorkspaceCommand
 
 
 def create_app(settings=None, runner=None):
@@ -57,11 +58,14 @@ def create_app(settings=None, runner=None):
         raise ValueError("Mode must be operator or recorded")
     store = Store(settings, runner)
     sessions, attempts = {}, {}
+    documents = DocumentWorkspace(store)
 
     @asynccontextmanager
     async def lifespan(app):
         store.open()
         try:
+            if settings.mode == "operator":
+                documents.initialize()
             yield
         finally:
             store.close()
@@ -76,6 +80,7 @@ def create_app(settings=None, runner=None):
         openapi_url=None,
     )
     app.state.store = store
+    app.state.document_workspace = documents
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=["localhost", "127.0.0.1"]
@@ -569,6 +574,54 @@ def create_app(settings=None, runner=None):
                 ),
                 headers={"Content-Disposition": 'attachment; filename="review-package.json"'},
             )
+
+    @app.get("/api/document-workspace", dependencies=[Depends(reader)])
+    async def document_snapshot():
+        return await asyncio.to_thread(documents.snapshot)
+
+    @app.get("/api/document-workspace/sessions/{sid}", dependencies=[Depends(reader)])
+    async def document_session(sid: str):
+        return await asyncio.to_thread(documents.snapshot, sid)
+
+    @app.post("/api/document-workspace/load", dependencies=[Depends(writer)])
+    async def document_load(body: WorkspaceCommand):
+        return await asyncio.to_thread(documents.load, command=body)
+
+    @app.post("/api/document-workspace/restart", dependencies=[Depends(writer)])
+    async def document_restart(body: WorkspaceCommand):
+        return await asyncio.to_thread(documents.load, True, body.expected_session, body)
+
+    @app.get("/api/document-workspace/sessions/{sid}/events", dependencies=[Depends(reader)])
+    async def document_events(sid: str):
+        def read_events():
+            with documents.database(documents.directory(sid) / "journal.sqlite3") as conn:
+                return [dict(sequence=row[0], **json.loads(row[1])) for row in documents.rows(conn, "SELECT sequence,body FROM workflow_events ORDER BY sequence")]
+        return await asyncio.to_thread(read_events)
+
+    @app.get("/api/document-workspace/sessions/{sid}/items/{wid}", dependencies=[Depends(reader)])
+    async def document_item(sid: str, wid: str):
+        return await asyncio.to_thread(documents.detail, sid, wid)
+
+    @app.get("/api/document-workspace/sessions/{sid}/evidence/{digest}", dependencies=[Depends(reader)])
+    async def document_pdf(sid: str, digest: str):
+        path = await asyncio.to_thread(documents.pdf, sid, digest)
+        return FileResponse(path, media_type="application/pdf", filename=path.name, content_disposition_type="inline")
+
+    @app.get("/api/document-workspace/sessions/{sid}/management-inbox", dependencies=[Depends(reader)])
+    async def document_inbox(sid: str):
+        return await asyncio.to_thread(documents.inbox, sid)
+
+    @app.post("/api/document-workspace/sessions/{sid}/process/{mode}", dependencies=[Depends(writer)])
+    async def document_batch(sid: str, mode: str, body: WorkspaceCommand):
+        if mode not in ("routine", "auto_all"):
+            raise StoreError(422, "Unsupported batch disposition")
+        return await asyncio.to_thread(documents.perform, sid, mode, body)
+
+    @app.post("/api/document-workspace/sessions/{sid}/items/{wid}/{action}", dependencies=[Depends(writer)])
+    async def document_action(sid: str, wid: str, action: str, body: WorkspaceCommand):
+        if action == "auto_all":
+            raise StoreError(422, "Use the batch endpoint")
+        return await asyncio.to_thread(documents.perform, sid, action, body, wid)
 
     @app.get("/{path:path}")
     async def frontend(path: str):

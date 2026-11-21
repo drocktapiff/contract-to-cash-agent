@@ -91,7 +91,7 @@ def installation_errors(root):
     errors = []
     if not (root / ".web-venv/Scripts/python.exe").is_file():
         errors.append("Missing .web-venv\\Scripts\\python.exe.")
-    if any(importlib.util.find_spec(name) is None for name in ("fastapi", "uvicorn", "openai")):
+    if any(importlib.util.find_spec(name) is None for name in ("fastapi", "uvicorn", "openai", "pypdf", "reportlab")):
         errors.append("Install requirements-web.txt in .web-venv; web dependencies are missing.")
     build = root / "frontend/dist"
     if (

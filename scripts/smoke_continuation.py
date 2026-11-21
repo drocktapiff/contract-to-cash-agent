@@ -51,7 +51,7 @@ def main():
                     )
                     errors = []
                     page.on("pageerror", lambda e: errors.append(str(e)))
-                    page.goto("http://127.0.0.1:8125", wait_until="networkidle")
+                    page.goto("http://127.0.0.1:8125/legacy", wait_until="networkidle")
 
                     def capture(name):
                         if not args.screenshots:

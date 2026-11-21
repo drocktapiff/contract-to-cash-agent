@@ -1,0 +1,240 @@
+import os
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+import httpx
+from contract_to_cash.web.app import create_app
+from contract_to_cash.web.store import Settings
+from scripts.build_agent_runtime import build
+from tests_workspace.test_workspace import command
+
+
+class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        runtime = build(root / "runtime")
+        self.env = patch.dict(os.environ, {"OPENAI_API_KEY": ""})
+        self.env.start()
+        self.settings = Settings(
+            root=root / "runs",
+            data=runtime / "contract_to_cash/data",
+            frontend=Path("frontend/dist"),
+        )
+        self.app = create_app(self.settings)
+        self.life = self.app.router.lifespan_context(self.app)
+        await self.life.__aenter__()
+        self.client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(self.app), base_url="http://127.0.0.1:8000"
+        )
+        session = (await self.client.get("/api/session")).json()
+        self.headers = {"x-csrf-token": session["csrf_token"]}
+
+    async def asyncTearDown(self):
+        await self.client.aclose()
+        await self.life.__aexit__(None, None, None)
+        self.env.stop()
+        self.tmp.cleanup()
+
+    async def load(self):
+        response = await self.client.post(
+            "/api/document-workspace/load", headers=self.headers, json=command().model_dump()
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        return response.json()
+
+    async def test_real_import_routine_telemetry_pdf_and_inbox(self):
+        initial = (await self.client.get("/api/document-workspace")).json()
+        self.assertIsNone(initial["session_id"])
+        data = await self.load()
+        sid = data["session_id"]
+        self.assertEqual(data["metrics"]["total"], 102)
+        self.assertEqual(data["metrics"]["automatically_completed"], 0)
+        work = next(w for w in data["items"] if w["category"] == "contract_conflict")
+        detail = (
+            await self.client.get(
+                f'/api/document-workspace/sessions/{sid}/items/{work["work_item_id"]}'
+            )
+        ).json()
+        pdf = await self.client.get(
+            f'/api/document-workspace/sessions/{sid}/evidence/{detail["documents"][0]["file_hash"]}'
+        )
+        self.assertEqual(pdf.status_code, 200)
+        self.assertTrue(pdf.content.startswith(b"%PDF-"))
+        self.assertIn("inline", pdf.headers["content-disposition"])
+        body = command(
+            expected_version=work["version"], evidence_hashes=[detail["documents"][0]["file_hash"]]
+        ).model_dump()
+        response = await self.client.post(
+            f'/api/document-workspace/sessions/{sid}/items/{work["work_item_id"]}/escalate',
+            headers=self.headers,
+            json=body,
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        inbox = (
+            await self.client.get(f"/api/document-workspace/sessions/{sid}/management-inbox")
+        ).json()
+        self.assertEqual(inbox["items"][0]["item"]["work_item_id"], work["work_item_id"])
+        result = await self.client.post(
+            f"/api/document-workspace/sessions/{sid}/process/routine",
+            headers=self.headers,
+            json=command().model_dump(),
+        )
+        self.assertEqual(result.status_code, 200, result.text)
+        self.assertEqual(result.json()["automatically_closed"], 73)
+        snapshot = (await self.client.get("/api/document-workspace")).json()
+        self.assertEqual(snapshot["metrics"]["escalated"], 1)
+        self.assertEqual(snapshot["telemetry"]["api_requests"], 0)
+        events = (await self.client.get(f"/api/document-workspace/sessions/{sid}/events")).json()
+        self.assertTrue(any(e["type"] == "escalated" for e in events))
+        self.assertEqual([e["sequence"] for e in events], sorted(e["sequence"] for e in events))
+
+    async def test_csrf_origin_loopback_and_no_financial_authority(self):
+        for path in ("/api/document-workspace/load", "/api/document-workspace/restart"):
+            self.assertEqual(
+                (await self.client.post(path, json=command().model_dump())).status_code, 403
+            )
+            self.assertEqual(
+                (
+                    await self.client.post(
+                        path,
+                        json=command().model_dump(),
+                        headers={**self.headers, "origin": "https://attacker.example"},
+                    )
+                ).status_code,
+                403,
+            )
+        external = httpx.AsyncClient(
+            transport=httpx.ASGITransport(self.app, client=("192.0.2.1", 5000)),
+            base_url="http://127.0.0.1:8000",
+        )
+        try:
+            self.assertEqual((await external.get("/api/document-workspace")).status_code, 403)
+        finally:
+            await external.aclose()
+        data = await self.load()
+        sid = data["session_id"]
+        work = next(w for w in data["items"] if w["category"] == "credit_review")
+        payload = command(
+            expected_version=1, evidence_hashes=list(work["supporting_facts"])[:1]
+        ).model_dump()
+        for action in ("approve_credit", "export", "approve_contract"):
+            self.assertEqual(
+                (
+                    await self.client.post(
+                        f'/api/document-workspace/sessions/{sid}/items/{work["work_item_id"]}/{action}',
+                        headers=self.headers,
+                        json=payload,
+                    )
+                ).status_code,
+                422,
+            )
+        self.assertEqual((await self.client.get("/api/runs")).json(), [])
+
+    async def test_restart_refresh_and_retained_human_escalation(self):
+        data = await self.load()
+        old = data["session_id"]
+        work = next(w for w in data["items"] if w["category"] == "contract_conflict")
+        payload = command(
+            expected_version=1, evidence_hashes=list(work["supporting_facts"])[:1]
+        ).model_dump()
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f'/api/document-workspace/sessions/{old}/items/{work["work_item_id"]}/escalate',
+                    headers=self.headers,
+                    json=payload,
+                )
+            ).status_code,
+            200,
+        )
+        body = command(expected_session=old).model_dump()
+        response = await self.client.post(
+            "/api/document-workspace/restart", headers=self.headers, json=body
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        fresh = response.json()
+        self.assertNotEqual(fresh["session_id"], old)
+        self.assertEqual(fresh["metrics"]["automatically_completed"], 0)
+        self.assertEqual(
+            (await self.client.get("/api/document-workspace")).json()["session_id"],
+            fresh["session_id"],
+        )
+        self.assertEqual(
+            (
+                await self.client.get(f"/api/document-workspace/sessions/{old}/management-inbox")
+            ).json()["items"][0]["item"]["status"],
+            "Escalated",
+        )
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f"/api/document-workspace/sessions/{old}/process/routine",
+                    headers=self.headers,
+                    json=command().model_dump(),
+                )
+            ).status_code,
+            409,
+        )
+        again = await self.client.post(
+            "/api/document-workspace/restart", headers=self.headers, json=body
+        )
+        self.assertEqual(again.json()["session_id"], fresh["session_id"])
+
+    async def test_recorded_mode_cannot_mutate_document_workspace(self):
+        self.app.state.store.settings.mode = "recorded"
+        self.assertEqual(
+            (
+                await self.client.post(
+                    "/api/document-workspace/load",
+                    headers=self.headers,
+                    json=command().model_dump(),
+                )
+            ).status_code,
+            403,
+        )
+        self.app.state.store.settings.mode = "operator"
+
+    async def test_invalid_attribution_confirmation_and_version_are_rejected(self):
+        data = await self.load()
+        sid = data["session_id"]
+        work = data["items"][0]
+        bad = command().model_dump()
+        bad["confirmation"] = "APPROVE EVERYTHING"
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f"/api/document-workspace/sessions/{sid}/process/auto_all",
+                    headers=self.headers,
+                    json=bad,
+                )
+            ).status_code,
+            422,
+        )
+        bad = command().model_dump()
+        bad["actor"] = " "
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f"/api/document-workspace/sessions/{sid}/process/auto_all",
+                    headers=self.headers,
+                    json=bad,
+                )
+            ).status_code,
+            422,
+        )
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f'/api/document-workspace/sessions/{sid}/items/{work["work_item_id"]}/auto',
+                    headers=self.headers,
+                    json=command().model_dump(),
+                )
+            ).status_code,
+            409,
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
