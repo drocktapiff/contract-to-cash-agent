@@ -264,6 +264,69 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
             401,
         )
 
+    async def test_selected_endpoints_partial_results_refresh_and_oversight(self):
+        loaded = await self.load()
+        sid = loaded["session_id"]
+        body = command(expected_session=sid).model_dump()
+        body["selected"] = [
+            dict(id=w["work_item_id"], version=w["version"]) for w in loaded["items"]
+        ]
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f"/api/document-workspace/sessions/{sid}/selected/close", json=body
+                )
+            ).status_code,
+            403,
+        )
+        closed = await self.client.post(
+            f"/api/document-workspace/sessions/{sid}/selected/close",
+            headers=self.headers,
+            json=body,
+        )
+        self.assertEqual(closed.status_code, 200, closed.text)
+        self.assertEqual(closed.json()["checks_completed"], 73)
+        replay = await self.client.post(
+            f"/api/document-workspace/sessions/{sid}/selected/close",
+            headers=self.headers,
+            json=body,
+        )
+        self.assertEqual(replay.json(), closed.json())
+        snapshot = (await self.client.get("/api/document-workspace")).json()
+        self.assertEqual(snapshot["last_bulk_operation"]["result"], closed.json())
+        remaining = [w for w in snapshot["items"] if w["status"] != "Closed"]
+        body = command(expected_session=sid).model_dump()
+        body["selected"] = [dict(id=w["work_item_id"], version=w["version"]) for w in remaining] + [
+            dict(id="WI-" + "f" * 24, version=1)
+        ]
+        result = await self.client.post(
+            f"/api/document-workspace/sessions/{sid}/selected/escalate",
+            headers=self.headers,
+            json=body,
+        )
+        self.assertEqual(result.status_code, 200, result.text)
+        self.assertEqual(result.json()["handoffs_created"], 29)
+        self.assertEqual(result.json()["blocked"], 1)
+        self.assertTrue(result.json()["partial"])
+        inbox = (
+            await self.client.get(f"/api/document-workspace/sessions/{sid}/management-inbox")
+        ).json()
+        self.assertEqual(len(inbox["items"]), 29)
+        self.assertTrue(
+            any(d["item"]["current_decision_owner"] == "Finance" for d in inbox["items"])
+        )
+        bad = {**body, "selected": [body["selected"][0], body["selected"][0]]}
+        self.assertEqual(
+            (
+                await self.client.post(
+                    f"/api/document-workspace/sessions/{sid}/selected/escalate",
+                    headers=self.headers,
+                    json=bad,
+                )
+            ).status_code,
+            422,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,9 @@ The original paid investigation/persona application remains at `/legacy`. Reinst
 See [Stage 2.5 Show Me the Work](LEDGERLINE2_STAGE25.md) for the guided source-backed
 presentation and consolidated Process All Work action. No paid advisor is introduced.
 
+See [Stage 2.6 bulk selection and Sarah oversight](LEDGERLINE2_STAGE26.md) for the
+selected-work presentation. AI Powered Close is deterministic; no live model is used.
+
 ## One-time setup (Windows Git Bash / Python 3.13)
 
 Install Python 3.13 and Node.js 22.12+. From the checkout:

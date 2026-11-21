@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, bootstrapSession, setCsrf } from './api';
 import './document-workspace.css';
 import WorkWalkthrough from './WorkWalkthrough';
+import ManagementInbox from './ManagementInbox';
 
 type Evidence = {
   file_hash: string;
@@ -20,6 +21,9 @@ type Recommendation = {
 };
 type Business = {
   impact_text: string;
+  management_oversight_owner: string | null;
+  current_decision_owner: string;
+  waiting_on_department: string | null;
   title: string;
   view: string;
   case_owner: string;
@@ -28,6 +32,13 @@ type Business = {
   why_it_matters: string;
 };
 type Work = {
+  oversight?: {
+    id: string;
+    owner: string;
+    reason: string;
+    requested_at: string;
+    requested_by: string;
+  };
   business: Business;
   work_item_id: string;
   customer_id: string;
@@ -90,6 +101,7 @@ type Snapshot = {
   };
   document_count?: number;
   customer_count?: number;
+  last_bulk_operation?: { id: string; status: string; result: BulkResult };
   provenance?: string;
   business_counts: Record<string, number>;
   scenarios: { key: string; label: string; work_item_id: string | null }[];
@@ -99,7 +111,35 @@ type Result = {
   [key: string]: number | string | Record<string, number>;
   queue_outcome: Record<string, number>;
 };
-type Action = { mode: string; label: string; item?: Work };
+type SelectedItem = { id: string; version: number; note?: string };
+type BulkResult = {
+  session_id: string;
+  kind: 'selected';
+  action: string;
+  operation_id: string;
+  status: string;
+  partial: boolean;
+  total_examined: number;
+  checks_completed: number;
+  requires_review: number;
+  handoffs_created: number;
+  handoffs_reused: number;
+  blocked: number;
+  failed: number;
+  awaiting_finance: number;
+  awaiting_evidence: number;
+  sarah_direct: number;
+  financial_actions_executed: number;
+  duration_seconds: number;
+  per_item: { id: string; outcome: string; reason: string; status?: string }[];
+};
+type Action = {
+  mode: string;
+  label: string;
+  item?: Work;
+  selected?: SelectedItem[];
+  sessionId?: string;
+};
 const labels: Record<string, string> = {
   auto: 'Auto Complete',
   routine: 'Complete routine check',
@@ -122,11 +162,19 @@ const title = (s: string) => s.replaceAll('_', ' ').replace(/^./, (c) => c.toUpp
 export default function DocumentWorkspace() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [detail, setDetail] = useState<Detail | null>(null);
+  const [viewSarah, setViewSarah] = useState(false);
+  const [selection, setSelection] = useState<{ sid: string | null; items: Record<string, number> }>(
+    { sid: null, items: {} },
+  );
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const headerCheckbox = useRef<HTMLInputElement>(null);
   const [walkShown, setWalkShown] = useState(false);
   const [walkItem, setWalkItem] = useState<string | null>(null);
   const [filter, setFilter] = useState('All Work'),
     [search, setSearch] = useState(''),
-    [limit, setLimit] = useState(25);
+    [page, setPage] = useState(0);
+  const limit = 25;
+  const setLimit = (_value: number) => setPage(0);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
@@ -135,18 +183,23 @@ export default function DocumentWorkspace() {
     [rationale, setRationale] = useState(''),
     [evidence, setEvidence] = useState<string[]>([]),
     [confirmed, setConfirmed] = useState(false);
+  const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
   const [result, setResult] = useState<Result | null>(null),
     [readOnly, setReadOnly] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null),
     actionDialog = useRef<HTMLDialogElement>(null),
     opener = useRef<HTMLElement | null>(null);
   const lastRequest = useRef<{ key: string; body: object } | null>(null);
-  const disabled = busy || readOnly || !!snapshot?.read_only || !!snapshot?.processing_active;
+  const disabled =
+    viewSarah || busy || readOnly || !!snapshot?.read_only || !!snapshot?.processing_active;
   async function refresh(sid?: string) {
     const next = await api<Snapshot>(
       sid ? `/document-workspace/sessions/${sid}` : '/document-workspace',
     );
     setSnapshot(next);
+    if (next.last_bulk_operation?.status === 'completed')
+      setBulkResult(next.last_bulk_operation.result);
+    else setBulkResult(null);
     return next;
   }
   useEffect(() => {
@@ -179,7 +232,29 @@ export default function DocumentWorkspace() {
   }, [snapshot?.processing_active]);
   useEffect(() => {
     setWalkShown(false);
+    setSelection({ sid: snapshot?.session_id ?? null, items: {} });
+    setPage(0);
+    setBulkResult(
+      snapshot?.last_bulk_operation?.status === 'completed'
+        ? snapshot.last_bulk_operation.result
+        : null,
+    );
   }, [snapshot?.session_id]);
+  useEffect(() => {
+    if (!snapshot?.session_id) return;
+    setSelection((previous) =>
+      previous.sid === snapshot.session_id
+        ? {
+            sid: previous.sid,
+            items: Object.fromEntries(
+              Object.entries(previous.items).filter(([id]) =>
+                snapshot.items.some((w) => w.work_item_id === id && w.status !== 'Closed'),
+              ),
+            ),
+          }
+        : previous,
+    );
+  }, [snapshot]);
   useEffect(() => {
     if (detail) dialog.current?.showModal();
     else dialog.current?.close();
@@ -229,8 +304,9 @@ export default function DocumentWorkspace() {
     setBusy(true);
     setError('');
     setResult(null);
+    if (action.selected) setBulkResult(null);
     setNotice('Revalidating original PDF evidence and applying permitted workflow dispositions…');
-    const sid = snapshot?.active_session_id,
+    const sid = action.sessionId ?? snapshot?.active_session_id,
       a = action;
     const fields = {
       actor: actor.trim(),
@@ -239,6 +315,9 @@ export default function DocumentWorkspace() {
       expected_session: sid ?? null,
       expected_version: a.item?.version ?? null,
       evidence_hashes: evidence,
+      ...(a.selected
+        ? { selected: a.selected.map((x) => ({ ...x, note: itemNotes[x.id] ?? '' })) }
+        : {}),
     };
     const key = JSON.stringify([sid, a.mode, a.item?.work_item_id, fields]);
     if (lastRequest.current?.key !== key)
@@ -250,9 +329,11 @@ export default function DocumentWorkspace() {
       const path =
         a.mode === 'load' || a.mode === 'restart'
           ? `/document-workspace/${a.mode}`
-          : a.item
-            ? `/document-workspace/sessions/${sid}/items/${a.item.work_item_id}/${a.mode}`
-            : `/document-workspace/sessions/${sid}/process/${a.mode}`;
+          : a.selected
+            ? `/document-workspace/sessions/${sid}/selected/${a.mode === 'selected_close' ? 'close' : 'escalate'}`
+            : a.item
+              ? `/document-workspace/sessions/${sid}/items/${a.item.work_item_id}/${a.mode}`
+              : `/document-workspace/sessions/${sid}/process/${a.mode}`;
       const answer = await api<Result | Snapshot>(path, {
         method: 'POST',
         body: JSON.stringify(lastRequest.current.body),
@@ -268,6 +349,16 @@ export default function DocumentWorkspace() {
             ? 'Fresh session ready. Previous work and decisions are retained.'
             : 'Sample PDFs are available in the active session. Existing decisions are retained.',
         );
+      } else if (a.selected) {
+        const selectedResult = answer as unknown as BulkResult;
+        setBulkResult(selectedResult);
+        setResult(null);
+        setNotice(
+          selectedResult.partial
+            ? 'Some selected items were blocked or failed. Inspect the per-item outcomes.'
+            : 'Selected workflow recorded. Review and oversight are not financial approval.',
+        );
+        setSelection({ sid: sid ?? null, items: {} });
       } else {
         setResult(answer as Result);
         setNotice(
@@ -293,7 +384,8 @@ export default function DocumentWorkspace() {
     (w) =>
       (filter === 'All Work' ||
         w.business.view === filter ||
-        (filter === 'Sarah' && w.status === 'Escalated') ||
+        ((filter === 'Sarah' || filter === 'Escalated to Sarah') &&
+          (w.oversight || w.status === 'Escalated')) ||
         (filter === 'Finance' && w.status === 'Awaiting Financial Review') ||
         (filter === 'Missing evidence' && w.status === 'Awaiting Evidence')) &&
       `${w.work_item_id} ${w.customer_id} ${w.customer_name ?? ''} ${w.required_action} ${w.category}`
@@ -307,6 +399,42 @@ export default function DocumentWorkspace() {
       a.customer_id.localeCompare(b.customer_id) ||
       a.category.localeCompare(b.category),
   );
+  const pageIndex = Math.min(page, Math.max(0, Math.ceil(items.length / limit) - 1));
+  const visible = items.slice(pageIndex * limit, (pageIndex + 1) * limit);
+  const selected = selection.sid === snapshot?.session_id ? selection.items : {};
+  const selectedCount = Object.keys(selected).length;
+  const selectable = (w: Work) => w.status !== 'Closed';
+  const currentPage = visible.filter(selectable);
+  const allPage = currentPage.length > 0 && currentPage.every((w) => w.work_item_id in selected);
+  useEffect(() => {
+    if (headerCheckbox.current)
+      headerCheckbox.current.indeterminate =
+        !allPage && currentPage.some((w) => w.work_item_id in selected);
+  });
+  function chooseMany(rows: Work[]) {
+    if (!snapshot?.session_id) return;
+    setSelection((prev) => ({
+      sid: snapshot.session_id,
+      items: {
+        ...(prev.sid === snapshot.session_id ? prev.items : {}),
+        ...Object.fromEntries(rows.filter(selectable).map((w) => [w.work_item_id, w.version])),
+      },
+    }));
+  }
+  function startSelected(mode: string) {
+    if (!selectedCount || !snapshot?.session_id) return;
+    setError('');
+    setConfirmed(false);
+    setRationale('');
+    setItemNotes({});
+    setEvidence([]);
+    setAction({
+      mode,
+      label: mode === 'selected_close' ? 'AI Powered Close' : 'Escalate Selected to Sarah',
+      sessionId: snapshot.session_id,
+      selected: Object.entries(selected).map(([id, version]) => ({ id, version })),
+    });
+  }
   const financial = detail?.item.financial_impact;
   return (
     <div className="mywork">
@@ -315,12 +443,25 @@ export default function DocumentWorkspace() {
           Ledgerline<span>REVENUE OPERATIONS</span>
         </a>
         <div className="mw-persona">
-          <span className="mw-avatar">MT</span>
+          <span className="mw-avatar">{viewSarah ? 'SC' : 'MT'}</span>
           <div>
-            <strong>Maya Tremblay</strong>
-            <small>Revenue Operations Specialist</small>
+            <strong>{viewSarah ? 'Sarah Chen' : 'Maya Tremblay'}</strong>
+            <small>
+              {viewSarah
+                ? 'Director of Revenue Operations · read-only oversight'
+                : 'Revenue Operations Specialist'}
+            </small>
           </div>
         </div>
+        <button
+          onClick={() => {
+            setViewSarah((v) => !v);
+            setDetail(null);
+            setSelection({ sid: snapshot?.session_id ?? null, items: {} });
+          }}
+        >
+          {viewSarah ? 'Return to Maya' : 'Sarah’s Inbox'}
+        </button>
         <a className="mw-legacy" href="/legacy">
           Advanced / Legacy workspace ↗
         </a>
@@ -329,7 +470,11 @@ export default function DocumentWorkspace() {
         <div className="mw-heading">
           <div>
             <span className="mw-eyebrow">MY WORKSPACE</span>
-            <h1>Revenue Operations — My Work</h1>
+            <h1>
+              {viewSarah
+                ? 'Revenue Operations — Management Oversight'
+                : 'Revenue Operations — My Work'}
+            </h1>
             <p>
               One queue for billing checks, contract evidence and the decisions that need a human.
             </p>
@@ -400,228 +545,448 @@ export default function DocumentWorkspace() {
                 </button>
               </p>
             )}
-            <section className="mw-metrics" aria-label="Work metrics">
-              {[
-                ['Work received', 'total', snapshot.business_counts.total],
-                [
-                  'Verified checks completed',
-                  'automatically_completed',
-                  snapshot.metrics.automatically_completed,
-                ],
-                ['Needs My Attention', 'needs_maya', snapshot.business_counts.needs_maya],
-                ['Awaiting Others', 'awaiting_others', snapshot.business_counts.awaiting_others],
-              ].map(([label, key, value]) => (
-                <article key={key}>
-                  <span>{label}</span>
-                  <strong data-testid={key}>{value}</strong>
-                  <small>
-                    {key === 'total'
-                      ? `${snapshot.metrics.routine_eligible} routine-eligible · ${snapshot.metrics.exceptions} exceptions`
-                      : key === 'automatically_completed'
-                        ? 'Administrative checks, not financial corrections'
-                        : key === 'awaiting_others'
-                          ? 'Sarah, Finance or missing documentation'
-                          : 'Ready checks and decisions for Maya'}
-                  </small>
-                </article>
-              ))}
-            </section>
-            <section className="mw-queue" aria-label="Revenue operations work queue">
-              <div className="mw-queue-heading">
-                <div>
-                  <h2>Your work queue</h2>
-                  <p>Complete supported checks. Keep uncertainty visible.</p>
+            {!viewSarah && (
+              <section className="mw-metrics" aria-label="Work metrics">
+                {[
+                  ['Work received', 'total', snapshot.business_counts.total],
+                  [
+                    'Verified checks completed',
+                    'automatically_completed',
+                    snapshot.metrics.automatically_completed,
+                  ],
+                  ['Needs My Attention', 'needs_maya', snapshot.business_counts.needs_maya],
+                  ['Awaiting Others', 'awaiting_others', snapshot.business_counts.awaiting_others],
+                ].map(([label, key, value]) => (
+                  <article key={key}>
+                    <span>{label}</span>
+                    <strong data-testid={key}>{value}</strong>
+                    <small>
+                      {key === 'total'
+                        ? `${snapshot.metrics.routine_eligible} routine-eligible · ${snapshot.metrics.exceptions} exceptions`
+                        : key === 'automatically_completed'
+                          ? 'Administrative checks, not financial corrections'
+                          : key === 'awaiting_others'
+                            ? 'Sarah, Finance or missing documentation'
+                            : 'Ready checks and decisions for Maya'}
+                    </small>
+                  </article>
+                ))}
+              </section>
+            )}
+            {viewSarah ? (
+              <ManagementInbox
+                sid={snapshot.session_id}
+                revision={snapshot}
+                onOpen={(id) => {
+                  const work = snapshot.items.find((w) => w.work_item_id === id);
+                  if (work) void openItem(work);
+                }}
+              />
+            ) : (
+              <section className="mw-queue" aria-label="Revenue operations work queue">
+                <div className="mw-queue-heading">
+                  <div>
+                    <h2>Your work queue</h2>
+                    <p>Complete supported checks. Keep uncertainty visible.</p>
+                  </div>
+                  <div className="mw-command-row">
+                    <button
+                      disabled={busy}
+                      onClick={() => {
+                        setWalkItem(null);
+                        setWalkShown(true);
+                      }}
+                    >
+                      Show Me the Work
+                    </button>
+                    {selectedCount === 0 && (
+                      <button
+                        className="mw-primary"
+                        disabled={disabled}
+                        onClick={() => begin('auto_all')}
+                      >
+                        Process All Work
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="mw-command-row">
-                  <button
-                    disabled={busy}
-                    onClick={() => {
-                      setWalkItem(null);
-                      setWalkShown(true);
-                    }}
-                  >
-                    Show Me the Work
-                  </button>
-                  <button
-                    className="mw-primary"
-                    disabled={disabled}
-                    onClick={() => begin('auto_all')}
-                  >
-                    Process All Work
-                  </button>
-                </div>
-              </div>
-              {result && (
-                <section className="mw-result" aria-label="Processing result">
-                  <span className="mw-eyebrow">RECORDED WORKFLOW OUTCOME</span>
-                  <h2>
-                    {Number(result.failed) > 0
-                      ? 'Processing needs review'
-                      : "Here's What Ledgerline Accomplished"}
-                  </h2>
-                  {Number(result.failed) > 0 && (
-                    <p role="alert">
-                      Processing failed or was partial. Inspect the failed work before treating any
-                      outcome as complete.
+                {selectedCount > 0 && (
+                  <section className="mw-bulk-toolbar" aria-label="Selected work actions">
+                    <div>
+                      <strong role="status" aria-live="polite">
+                        {selectedCount} Work Items Selected
+                      </strong>
+                      <small>
+                        Selection is scoped to this session. Current versions and PDF evidence are
+                        checked on the server.
+                      </small>
+                    </div>
+                    <div className="mw-command-row">
+                      <button
+                        className="mw-primary"
+                        disabled={disabled}
+                        onClick={() => startSelected('selected_close')}
+                        aria-describedby="mw-automated-scope"
+                      >
+                        AI Powered Close
+                      </button>
+                      <button
+                        disabled={disabled}
+                        onClick={() => startSelected('selected_escalate')}
+                      >
+                        Escalate to Sarah
+                      </button>
+                      <button
+                        disabled={busy}
+                        onClick={() => setSelection({ sid: snapshot.session_id, items: {} })}
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                    <p id="mw-automated-scope">
+                      Automated evidence validation and financial rules. No live AI model used in
+                      this demonstration.
+                    </p>
+                  </section>
+                )}
+                {bulkResult?.session_id === snapshot.session_id && (
+                  <section className="mw-result" aria-label="Selected work outcome">
+                    <h2>
+                      {bulkResult.partial
+                        ? 'Selected work needs attention'
+                        : 'Selected workflow outcome'}
+                    </h2>
+                    <p>
+                      {bulkResult.action === 'close'
+                        ? 'Only supported administrative checks were completed. Unresolved cases remain open.'
+                        : 'Sarah received oversight; financial and contractual authority did not transfer.'}
+                    </p>
+                    <dl>
+                      {[
+                        ['Items examined', 'total_examined'],
+                        ['Routine checks completed', 'checks_completed'],
+                        ['Requiring review', 'requires_review'],
+                        ['Handoffs created', 'handoffs_created'],
+                        ['Existing handoffs reused', 'handoffs_reused'],
+                        ['Awaiting Finance', 'awaiting_finance'],
+                        ['Awaiting evidence', 'awaiting_evidence'],
+                        ['Sarah’s direct attention', 'sarah_direct'],
+                        ['Blocked', 'blocked'],
+                        ['Failed', 'failed'],
+                        ['Unauthorized financial actions', 'financial_actions_executed'],
+                      ].map(([label, key]) => (
+                        <div key={key}>
+                          <dt>{label}</dt>
+                          <dd>{String(bulkResult[key as keyof BulkResult] ?? 0)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <button
+                      disabled={disabled}
+                      onClick={() =>
+                        chooseMany(snapshot.items.filter((w) => w.status !== 'Closed'))
+                      }
+                    >
+                      Select All Remaining Work
+                    </button>
+                    <small>
+                      {snapshot.items.filter((w) => w.status === 'Closed').length} completed items
+                      excluded. Existing Sarah handoffs may be selected and safely reused.
+                    </small>
+                    <details>
+                      <summary>Per-item outcomes and exclusions</summary>
+                      <ul>
+                        {bulkResult.per_item.map((row) => (
+                          <li key={row.id}>
+                            <button
+                              onClick={() => {
+                                const work = snapshot.items.find((w) => w.work_item_id === row.id);
+                                if (work) void openItem(work);
+                              }}
+                            >
+                              {row.id}
+                            </button>{' '}
+                            — {title(row.outcome)}: {row.reason}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </section>
+                )}
+                {snapshot.last_bulk_operation &&
+                  snapshot.last_bulk_operation.status === 'interrupted' && (
+                    <p className="mw-alert" role="alert">
+                      The last selected operation is {snapshot.last_bulk_operation.status}. No
+                      uncommitted success is claimed. Retry its operation ID or inspect the audit
+                      history.
                     </p>
                   )}
-                  <p>
-                    Completed checks and work routed for another decision are different outcomes. No
-                    revenue recovery or financial approval is claimed.
-                  </p>
-                  <dl>
+                {result && (
+                  <section className="mw-result" aria-label="Processing result">
+                    <span className="mw-eyebrow">RECORDED WORKFLOW OUTCOME</span>
+                    <h2>
+                      {Number(result.failed) > 0
+                        ? 'Processing needs review'
+                        : "Here's What Ledgerline Accomplished"}
+                    </h2>
+                    {Number(result.failed) > 0 && (
+                      <p role="alert">
+                        Processing failed or was partial. Inspect the failed work before treating
+                        any outcome as complete.
+                      </p>
+                    )}
+                    <p>
+                      Completed checks and work routed for another decision are different outcomes.
+                      No revenue recovery or financial approval is claimed.
+                    </p>
+                    <dl>
+                      {[
+                        ['Total work examined', 'total_examined'],
+                        ['Routine checks completed', 'checks_completed'],
+                        ['Items skipped', 'skipped'],
+                        ['Blocked or unchanged', 'unchanged_due_to_safeguards'],
+                        ['Processing failures', 'failed'],
+                        ['System processing duration (seconds)', 'duration_seconds'],
+                      ].map(([label, key]) => (
+                        <div key={key}>
+                          <dt>{label}</dt>
+                          <dd>{String(result[key] ?? 'Not recorded')}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <h3>Where the work stands now</h3>
+                    <div className="mw-queue-breakdown">
+                      {[
+                        ['Completed', 'completed', 'Completed'],
+                        ['Needs Maya', 'needs_maya', 'Needs My Attention'],
+                        ['Awaiting Sarah', 'awaiting_sarah', 'Sarah'],
+                        ['Awaiting Finance', 'awaiting_finance', 'Finance'],
+                        ['Awaiting missing evidence', 'awaiting_evidence', 'Missing evidence'],
+                      ].map(([label, key, view]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setFilter(view);
+                            setSearch('');
+                          }}
+                        >
+                          <strong>{snapshot.business_counts[key]}</strong>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <small>
+                      These current-state counts come from the saved queue, not a projected success
+                      rate. Open a group to inspect its work items. Runtime is not employee labor
+                      time.
+                    </small>
+                  </section>
+                )}
+                <details className="mw-granular">
+                  <summary>Granular processing controls</summary>
+                  <button disabled={disabled} onClick={() => begin('routine')}>
+                    Process Routine Work
+                  </button>
+                  <button
+                    disabled={disabled}
+                    onClick={() => begin('auto_all', undefined, 'Auto Complete All')}
+                  >
+                    Auto Complete All
+                  </button>
+                </details>
+                <div className="mw-filters">
+                  <div role="group" aria-label="Work queue filters">
                     {[
-                      ['Total work examined', 'total_examined'],
-                      ['Routine checks completed', 'checks_completed'],
-                      ['Items skipped', 'skipped'],
-                      ['Blocked or unchanged', 'unchanged_due_to_safeguards'],
-                      ['Processing failures', 'failed'],
-                      ['System processing duration (seconds)', 'duration_seconds'],
-                    ].map(([label, key]) => (
-                      <div key={key}>
-                        <dt>{label}</dt>
-                        <dd>{String(result[key] ?? 'Not recorded')}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <h3>Where the work stands now</h3>
-                  <div className="mw-queue-breakdown">
-                    {[
-                      ['Completed', 'completed', 'Completed'],
-                      ['Needs Maya', 'needs_maya', 'Needs My Attention'],
-                      ['Awaiting Sarah', 'awaiting_sarah', 'Sarah'],
-                      ['Awaiting Finance', 'awaiting_finance', 'Finance'],
-                      ['Awaiting missing evidence', 'awaiting_evidence', 'Missing evidence'],
-                    ].map(([label, key, view]) => (
+                      'Needs My Attention',
+                      'Awaiting Others',
+                      'Completed',
+                      'All Work',
+                      'Escalated to Sarah',
+                    ].map((f) => (
                       <button
-                        key={key}
+                        key={f}
+                        aria-pressed={f === filter}
                         onClick={() => {
-                          setFilter(view);
-                          setSearch('');
+                          setFilter(f);
+                          setLimit(25);
                         }}
                       >
-                        <strong>{snapshot.business_counts[key]}</strong>
-                        {label}
+                        {f}
                       </button>
                     ))}
                   </div>
-                  <small>
-                    These current-state counts come from the saved queue, not a projected success
-                    rate. Open a group to inspect its work items. Runtime is not employee labor
-                    time.
-                  </small>
-                </section>
-              )}
-              <details className="mw-granular">
-                <summary>Granular processing controls</summary>
-                <button disabled={disabled} onClick={() => begin('routine')}>
-                  Process Routine Work
-                </button>
-                <button
-                  disabled={disabled}
-                  onClick={() => begin('auto_all', undefined, 'Auto Complete All')}
-                >
-                  Auto Complete All
-                </button>
-              </details>
-              <div className="mw-filters">
-                <div role="group" aria-label="Work queue filters">
-                  {['Needs My Attention', 'Awaiting Others', 'Completed', 'All Work'].map((f) => (
-                    <button
-                      key={f}
-                      aria-pressed={f === filter}
-                      onClick={() => {
-                        setFilter(f);
-                        setLimit(25);
-                      }}
-                    >
-                      {f}
-                    </button>
-                  ))}
+                  <input
+                    aria-label="Search work items"
+                    placeholder="Search customer or action"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setLimit(25);
+                    }}
+                  />
                 </div>
-                <input
-                  aria-label="Search work items"
-                  placeholder="Search customer or action"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setLimit(25);
-                  }}
-                />
-              </div>
-              <div className="mw-table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      {[
-                        'Work item / Customer',
-                        'Potential business impact',
-                        'Required action',
-                        'Priority',
-                        'Assigned owner',
-                        'Status',
-                        'Recommended next action',
-                      ].map((x) => (
-                        <th key={x}>{x}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.slice(0, limit).map((w) => (
-                      <tr key={w.work_item_id}>
-                        <td>
-                          <button
-                            className="mw-item-link"
-                            onClick={(e) => void openItem(w, e.currentTarget)}
-                          >
-                            <strong>{w.customer_name ?? w.customer_id}</strong>
-                            <small>{w.customer_id}</small>
-                            <small>{w.work_item_id}</small>
-                            <span className="mw-sr">Open work item</span>
-                          </button>
-                        </td>
-                        <td>{w.business.impact_text}</td>
-                        <td>
-                          {w.business.title}
-                          <small className="mw-row-reason">{title(w.business_object_type)}</small>
-                          <small className="mw-row-reason">{w.eligibility_reason}</small>
-                        </td>
-                        <td>
-                          <span className={`mw-priority ${w.priority === 'High' ? 'high' : ''}`}>
-                            {w.priority}
-                          </span>
-                        </td>
-                        <td>
-                          {w.business.case_owner}
-                          <small className="mw-row-reason">
-                            {w.business.waiting_on
-                              ? `Waiting on ${w.business.waiting_on}`
-                              : 'Next: Maya'}
-                          </small>
-                        </td>
-                        <td>
-                          <span
-                            className={`mw-status ${w.status === 'Closed' ? 'closed' : w.status === 'Escalated' ? 'escalated' : ''}`}
-                          >
-                            {statuses[w.status] ?? w.status}
-                          </span>
-                        </td>
-                        <td>{w.business.next_action}</td>
+                <div className="mw-selection-scope">
+                  <button disabled={disabled} onClick={() => chooseMany(items)}>
+                    Select All Matching
+                  </button>
+                  {!bulkResult && (
+                    <button
+                      disabled={disabled}
+                      onClick={() =>
+                        chooseMany(snapshot.items.filter((w) => w.status !== 'Closed'))
+                      }
+                    >
+                      Select All Remaining Work
+                    </button>
+                  )}
+                  <span>
+                    {items.filter(selectable).length} matching actionable items;{' '}
+                    {items.filter((w) => !selectable(w)).length} completed items excluded. Header
+                    Select All applies only to this page.
+                  </span>
+                </div>
+                <div className="mw-table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            aria-label="Select All"
+                            ref={headerCheckbox}
+                            disabled={disabled || !currentPage.length}
+                            checked={allPage}
+                            onChange={(e) => {
+                              if (e.target.checked) chooseMany(currentPage);
+                              else
+                                setSelection((prev) => ({
+                                  sid: snapshot.session_id,
+                                  items: Object.fromEntries(
+                                    Object.entries(prev.items).filter(
+                                      ([id]) => !currentPage.some((w) => w.work_item_id === id),
+                                    ),
+                                  ),
+                                }));
+                            }}
+                          />
+                        </th>
+                        {[
+                          'Work item / Customer',
+                          'Potential business impact',
+                          'Required action',
+                          'Priority',
+                          'Assigned owner',
+                          'Status',
+                          'Recommended next action',
+                        ].map((x) => (
+                          <th key={x}>{x}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {!items.length && <p className="mw-empty">No work items match this view.</p>}
-              <div className="mw-table-footer">
-                <span>
-                  Showing {Math.min(limit, items.length)} of {items.length} matching work items
-                </span>
-                {limit < items.length && (
-                  <button onClick={() => setLimit((v) => v + 25)}>Show more</button>
-                )}
-              </div>
-            </section>
+                    </thead>
+                    <tbody>
+                      {visible.map((w) => (
+                        <tr key={w.work_item_id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              aria-label={
+                                'Select ' +
+                                (w.customer_name ?? w.customer_id) +
+                                ' — ' +
+                                w.business.title +
+                                ' — ' +
+                                w.work_item_id
+                              }
+                              title={
+                                w.status === 'Closed'
+                                  ? 'Completed items cannot be acted upon'
+                                  : w.oversight
+                                    ? 'Sarah already oversees this item; escalation will reuse the handoff'
+                                    : 'Select this work item'
+                              }
+                              disabled={disabled || !selectable(w)}
+                              checked={w.work_item_id in selected}
+                              onChange={(e) => {
+                                if (e.target.checked) chooseMany([w]);
+                                else
+                                  setSelection((prev) => ({
+                                    sid: snapshot.session_id,
+                                    items: Object.fromEntries(
+                                      Object.entries(prev.items).filter(
+                                        ([id]) => id !== w.work_item_id,
+                                      ),
+                                    ),
+                                  }));
+                              }}
+                            />
+                          </td>
+                          <td>
+                            <button
+                              className="mw-item-link"
+                              onClick={(e) => void openItem(w, e.currentTarget)}
+                            >
+                              <strong>{w.customer_name ?? w.customer_id}</strong>
+                              <small>{w.customer_id}</small>
+                              <small>{w.work_item_id}</small>
+                              <span className="mw-sr">Open work item</span>
+                            </button>
+                          </td>
+                          <td>{w.business.impact_text}</td>
+                          <td>
+                            {w.business.title}
+                            <small className="mw-row-reason">{title(w.business_object_type)}</small>
+                            <small className="mw-row-reason">{w.eligibility_reason}</small>
+                          </td>
+                          <td>
+                            <span className={`mw-priority ${w.priority === 'High' ? 'high' : ''}`}>
+                              {w.priority}
+                            </span>
+                          </td>
+                          <td>
+                            {w.business.case_owner}
+                            <small className="mw-row-reason">
+                              {w.business.waiting_on
+                                ? `Waiting on ${w.business.waiting_on}`
+                                : 'Next: Maya'}
+                            </small>
+                          </td>
+                          <td>
+                            <span
+                              className={`mw-status ${w.status === 'Closed' ? 'closed' : w.status === 'Escalated' ? 'escalated' : ''}`}
+                            >
+                              {statuses[w.status] ?? w.status}
+                            </span>
+                          </td>
+                          <td>{w.business.next_action}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {!items.length && <p className="mw-empty">No work items match this view.</p>}
+                <div className="mw-table-footer">
+                  <span>
+                    Showing {items.length ? pageIndex * limit + 1 : 0}–
+                    {Math.min((pageIndex + 1) * limit, items.length)} of {items.length} matching
+                    work items
+                  </span>
+                  <div className="mw-command-row">
+                    <button disabled={pageIndex === 0} onClick={() => setPage(pageIndex - 1)}>
+                      Previous Page
+                    </button>
+                    <span>
+                      Page {pageIndex + 1} of {Math.max(1, Math.ceil(items.length / limit))}
+                    </span>
+                    <button
+                      disabled={(pageIndex + 1) * limit >= items.length}
+                      onClick={() => setPage(pageIndex + 1)}
+                    >
+                      Next Page
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
             <section className="mw-bottom">
               <details>
                 <summary>Workflow telemetry</summary>
@@ -732,6 +1097,21 @@ export default function DocumentWorkspace() {
               · Owner: {detail.item.business.case_owner} · Waiting on:{' '}
               {detail.item.business.waiting_on ?? 'Maya’s next action'}
             </p>
+            {detail.item.business.management_oversight_owner && (
+              <section className="mw-oversight">
+                <strong>Management oversight: Sarah Chen</strong>
+                <p>
+                  Decision required from: {detail.item.business.current_decision_owner}. Status:{' '}
+                  {detail.item.status}. No financial approval authority has transferred.
+                </p>
+                {detail.item.oversight && (
+                  <p>
+                    Handoff recorded {new Date(detail.item.oversight.requested_at).toLocaleString()}{' '}
+                    · {detail.item.oversight.reason}
+                  </p>
+                )}
+              </section>
+            )}
             <button
               onClick={() => {
                 setDetail(null);
@@ -934,6 +1314,7 @@ export default function DocumentWorkspace() {
           }}
           onRemaining={() => {
             setWalkShown(false);
+            setSelection({ sid: snapshot.session_id, items: {} });
             begin('auto_all', undefined, 'Process All Remaining Work');
           }}
         />
@@ -974,6 +1355,36 @@ export default function DocumentWorkspace() {
               />
             </label>
             <small>Self-reported attribution in a local session, not authenticated identity.</small>
+            {action.selected && (
+              <>
+                <p>
+                  {action.selected.length} selected work items. Current source evidence and captured
+                  versions will be revalidated. Sarah provides oversight, not financial approval.
+                </p>
+                {action.mode === 'selected_close' && (
+                  <p>
+                    Automated evidence validation and financial rules. No live AI model used in this
+                    demonstration.
+                  </p>
+                )}
+                <details>
+                  <summary>Optional per-item notes</summary>
+                  {action.selected.map((row) => (
+                    <label key={row.id}>
+                      {row.id}
+                      <textarea
+                        maxLength={1000}
+                        value={itemNotes[row.id] ?? ''}
+                        onChange={(e) =>
+                          setItemNotes((prev) => ({ ...prev, [row.id]: e.target.value }))
+                        }
+                        disabled={busy}
+                      />
+                    </label>
+                  ))}
+                </details>
+              </>
+            )}
             <label htmlFor="mw-rationale">Rationale</label>
             <textarea
               id="mw-rationale"

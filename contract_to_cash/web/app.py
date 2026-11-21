@@ -48,6 +48,7 @@ from .demo_prepare import PrepareDemo, prepare
 from .management import ActionInput, save_action
 from .guided_demo import SarahDemo, complete_sarah
 from .document_workspace import DocumentWorkspace, WorkspaceCommand
+from .selected_workflow import SelectedCommand, selected_operation
 
 
 def create_app(settings=None, runner=None):
@@ -614,6 +615,10 @@ def create_app(settings=None, runner=None):
     @app.get("/api/document-workspace/sessions/{sid}/management-inbox", dependencies=[Depends(reader)])
     async def document_inbox(sid: str):
         return await asyncio.to_thread(documents.inbox, sid)
+
+    @app.post('/api/document-workspace/sessions/{sid}/selected/{action}', dependencies=[Depends(writer)])
+    async def selected_document_action(sid:str,action:str,body:SelectedCommand):
+        return await asyncio.to_thread(selected_operation, documents,sid,action,body)
 
     @app.post("/api/document-workspace/sessions/{sid}/process/{mode}", dependencies=[Depends(writer)])
     async def document_batch(sid: str, mode: str, body: WorkspaceCommand):

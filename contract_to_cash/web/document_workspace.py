@@ -507,12 +507,15 @@ class DocumentWorkspace:
                 json.loads(r[0])
                 for r in self.rows(conn, "SELECT body FROM workflow_events ORDER BY sequence")
             ]
-            operations = self.rows(conn, "SELECT status,result FROM workflow_operations")
+            operations = self.rows(
+                conn, "SELECT id,status,result FROM workflow_operations ORDER BY rowid"
+            )
             docs = self.documents(conn)
             intake = self.rows(
                 conn, "SELECT value FROM workflow_meta WHERE key='intake_duration_seconds'"
             )
-        for item in items:item['business']=business(item)
+        for item in items:
+            item["business"] = business(item)
         counts = Counter(w["status"] for w in items)
         completions = {
             e["item_id"]
@@ -573,6 +576,14 @@ class DocumentWorkspace:
             read_only=sid != self.active(),
             processing_active=any(o["status"] == "running" for o in operations),
             sessions=histories,
+            last_bulk_operation=next(
+                (
+                    dict(id=o["id"], status=o["status"], result=json.loads(o["result"]))
+                    for o in reversed(operations)
+                    if o["result"] and json.loads(o["result"]).get("kind") == "selected"
+                ),
+                None,
+            ),
             items=items,
             metrics=dict(
                 total=len(items),
@@ -611,7 +622,7 @@ class DocumentWorkspace:
                     eligibility_reason="Original source PDF is missing or changed. Saved extracted facts are historical; obtain and revalidate authoritative evidence.",
                 )
                 work["recommendation"] = recommendation(work)
-        work['business']=business(work)
+        work["business"] = business(work)
         return dict(
             item=work,
             documents=documents,
@@ -620,8 +631,10 @@ class DocumentWorkspace:
         )
 
     def allowed(self, work):
-        if work["status"] in ("Closed", "Escalated", "Awaiting Financial Review"):
+        if work.get("oversight") or work["status"] in ("Closed", "Escalated"):
             return []
+        if work["status"] == "Awaiting Financial Review":
+            return ["escalate"]
         actions = ["auto", "request_evidence", "escalate", "accept", "reject", "review"]
         if work["automation_eligible"]:
             actions.append("routine")
@@ -651,6 +664,30 @@ class DocumentWorkspace:
         return {w.work_item_id: w.dump() for w in reconcile(docs)}
 
     def perform(self, sid, mode, body, wid=None):
+        if mode == "escalate" and wid:
+            from .selected_workflow import SelectedCommand, selected_operation
+
+            if body.expected_version is None:
+                raise StoreError(409, "Current item version required")
+            # Individual escalation uses exactly the same oversight and authority rules.
+            with self.database(self.directory(sid) / "journal.sqlite3") as conn:
+                rows = self.rows(conn, "SELECT body FROM work_items WHERE id=?", (wid,))
+                if not rows:
+                    raise StoreError(404, "Unknown work item")
+                work = json.loads(rows[0][0])
+            if not body.evidence_hashes or not set(body.evidence_hashes).issubset(
+                work["supporting_facts"]
+            ):
+                raise StoreError(422, "Reviewed evidence must belong to the item")
+            payload = body.model_dump()
+            payload.update(
+                expected_session=sid, selected=[dict(id=wid, version=body.expected_version)]
+            )
+            result = selected_operation(self, sid, "escalate", SelectedCommand(**payload))
+            if result["blocked"] or result["failed"]:
+                raise StoreError(409, result["per_item"][0]["reason"])
+            return result
+
         if mode not in (
             "routine",
             "auto_all",
@@ -795,12 +832,9 @@ class DocumentWorkspace:
                                         "identity_verified": False,
                                     },
                                 )
-                            eligible = bool(
-                                fresh
-                                and fresh["automation_eligible"]
-                                and fresh["automatic_closure_allowed"]
-                                and not fresh["human_review_required"]
-                            )
+                            from .selected_workflow import can_complete
+
+                            eligible = can_complete(work, fresh)
                             work["automation_eligible"] = eligible
                             work["automatic_closure_allowed"] = eligible
                             work["human_review_required"] = not eligible
@@ -814,11 +848,27 @@ class DocumentWorkspace:
                                 work["eligibility_reason"] = fresh["eligibility_reason"]
                                 work["financial_impact"] = fresh["financial_impact"]
                                 disposition = recommendation(work)["disposition"]
-                            self.event(conn,sid,work,'evidence_validation_recorded','deterministic_automation','Rules baseline',
-                                'Session PDFs re-extracted and reconciled against current source evidence',body.operation_id,
-                                details={'evidence_current':fresh is not None,'source_hashes':sorted(work['supporting_facts']),
-                                'financial_comparison':fresh['financial_impact'] if fresh else None,'automation_eligible':eligible,
-                                'eligibility_reason':work['eligibility_reason'],'parser':'pypdf text extraction','reconciliation':'Stage 1 deterministic Python rules'})
+                            self.event(
+                                conn,
+                                sid,
+                                work,
+                                "evidence_validation_recorded",
+                                "deterministic_automation",
+                                "Rules baseline",
+                                "Session PDFs re-extracted and reconciled against current source evidence",
+                                body.operation_id,
+                                details={
+                                    "evidence_current": fresh is not None,
+                                    "source_hashes": sorted(work["supporting_facts"]),
+                                    "financial_comparison": (
+                                        fresh["financial_impact"] if fresh else None
+                                    ),
+                                    "automation_eligible": eligible,
+                                    "eligibility_reason": work["eligibility_reason"],
+                                    "parser": "pypdf text extraction",
+                                    "reconciliation": "Stage 1 deterministic Python rules",
+                                },
+                            )
                             if mode == "financial_review" and not financial_referral_supported(
                                 work
                             ):
@@ -874,9 +924,9 @@ class DocumentWorkspace:
                                     else "request_evidence" if not fresh else "review"
                                 )
                             # Escalated or financially referred records cannot be silently pulled back by bulk automation.
-                            if not wid and work["status"] in (
-                                "Escalated",
-                                "Awaiting Financial Review",
+                            if not wid and (
+                                work.get("oversight")
+                                or work["status"] in ("Escalated", "Awaiting Financial Review")
                             ):
                                 result["unchanged_due_to_safeguards"] += 1
                                 continue
@@ -1050,8 +1100,8 @@ class DocumentWorkspace:
                         )
                     raise
 
-    def walkthrough(self,sid,wid):
-        return walkthrough(self.detail(sid,wid))
+    def walkthrough(self, sid, wid):
+        return walkthrough(self.detail(sid, wid))
 
     def inbox(self, sid):
         snap = self.snapshot(sid)
@@ -1060,7 +1110,7 @@ class DocumentWorkspace:
             items=[
                 self.detail(sid, w["work_item_id"])
                 for w in snap["items"]
-                if w["status"] == "Escalated"
+                if w.get("oversight") or w["status"] == "Escalated"
             ],
             message="Persisted internal management inbox; not a financial authorization queue",
         )

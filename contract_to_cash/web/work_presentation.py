@@ -7,7 +7,11 @@ from decimal import Decimal
 def bucket(work):
     if work["status"] == "Closed":
         return "Completed"
-    if work["status"] in ("Escalated", "Awaiting Financial Review", "Awaiting Evidence"):
+    if work.get("oversight") or work["status"] in (
+        "Escalated",
+        "Awaiting Financial Review",
+        "Awaiting Evidence",
+    ):
         return "Awaiting Others"
     return "Needs My Attention"
 
@@ -38,6 +42,9 @@ def business(work):
         "Awaiting Financial Review": "Finance",
         "Awaiting Evidence": "Missing documentation or authority",
     }.get(work["status"])
+    waiting = work.get("waiting_on_department") or waiting
+    oversight = "Sarah Chen" if work.get("oversight") or work["status"] == "Escalated" else None
+    decision = work.get("current_decision_owner") or waiting or "Maya Tremblay"
     next_action = (
         "No further administrative action"
         if work["status"] == "Closed"
@@ -73,6 +80,9 @@ def business(work):
         view=bucket(work),
         case_owner="Maya Tremblay",
         waiting_on=waiting,
+        management_oversight_owner=oversight,
+        current_decision_owner=decision,
+        waiting_on_department=work.get("waiting_on_department") or waiting,
         next_action=next_action,
         why_it_matters=(
             "Potential billing exposure requires separate authorization; identification is not recovery."
@@ -90,6 +100,9 @@ def queue_counts(items):
         "needs_maya": counts["Needs My Attention"],
         "completed": counts["Completed"],
         "awaiting_sarah": sum(w["status"] == "Escalated" for w in items),
+        "management_oversight": sum(
+            bool(w.get("oversight")) or w["status"] == "Escalated" for w in items
+        ),
         "awaiting_finance": sum(w["status"] == "Awaiting Financial Review" for w in items),
         "awaiting_evidence": sum(w["status"] == "Awaiting Evidence" for w in items),
         "awaiting_others": counts["Awaiting Others"],
