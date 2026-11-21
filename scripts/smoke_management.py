@@ -290,7 +290,7 @@ def main():
                 process.kill()
                 process.wait(timeout=10)
     print(
-        "PASS: actual Maya → Sarah shared PDF handoff; chart drill-downs, Finance boundaries, corrective action persistence, consent, simulated SDK insights/replay, actual citations/traces and responsive layouts. No paid provider calls."
+        "PASS: actual Maya -> Sarah shared PDF handoff; chart drill-downs, Finance boundaries, corrective action persistence, consent, simulated SDK insights/replay, actual citations/traces and responsive layouts. No paid provider calls."
     )
 
 
