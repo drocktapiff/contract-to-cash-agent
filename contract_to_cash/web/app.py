@@ -49,6 +49,8 @@ from .management import ActionInput, save_action
 from .guided_demo import SarahDemo, complete_sarah
 from .document_workspace import DocumentWorkspace, WorkspaceCommand
 from .selected_workflow import SelectedCommand, selected_operation
+from .management_center import ManagementCenter, ManagementCommand, CorrectiveCommand
+from .document_advisor import DocumentAdvisor, AdvisorRequest, AdvisorScope
 
 
 def create_app(settings=None, runner=None):
@@ -60,6 +62,9 @@ def create_app(settings=None, runner=None):
     store = Store(settings, runner)
     sessions, attempts = {}, {}
     documents = DocumentWorkspace(store)
+    management = ManagementCenter(documents)
+    advisor = DocumentAdvisor(management)
+    store.document_advisor = advisor
 
     @asynccontextmanager
     async def lifespan(app):
@@ -67,6 +72,7 @@ def create_app(settings=None, runner=None):
         try:
             if settings.mode == "operator":
                 documents.initialize()
+                advisor.initialize()
             yield
         finally:
             store.close()
@@ -82,6 +88,8 @@ def create_app(settings=None, runner=None):
     )
     app.state.store = store
     app.state.document_workspace = documents
+    app.state.management_center = management
+    app.state.document_advisor = advisor
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=["localhost", "127.0.0.1"]
@@ -122,10 +130,22 @@ def create_app(settings=None, runner=None):
     @app.exception_handler(StoreError)
     async def store_error(request, exc):
         body = {"detail": exc.message}
-        paid_path = request.url.path in ("/api/runs", "/api/billing-reviews", "/api/enterprise/analyses") or request.url.path.endswith("/continue")
+        paid_path = (
+            request.url.path in ("/api/runs", "/api/billing-reviews", "/api/enterprise/analyses")
+            or request.url.path.endswith("/continue")
+            or request.url.path.endswith("/management/analyses")
+        )
         if request.method == "POST" and paid_path and exc.status in (409, 429, 503):
             state = availability(store)
-            body.update(code="paid_launch_retained_failure" if exc.paid_run_created else "paid_launch_rejected", availability=state, paid_run_created=exc.paid_run_created)
+            body.update(
+                code=(
+                    "paid_launch_retained_failure"
+                    if exc.paid_run_created
+                    else "paid_launch_rejected"
+                ),
+                availability=state,
+                paid_run_created=exc.paid_run_created,
+            )
         return JSONResponse(body, status_code=exc.status)
 
     @app.exception_handler(RequestValidationError)
@@ -576,6 +596,69 @@ def create_app(settings=None, runner=None):
                 headers={"Content-Disposition": 'attachment; filename="review-package.json"'},
             )
 
+    @app.get("/api/document-workspace/sessions/{sid}/management", dependencies=[Depends(reader)])
+    async def management_overview(sid: str):
+        return await asyncio.to_thread(management.overview, sid)
+
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/management/commands", dependencies=[Depends(writer)]
+    )
+    async def management_command(sid: str, body: ManagementCommand):
+        return await asyncio.to_thread(management.command, sid, body)
+
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/management/corrective",
+        dependencies=[Depends(writer)],
+    )
+    async def management_corrective(sid: str, body: CorrectiveCommand):
+        return await asyncio.to_thread(management.corrective, sid, body)
+
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/management/analysis-preview",
+        dependencies=[Depends(writer)],
+    )
+    async def management_preview(sid: str, body: AdvisorScope):
+        return await asyncio.to_thread(
+            advisor.preview, sid, body.scope, body.case_ids, body.category
+        )
+
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/management/analyses", dependencies=[Depends(writer)]
+    )
+    async def management_analyze(sid: str, body: AdvisorRequest):
+        return await asyncio.to_thread(advisor.start, sid, body)
+
+    @app.get(
+        "/api/document-workspace/sessions/{sid}/management/analyses/{aid}/trace",
+        dependencies=[Depends(reader)],
+    )
+    async def management_analysis_trace(sid: str, aid: str):
+        records = [a for a in advisor.records() if a["session_id"] == sid and a["id"] == aid]
+        if not records:
+            raise StoreError(404, "Unknown scoped analysis")
+        path = advisor.ws.root / "analysis-traces" / aid / "events.sqlite3"
+        if not path.exists():
+            return []
+
+        def read_trace():
+            with closing(
+                sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)
+            ) as conn, closing(conn.cursor()) as cur:
+                return [
+                    {**json.loads(row[1]), "sequence": row[0]}
+                    for row in cur.execute(
+                        "SELECT sequence,body FROM events ORDER BY sequence"
+                    ).fetchall()
+                ]
+
+        return await asyncio.to_thread(read_trace)
+
+    @app.get(
+        "/api/document-workspace/sessions/{sid}/management/analyses", dependencies=[Depends(reader)]
+    )
+    async def management_analyses(sid: str):
+        return await asyncio.to_thread(advisor.list, sid)
+
     @app.get("/api/document-workspace", dependencies=[Depends(reader)])
     async def document_snapshot():
         return await asyncio.to_thread(documents.snapshot)
@@ -596,10 +679,18 @@ def create_app(settings=None, runner=None):
     async def document_events(sid: str):
         def read_events():
             with documents.database(documents.directory(sid) / "journal.sqlite3") as conn:
-                return [dict(sequence=row[0], **json.loads(row[1])) for row in documents.rows(conn, "SELECT sequence,body FROM workflow_events ORDER BY sequence")]
+                return [
+                    dict(sequence=row[0], **json.loads(row[1]))
+                    for row in documents.rows(
+                        conn, "SELECT sequence,body FROM workflow_events ORDER BY sequence"
+                    )
+                ]
+
         return await asyncio.to_thread(read_events)
 
-    @app.get("/api/document-workspace/sessions/{sid}/walkthrough/{wid}", dependencies=[Depends(reader)])
+    @app.get(
+        "/api/document-workspace/sessions/{sid}/walkthrough/{wid}", dependencies=[Depends(reader)]
+    )
     async def document_walkthrough(sid: str, wid: str):
         return await asyncio.to_thread(documents.walkthrough, sid, wid)
 
@@ -607,26 +698,42 @@ def create_app(settings=None, runner=None):
     async def document_item(sid: str, wid: str):
         return await asyncio.to_thread(documents.detail, sid, wid)
 
-    @app.get("/api/document-workspace/sessions/{sid}/evidence/{digest}", dependencies=[Depends(reader)])
+    @app.get(
+        "/api/document-workspace/sessions/{sid}/evidence/{digest}", dependencies=[Depends(reader)]
+    )
     async def document_pdf(sid: str, digest: str):
         path = await asyncio.to_thread(documents.pdf, sid, digest)
-        return FileResponse(path, media_type="application/pdf", filename=path.name, content_disposition_type="inline")
+        return FileResponse(
+            path,
+            media_type="application/pdf",
+            filename=path.name,
+            content_disposition_type="inline",
+        )
 
-    @app.get("/api/document-workspace/sessions/{sid}/management-inbox", dependencies=[Depends(reader)])
+    @app.get(
+        "/api/document-workspace/sessions/{sid}/management-inbox", dependencies=[Depends(reader)]
+    )
     async def document_inbox(sid: str):
         return await asyncio.to_thread(documents.inbox, sid)
 
-    @app.post('/api/document-workspace/sessions/{sid}/selected/{action}', dependencies=[Depends(writer)])
-    async def selected_document_action(sid:str,action:str,body:SelectedCommand):
-        return await asyncio.to_thread(selected_operation, documents,sid,action,body)
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/selected/{action}", dependencies=[Depends(writer)]
+    )
+    async def selected_document_action(sid: str, action: str, body: SelectedCommand):
+        return await asyncio.to_thread(selected_operation, documents, sid, action, body)
 
-    @app.post("/api/document-workspace/sessions/{sid}/process/{mode}", dependencies=[Depends(writer)])
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/process/{mode}", dependencies=[Depends(writer)]
+    )
     async def document_batch(sid: str, mode: str, body: WorkspaceCommand):
         if mode not in ("routine", "auto_all"):
             raise StoreError(422, "Unsupported batch disposition")
         return await asyncio.to_thread(documents.perform, sid, mode, body)
 
-    @app.post("/api/document-workspace/sessions/{sid}/items/{wid}/{action}", dependencies=[Depends(writer)])
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/items/{wid}/{action}",
+        dependencies=[Depends(writer)],
+    )
     async def document_action(sid: str, wid: str, action: str, body: WorkspaceCommand):
         if action == "auto_all":
             raise StoreError(422, "Use the batch endpoint")

@@ -98,6 +98,7 @@ type Snapshot = {
     processing_duration_seconds?: number;
     intake_duration_seconds?: number;
     api_cost_usd?: string;
+    api_cost_complete?: boolean;
   };
   document_count?: number;
   customer_count?: number;
@@ -448,7 +449,7 @@ export default function DocumentWorkspace() {
             <strong>{viewSarah ? 'Sarah Chen' : 'Maya Tremblay'}</strong>
             <small>
               {viewSarah
-                ? 'Director of Revenue Operations · read-only oversight'
+                ? 'Director of Revenue Operations · management coordination'
                 : 'Revenue Operations Specialist'}
             </small>
           </div>
@@ -460,7 +461,7 @@ export default function DocumentWorkspace() {
             setSelection({ sid: snapshot?.session_id ?? null, items: {} });
           }}
         >
-          {viewSarah ? 'Return to Maya' : 'Sarah’s Inbox'}
+          {viewSarah ? 'Maya — Revenue Operations' : 'Sarah — Management Command Center'}
         </button>
         <a className="mw-legacy" href="/legacy">
           Advanced / Legacy workspace ↗
@@ -472,7 +473,7 @@ export default function DocumentWorkspace() {
             <span className="mw-eyebrow">MY WORKSPACE</span>
             <h1>
               {viewSarah
-                ? 'Revenue Operations — Management Oversight'
+                ? 'Revenue Operations — Department Overview'
                 : 'Revenue Operations — My Work'}
             </h1>
             <p>
@@ -575,8 +576,11 @@ export default function DocumentWorkspace() {
             )}
             {viewSarah ? (
               <ManagementInbox
+                key={snapshot.session_id}
                 sid={snapshot.session_id}
                 revision={snapshot}
+                readOnly={readOnly || snapshot.read_only}
+                onChanged={() => void refresh()}
                 onOpen={(id) => {
                   const work = snapshot.items.find((w) => w.work_item_id === id);
                   if (work) void openItem(work);
@@ -1028,7 +1032,12 @@ export default function DocumentWorkspace() {
                       'Workflow processing (wall-clock seconds)',
                       snapshot.telemetry.processing_duration_seconds,
                     ],
-                    ['Document-session OpenAI cost (USD)', snapshot.telemetry.api_cost_usd],
+                    [
+                      'Document-session OpenAI cost (USD)',
+                      snapshot.telemetry.api_cost_complete === false
+                        ? 'Unknown / incomplete usage'
+                        : snapshot.telemetry.api_cost_usd,
+                    ],
                     ['Human labor / time saved', 'Not measured'],
                   ].map(([k, v]) => (
                     <div key={k}>

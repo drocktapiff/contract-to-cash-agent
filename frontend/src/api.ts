@@ -21,7 +21,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (
     options.method &&
     options.method !== 'GET' &&
-    /^\/(billing-reviews|runs|enterprise\/analyses|admin\/(pricing|reset))/.test(path)
+    /^\/(billing-reviews|runs|enterprise\/analyses|document-workspace\/sessions\/[^/]+\/management\/analyses|admin\/(pricing|reset))/.test(
+      path,
+    )
   ) {
     window.dispatchEvent(new Event('ctc-paid-availability-changed'));
   }

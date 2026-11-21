@@ -13,6 +13,11 @@ from tests_web.test_api import ApiTests
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8124)
+    parser.add_argument(
+        "--management-ai",
+        action="store_true",
+        help="Ephemeral simulated SDK responses; no provider calls",
+    )
     parser.add_argument("--recorded", action="store_true")
     parser.add_argument("--slow-test-runner", action="store_true")
     parser.add_argument(
@@ -30,7 +35,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Ephemeral test-only persisted admission fixtures, never provider calls",
     )
-    parser.add_argument("--document-workspace", action="store_true", help="Synthetic browser interactions, real PDF intake; no provider calls")
+    parser.add_argument(
+        "--document-workspace",
+        action="store_true",
+        help="Synthetic browser interactions, real PDF intake; no provider calls",
+    )
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -90,6 +99,31 @@ if __name__ == "__main__":
             runner = fixture.simulated_runner
         application = create_app(settings, runner)
         fixture.app = application
+        if args.management_ai:
+            from tests_workspace.test_management import SimulatedClient, insight_payload
+            from contract_to_cash.tests.test_agent import FakeResponse, call
+
+            advisor = application.state.document_advisor
+            advisor.provenance = "simulated_provider_fixture"
+
+            def simulated_sdk(**kwargs):
+                data = advisor.records()[0]["inputs"]
+                payload = insight_payload(data)
+                cid = payload["insights"][0]["case_ids"][0]
+                return SimulatedClient(
+                    [
+                        FakeResponse(
+                            [
+                                call("get_management_overview", {}),
+                                call("get_management_case", {"case_id": cid}),
+                            ]
+                        ),
+                        FakeResponse([call("save_management_insights", payload)]),
+                        FakeResponse([]),
+                    ]
+                )
+
+            advisor.client_factory = simulated_sdk
         if args.document_workspace:
             application.state.document_workspace.interaction_kind = "simulated_fixture"
         if args.phase32:

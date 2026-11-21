@@ -46,3 +46,4 @@ jobs:
       - run: python -m scripts.smoke_document_workspace
       - run: python -m scripts.smoke_show_work
       - run: python -m scripts.smoke_bulk_workflow
+      - run: python -m scripts.smoke_management

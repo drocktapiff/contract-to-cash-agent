@@ -383,6 +383,23 @@ def selected_operation(ws, sid, action, body):
                                             "financial_authority_transferred": False,
                                         },
                                     )
+                                    ws.event(
+                                        conn,
+                                        sid,
+                                        work,
+                                        "management_handoff_received",
+                                        "deterministic_automation",
+                                        "Internal management inbox",
+                                        body.rationale,
+                                        body.operation_id,
+                                        before=work["status"],
+                                        after=work["status"],
+                                        details={
+                                            "handoff": work["oversight"],
+                                            "source_documents": work["source_documents"],
+                                            "financial_authority_transferred": False,
+                                        },
+                                    )
                                     outcome = "handoff_created"
                                     reason = "Sarah received management oversight; the required decision remains separately authorized"
                                 if outcome in ("completed", "handoff_created", "requires_review"):

@@ -132,7 +132,7 @@ def main():
                     )
                     assert escalated["awaiting_finance"] > 0 and escalated["awaiting_evidence"] > 0
                     capture("04-persisted-management-handoffs.png")
-                    page.get_by_role("button", name="Sarah’s Inbox", exact=True).click()
+                    page.get_by_role("button", name="Sarah — Management Command Center", exact=True).click()
                     inbox = page.get_by_role("region", name="Sarah’s management inbox", exact=True)
                     expect(inbox).to_contain_text("29 oversight cases")
                     expect(inbox).to_contain_text("Finance")
@@ -159,7 +159,7 @@ def main():
                         f'/api/document-workspace/sessions/{sid}/evidence/{finance["documents"][0]["file_hash"]}'
                     )
                     assert pdf.ok and pdf.body().startswith(b"%PDF-")
-                    page.get_by_role("button", name="Return to Maya", exact=True).click()
+                    page.get_by_role("button", name="Maya — Revenue Operations", exact=True).click()
                     page.get_by_role("button", name="Escalated to Sarah", exact=True).click()
                     expect(page.locator(".mw-table-footer")).to_contain_text(
                         "of 29 matching work items"
