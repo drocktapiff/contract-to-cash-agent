@@ -24,6 +24,13 @@ Sarah’s persisted inbox. [Windows setup, demo flow, safeguards and screenshots
 The original Phase 6.1 application remains at `/legacy`; existing history is preserved.
 No OpenAI calls are needed for the document workflow.
 
+## Ledgerline 2.0 — Management Command Center
+
+Sarah now coordinates Maya’s persisted handoffs with interactive performance charts,
+management actions, tracked corrective work and a bounded, explicitly authorized
+OpenAI advisor. The free rule-based overview needs no API key or paid run.
+[Windows setup, presenter flow, live acceptance procedure and browser evidence](docs/LEDGERLINE2_STAGE3.md).
+
 ## Local operations console (Phase 3)
 
 A React/TypeScript workspace and protected FastAPI adapter build on the existing

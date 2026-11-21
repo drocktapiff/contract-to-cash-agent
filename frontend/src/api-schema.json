@@ -1,4 +1,148 @@
 {
+  "AdvisorRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_paid": {
+        "const": true,
+        "title": "Acknowledge Paid",
+        "type": "boolean"
+      },
+      "actor": {
+        "maxLength": 120,
+        "minLength": 1,
+        "title": "Actor",
+        "type": "string"
+      },
+      "case_ids": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 100,
+        "title": "Case Ids",
+        "type": "array"
+      },
+      "category": {
+        "anyOf": [
+          {
+            "maxLength": 100,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Category"
+      },
+      "confirmation": {
+        "maxLength": 100,
+        "title": "Confirmation",
+        "type": "string"
+      },
+      "evidence_hashes": {
+        "items": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "maxItems": 50,
+        "title": "Evidence Hashes",
+        "type": "array"
+      },
+      "expected_revision": {
+        "pattern": "^[a-f0-9]{64}$",
+        "title": "Expected Revision",
+        "type": "string"
+      },
+      "expected_session": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Expected Session",
+        "type": "string"
+      },
+      "expected_version": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Expected Version"
+      },
+      "operation_id": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Operation Id",
+        "type": "string"
+      },
+      "rationale": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Rationale",
+        "type": "string"
+      },
+      "scope": {
+        "default": "all",
+        "enum": [
+          "all",
+          "selected",
+          "category"
+        ],
+        "title": "Scope",
+        "type": "string"
+      }
+    },
+    "required": [
+      "operation_id",
+      "actor",
+      "rationale",
+      "confirmation",
+      "expected_session",
+      "expected_revision",
+      "acknowledge_paid"
+    ],
+    "title": "AdvisorRequest",
+    "type": "object"
+  },
+  "AdvisorScope": {
+    "additionalProperties": false,
+    "properties": {
+      "case_ids": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 100,
+        "title": "Case Ids",
+        "type": "array"
+      },
+      "category": {
+        "anyOf": [
+          {
+            "maxLength": 100,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Category"
+      },
+      "scope": {
+        "default": "all",
+        "enum": [
+          "all",
+          "selected",
+          "category"
+        ],
+        "title": "Scope",
+        "type": "string"
+      }
+    },
+    "title": "AdvisorScope",
+    "type": "object"
+  },
   "AnalysisRequest": {
     "additionalProperties": false,
     "properties": {
@@ -167,6 +311,196 @@
       "acknowledge_paid"
     ],
     "title": "ContinueInvestigation",
+    "type": "object"
+  },
+  "CorrectiveCommand": {
+    "additionalProperties": false,
+    "properties": {
+      "acceptance_criteria": {
+        "maxLength": 1600,
+        "minLength": 5,
+        "title": "Acceptance Criteria",
+        "type": "string"
+      },
+      "action_id": {
+        "anyOf": [
+          {
+            "pattern": "^[a-f0-9]{32}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Action Id"
+      },
+      "action_version": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Action Version"
+      },
+      "actor": {
+        "maxLength": 120,
+        "minLength": 1,
+        "title": "Actor",
+        "type": "string"
+      },
+      "confirmation": {
+        "maxLength": 100,
+        "title": "Confirmation",
+        "type": "string"
+      },
+      "description": {
+        "maxLength": 1600,
+        "minLength": 5,
+        "title": "Description",
+        "type": "string"
+      },
+      "document_ids": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 100,
+        "minItems": 1,
+        "title": "Document Ids",
+        "type": "array"
+      },
+      "due_date": {
+        "anyOf": [
+          {
+            "format": "date",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Due Date"
+      },
+      "evidence_hashes": {
+        "items": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "maxItems": 50,
+        "title": "Evidence Hashes",
+        "type": "array"
+      },
+      "expected_session": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Expected Session",
+        "type": "string"
+      },
+      "expected_version": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Expected Version"
+      },
+      "operation_id": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Operation Id",
+        "type": "string"
+      },
+      "origin_insight": {
+        "maxLength": 200,
+        "minLength": 1,
+        "title": "Origin Insight",
+        "type": "string"
+      },
+      "outcome": {
+        "default": "",
+        "maxLength": 1600,
+        "title": "Outcome",
+        "type": "string"
+      },
+      "owner": {
+        "enum": [
+          "Revenue Operations",
+          "Billing Operations",
+          "Contract Administration",
+          "Finance coordination"
+        ],
+        "title": "Owner",
+        "type": "string"
+      },
+      "priority": {
+        "enum": [
+          "High",
+          "Normal",
+          "Low"
+        ],
+        "title": "Priority",
+        "type": "string"
+      },
+      "rationale": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Rationale",
+        "type": "string"
+      },
+      "related_ids": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 100,
+        "minItems": 1,
+        "title": "Related Ids",
+        "type": "array"
+      },
+      "status": {
+        "default": "Proposed",
+        "enum": [
+          "Proposed",
+          "Approved for Internal Investigation",
+          "In Progress",
+          "Awaiting Evidence",
+          "Completed",
+          "Dismissed"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "title": {
+        "maxLength": 160,
+        "minLength": 5,
+        "title": "Title",
+        "type": "string"
+      }
+    },
+    "required": [
+      "operation_id",
+      "actor",
+      "rationale",
+      "confirmation",
+      "expected_session",
+      "title",
+      "description",
+      "origin_insight",
+      "related_ids",
+      "document_ids",
+      "owner",
+      "priority",
+      "acceptance_criteria"
+    ],
+    "title": "CorrectiveCommand",
     "type": "object"
   },
   "DatasetView": {
@@ -700,6 +1034,165 @@
       "token"
     ],
     "title": "Login",
+    "type": "object"
+  },
+  "ManagementCommand": {
+    "$defs": {
+      "SelectedItem": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^WI-[a-f0-9]{24}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Note",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "title": "SelectedItem",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "action": {
+        "enum": [
+          "prioritize",
+          "assign",
+          "return",
+          "evidence",
+          "finance",
+          "complete",
+          "auto",
+          "accept_insight",
+          "dismiss_insight"
+        ],
+        "title": "Action",
+        "type": "string"
+      },
+      "actor": {
+        "maxLength": 120,
+        "minLength": 1,
+        "title": "Actor",
+        "type": "string"
+      },
+      "confirmation": {
+        "maxLength": 100,
+        "title": "Confirmation",
+        "type": "string"
+      },
+      "evidence_hashes": {
+        "items": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "maxItems": 50,
+        "title": "Evidence Hashes",
+        "type": "array"
+      },
+      "expected_session": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Expected Session",
+        "type": "string"
+      },
+      "expected_version": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Expected Version"
+      },
+      "insight_id": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Insight Id"
+      },
+      "operation_id": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Operation Id",
+        "type": "string"
+      },
+      "owner": {
+        "default": "Revenue Operations",
+        "enum": [
+          "Revenue Operations",
+          "Billing Operations",
+          "Contract Administration",
+          "Finance coordination"
+        ],
+        "title": "Owner",
+        "type": "string"
+      },
+      "priority": {
+        "default": "Normal",
+        "enum": [
+          "High",
+          "Normal",
+          "Low"
+        ],
+        "title": "Priority",
+        "type": "string"
+      },
+      "rationale": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Rationale",
+        "type": "string"
+      },
+      "required_next_action": {
+        "maxLength": 1200,
+        "minLength": 5,
+        "title": "Required Next Action",
+        "type": "string"
+      },
+      "selected": {
+        "items": {
+          "$ref": "#/$defs/SelectedItem"
+        },
+        "maxItems": 500,
+        "minItems": 1,
+        "title": "Selected",
+        "type": "array"
+      }
+    },
+    "required": [
+      "operation_id",
+      "actor",
+      "rationale",
+      "confirmation",
+      "expected_session",
+      "selected",
+      "action",
+      "required_next_action"
+    ],
+    "title": "ManagementCommand",
     "type": "object"
   },
   "PrepareGuidance": {

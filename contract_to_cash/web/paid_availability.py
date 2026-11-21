@@ -8,6 +8,8 @@ import sqlite3
 def rate_status(store, at=None):
     current = at or datetime.now(timezone.utc)
     records = store.metadata() + store.enterprise.analyses() + store.archived_paid_records()
+    if getattr(store, "document_advisor", None):
+        records += store.document_advisor.records()
     times = sorted(
         (
             datetime.fromisoformat(r["created_at"])

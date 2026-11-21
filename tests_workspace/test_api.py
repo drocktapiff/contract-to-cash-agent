@@ -327,6 +327,74 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
             422,
         )
 
+    async def test_management_api_enforces_session_origin_versions_and_safe_coordination(self):
+        from contract_to_cash.web.selected_workflow import selected_operation, SelectedCommand
+        from contract_to_cash.web.management_center import ManagementCommand
+
+        data = await self.load()
+        sid = data["session_id"]
+        ws = self.app.state.document_workspace
+
+        def selected(items):
+            return SelectedCommand(
+                **command(expected_session=sid).model_dump(),
+                selected=[dict(id=w["work_item_id"], version=w["version"]) for w in items],
+            )
+
+        selected_operation(ws, sid, "close", selected(data["items"]))
+        selected_operation(
+            ws,
+            sid,
+            "escalate",
+            selected([w for w in ws.snapshot()["items"] if w["status"] != "Closed"]),
+        )
+        path = f"/api/document-workspace/sessions/{sid}/management"
+        overview = (await self.client.get(path)).json()
+        self.assertEqual(overview["metrics"]["handoffs"], 29)
+        w = next(w for w in overview["cases"] if w["status"] == "Awaiting Financial Review")
+        body = ManagementCommand(
+            **command(expected_session=sid).model_dump(),
+            selected=[dict(id=w["work_item_id"], version=w["version"])],
+            action="complete",
+            required_next_action="Management coordination complete; Finance review is still required.",
+        ).model_dump()
+        self.assertEqual((await self.client.post(path + "/commands", json=body)).status_code, 403)
+        self.assertEqual(
+            (
+                await self.client.post(
+                    path + "/commands",
+                    headers={**self.headers, "origin": "https://attacker.invalid"},
+                    json=body,
+                )
+            ).status_code,
+            403,
+        )
+        r = await self.client.post(path + "/commands", headers=self.headers, json=body)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["financial_actions_executed"], 0)
+        updated = (await self.client.get(path)).json()
+        case = next(x for x in updated["cases"] if x["work_item_id"] == w["work_item_id"])
+        self.assertEqual(case["status"], "Awaiting Financial Review")
+        self.assertEqual(case["current_decision_owner"], "Finance")
+        self.assertEqual(
+            (
+                await self.client.post(
+                    path + "/analysis-preview", headers=self.headers, json={"scope": []}
+                )
+            ).status_code,
+            422,
+        )
+        preview = await self.client.post(
+            path + "/analysis-preview", headers=self.headers, json={"scope": "all"}
+        )
+        self.assertEqual(preview.status_code, 200, preview.text)
+        self.assertFalse(preview.json()["availability"]["available"])
+        self.assertEqual((await self.client.get(path + "/analyses")).json(), [])
+        self.assertEqual(
+            (await self.client.post(path + "/analyses", headers=self.headers, json={})).status_code,
+            422,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

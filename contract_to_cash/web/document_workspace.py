@@ -1,11 +1,12 @@
 """Document-derived work, retained sessions and append-only workflow telemetry.
 
-This namespace never calls a provider or writes billing/contract authority records.
+Document processing never calls a provider or writes billing/contract authority records.
 """
 
 from collections import Counter
 from contextlib import closing, contextmanager
 from datetime import datetime, timezone
+from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
@@ -138,7 +139,11 @@ class DocumentWorkspace:
         acquired = False
         try:
             acquired = self.store.lock.acquire(blocking=False)
-            if not acquired or (self.store.worker and self.store.worker.is_alive()):
+            if (
+                not acquired
+                or self.store.active
+                or (self.store.worker and self.store.worker.is_alive())
+            ):
                 raise StoreError(
                     409, "An investigation or workspace operation is active; try after it finishes"
                 )
@@ -570,6 +575,30 @@ class DocumentWorkspace:
             api_cost_usd="0.00",
             measurement_note="Wall-clock command duration, not measured human labor or labor savings.",
         )
+        advisor = getattr(self.store, "document_advisor", None)
+        analyses = [a for a in advisor.records() if a["session_id"] == sid] if advisor else []
+        if analyses:
+            telemetry.update(
+                api_requests=sum((a.get("metrics") or {}).get("api_requests", 0) for a in analyses),
+                api_tokens=sum(
+                    (a.get("metrics") or {}).get("input_tokens", 0)
+                    + (a.get("metrics") or {}).get("output_tokens", 0)
+                    for a in analyses
+                ),
+                api_cost_usd=str(
+                    sum(
+                        (
+                            Decimal((a.get("metrics") or {}).get("estimated_api_cost_usd", "0"))
+                            for a in analyses
+                        ),
+                        Decimal("0"),
+                    )
+                ),
+                api_cost_complete=all(
+                    a.get("metrics") and a["metrics"].get("cost_accounting_complete")
+                    for a in analyses
+                ),
+            )
         return dict(
             session_id=sid,
             active_session_id=self.active(),
@@ -598,7 +627,8 @@ class DocumentWorkspace:
             scenarios=scenarios(items),
             document_count=len(docs),
             customer_count=len({d["customer_id"] for d in docs if d["customer_id"]}),
-            provenance="Synthetic source documents · Actual deterministic processing · No provider calls",
+            provenance="Synthetic source documents · Actual deterministic processing"
+            + (" · Advisor request history retained" if analyses else " · No provider calls"),
         )
 
     def detail(self, sid, wid):
@@ -631,6 +661,8 @@ class DocumentWorkspace:
         )
 
     def allowed(self, work):
+        if work.get("management", {}).get("review_status") == "Returned to Maya":
+            return ["request_evidence"]
         if work.get("oversight") or work["status"] in ("Closed", "Escalated"):
             return []
         if work["status"] == "Awaiting Financial Review":
@@ -795,6 +827,47 @@ class DocumentWorkspace:
                                 raise StoreError(422, "Evidence must belong to this work item")
                         for work in works:
                             fresh = current.get(work["work_item_id"])
+                            if (
+                                wid
+                                and mode == "request_evidence"
+                                and work.get("management", {}).get("review_status")
+                                == "Returned to Maya"
+                            ):
+                                if not fresh:
+                                    raise StoreError(
+                                        409,
+                                        "Obtain valid source evidence before recording the follow-up",
+                                    )
+                                work["management"]["maya_followup"] = {
+                                    "actor": body.actor,
+                                    "rationale": body.rationale,
+                                    "at": now(),
+                                    "evidence_hashes": body.evidence_hashes,
+                                }
+                                work.update(version=work["version"] + 1, updated_at=now())
+                                self.event(
+                                    conn,
+                                    sid,
+                                    work,
+                                    "maya_followup_evidence_requested",
+                                    self.interaction_kind,
+                                    body.actor,
+                                    body.rationale,
+                                    body.operation_id,
+                                    before=work["status"],
+                                    after=work["status"],
+                                    details={
+                                        "evidence_hashes": body.evidence_hashes,
+                                        "financial_authority_transferred": False,
+                                    },
+                                )
+                                self.execute(
+                                    conn,
+                                    "UPDATE work_items SET body=? WHERE id=?",
+                                    (encoded(work), work["work_item_id"]),
+                                )
+                                result["awaiting_evidence_or_authority"] += 1
+                                continue
                             original_version = work["version"]
                             original_state = encoded(
                                 {

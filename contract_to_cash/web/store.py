@@ -358,26 +358,50 @@ class Store:
         return records
 
     def ensure_new_paid_key(self, key, kind):
-        if any(r["idempotency_key"] == str(key) for r in self.archived_paid_records()):
+        from uuid import UUID
+
+        def normalized(value):
+            try:
+                return UUID(str(value)).hex
+            except ValueError:
+                return str(value)
+
+        if getattr(self, "document_advisor", None) and any(
+            normalized(a["idempotency_key"]) == normalized(key)
+            for a in self.document_advisor.records()
+        ):
+            raise StoreError(409, "This key belongs to a document management analysis")
+        if any(
+            normalized(r["idempotency_key"]) == normalized(key)
+            for r in self.archived_paid_records()
+        ):
             raise StoreError(
                 409,
                 "This paid request was archived. Review the new workspace and explicitly authorize a new request.",
             )
         other = self.metadata() if kind == "analysis" else self.enterprise.analyses()
-        if any(r["idempotency_key"] == str(key) for r in other):
+        if kind == "document_management":
+            other += self.metadata()
+        if any(normalized(r["idempotency_key"]) == normalized(key) for r in other):
             raise StoreError(409, "This key belongs to a different paid workflow")
 
     def paid_rate_status(self, at=None):
         from .paid_availability import rate_status
+
         return rate_status(self, at)
 
     def check_paid_limits(self):
         try:
             rate = self.paid_rate_status()
         except (ValueError, KeyError, TypeError, OSError, sqlite3.Error):
-            raise StoreError(503, "Launch history could not be verified; no paid request started") from None
+            raise StoreError(
+                503, "Launch history could not be verified; no paid request started"
+            ) from None
         if not rate["available"]:
-            raise StoreError(429, "Local launch limit reached. At most one per minute and three per hour, shared by investigations and analyses.")
+            raise StoreError(
+                429,
+                "Local launch limit reached. At most one per minute and three per hour, shared by investigations and analyses.",
+            )
 
     def launch(self, request, pricing_verification=None, continuation=None, data_override=None):
         with self.lock:
@@ -453,7 +477,9 @@ class Store:
                 meta.update(status="failed", reason="worker_start_failed")
                 self.write_meta(meta)
                 raise StoreError(
-                    503, "Investigation could not start; request is retained for audit", paid_run_created=True
+                    503,
+                    "Investigation could not start; request is retained for audit",
+                    paid_run_created=True,
                 ) from None
             return self.snapshot(run_id)
 

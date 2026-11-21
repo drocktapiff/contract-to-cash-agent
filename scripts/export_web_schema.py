@@ -15,6 +15,8 @@ from contract_to_cash.web.models import (
 
 from contract_to_cash.web.document_workspace import WorkspaceCommand
 from contract_to_cash.web.selected_workflow import SelectedCommand
+from contract_to_cash.web.management_center import ManagementCommand, CorrectiveCommand
+from contract_to_cash.web.document_advisor import AdvisorRequest, AdvisorScope
 
 from contract_to_cash.web.enterprise import (
     AnalysisRequest,
@@ -34,6 +36,10 @@ def public_schema():
         for model in (
             WorkspaceCommand,
             SelectedCommand,
+            ManagementCommand,
+            CorrectiveCommand,
+            AdvisorRequest,
+            AdvisorScope,
             DatasetView,
             EventView,
             Health,

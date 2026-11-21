@@ -7,6 +7,8 @@ from decimal import Decimal
 def bucket(work):
     if work["status"] == "Closed":
         return "Completed"
+    if work.get("management", {}).get("review_status") == "Returned to Maya":
+        return "Needs My Attention"
     if work.get("oversight") or work["status"] in (
         "Escalated",
         "Awaiting Financial Review",
@@ -51,9 +53,12 @@ def business(work):
         else (
             "Await the authorized decision"
             if waiting and work["status"] != "Awaiting Evidence"
-            else work["recommendation"]["suggested_action"]
+            else work.get("management", {}).get("required_next_action")
+            or work["recommendation"]["suggested_action"]
         )
     )
+    if work.get("management", {}).get("review_status") == "Returned to Maya":
+        next_action = work["management"]["required_next_action"]
     impact_text = "Not quantified"
     if impact:
         currency = impact.get("currency", "")
