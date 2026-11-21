@@ -21,6 +21,7 @@ from contract_to_cash.document_ops.intake import ingest
 from contract_to_cash.document_ops.parser import read_directory
 from contract_to_cash.document_ops.reconcile import reconcile
 from .store import StoreError
+from .work_presentation import business, queue_counts, scenarios, walkthrough
 
 SAMPLE = Path(__file__).resolve().parents[2] / "examples/ledgerline2/april-2026/documents"
 
@@ -511,6 +512,7 @@ class DocumentWorkspace:
             intake = self.rows(
                 conn, "SELECT value FROM workflow_meta WHERE key='intake_duration_seconds'"
             )
+        for item in items:item['business']=business(item)
         counts = Counter(w["status"] for w in items)
         completions = {
             e["item_id"]
@@ -581,6 +583,8 @@ class DocumentWorkspace:
                 exceptions=sum(not w["automation_eligible"] for w in items),
             ),
             telemetry=telemetry,
+            business_counts=queue_counts(items),
+            scenarios=scenarios(items),
             document_count=len(docs),
             customer_count=len({d["customer_id"] for d in docs if d["customer_id"]}),
             provenance="Synthetic source documents · Actual deterministic processing · No provider calls",
@@ -607,6 +611,7 @@ class DocumentWorkspace:
                     eligibility_reason="Original source PDF is missing or changed. Saved extracted facts are historical; obtain and revalidate authoritative evidence.",
                 )
                 work["recommendation"] = recommendation(work)
+        work['business']=business(work)
         return dict(
             item=work,
             documents=documents,
@@ -809,6 +814,11 @@ class DocumentWorkspace:
                                 work["eligibility_reason"] = fresh["eligibility_reason"]
                                 work["financial_impact"] = fresh["financial_impact"]
                                 disposition = recommendation(work)["disposition"]
+                            self.event(conn,sid,work,'evidence_validation_recorded','deterministic_automation','Rules baseline',
+                                'Session PDFs re-extracted and reconciled against current source evidence',body.operation_id,
+                                details={'evidence_current':fresh is not None,'source_hashes':sorted(work['supporting_facts']),
+                                'financial_comparison':fresh['financial_impact'] if fresh else None,'automation_eligible':eligible,
+                                'eligibility_reason':work['eligibility_reason'],'parser':'pypdf text extraction','reconciliation':'Stage 1 deterministic Python rules'})
                             if mode == "financial_review" and not financial_referral_supported(
                                 work
                             ):
@@ -1011,6 +1021,8 @@ class DocumentWorkspace:
                             processing_failures=result["failed"],
                             duration_seconds=round(perf_counter() - start, 6),
                             operation_id=body.operation_id,
+                            total_examined=len(works),
+                            queue_outcome=queue_counts(all_work),
                         )
                         self.execute(
                             conn,
@@ -1037,6 +1049,9 @@ class DocumentWorkspace:
                             details={"error_class": type(exc).__name__},
                         )
                     raise
+
+    def walkthrough(self,sid,wid):
+        return walkthrough(self.detail(sid,wid))
 
     def inbox(self, sid):
         snap = self.snapshot(sid)

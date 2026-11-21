@@ -44,3 +44,4 @@ jobs:
       - run: python -m scripts.smoke_guided_demo
       - run: python -m scripts.smoke_paid_ux
       - run: python -m scripts.smoke_document_workspace
+      - run: python -m scripts.smoke_show_work

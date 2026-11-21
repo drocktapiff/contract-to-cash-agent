@@ -598,6 +598,10 @@ def create_app(settings=None, runner=None):
                 return [dict(sequence=row[0], **json.loads(row[1])) for row in documents.rows(conn, "SELECT sequence,body FROM workflow_events ORDER BY sequence")]
         return await asyncio.to_thread(read_events)
 
+    @app.get("/api/document-workspace/sessions/{sid}/walkthrough/{wid}", dependencies=[Depends(reader)])
+    async def document_walkthrough(sid: str, wid: str):
+        return await asyncio.to_thread(documents.walkthrough, sid, wid)
+
     @app.get("/api/document-workspace/sessions/{sid}/items/{wid}", dependencies=[Depends(reader)])
     async def document_item(sid: str, wid: str):
         return await asyncio.to_thread(documents.detail, sid, wid)

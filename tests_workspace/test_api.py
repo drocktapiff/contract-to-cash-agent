@@ -235,6 +235,35 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
             409,
         )
 
+    async def test_walkthrough_api_is_source_bound_read_only_and_session_protected(self):
+        loaded = await self.load()
+        sid = loaded["session_id"]
+        wid = loaded["scenarios"][0]["work_item_id"]
+        before = (await self.client.get("/api/document-workspace")).json()["telemetry"][
+            "event_count"
+        ]
+        for _ in range(2):
+            response = await self.client.get(
+                f"/api/document-workspace/sessions/{sid}/walkthrough/{wid}"
+            )
+            self.assertEqual(response.status_code, 200, response.text)
+            story = response.json()
+            self.assertFalse(story["recorded"])
+            self.assertTrue(story["can_process"])
+            self.assertTrue(story["manual_steps"])
+            self.assertTrue(story["documents"])
+        self.assertEqual(
+            (await self.client.get("/api/document-workspace")).json()["telemetry"]["event_count"],
+            before,
+        )
+        self.client.cookies.clear()
+        self.assertEqual(
+            (
+                await self.client.get(f"/api/document-workspace/sessions/{sid}/walkthrough/{wid}")
+            ).status_code,
+            401,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

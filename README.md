@@ -2,6 +2,13 @@
 Contract-to-cash-agent
 
 
+## Show Me the Work (Ledgerline 2.0 Stage 2.5)
+
+A source-backed walkthrough connects traditional manual work, actual PDF extraction,
+rule-based processing and recorded business outcomes. The dashboard separates Maya’s
+attention from work awaiting others; **Process All Work** applies the same financial
+and human-review safeguards. [Setup, 20-minute presentation, replay, screenshots and tests](docs/LEDGERLINE2_STAGE25.md).
+
 ## Revenue Operations — My Work (Ledgerline 2.0 Stage 2)
 
 The default dashboard now processes real document-derived work: load the 149 sample

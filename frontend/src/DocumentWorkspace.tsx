@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, bootstrapSession, setCsrf } from './api';
 import './document-workspace.css';
+import WorkWalkthrough from './WorkWalkthrough';
 
 type Evidence = {
   file_hash: string;
@@ -17,7 +18,17 @@ type Recommendation = {
   supporting_documents: string[];
   human_judgment: string;
 };
+type Business = {
+  impact_text: string;
+  title: string;
+  view: string;
+  case_owner: string;
+  waiting_on: string | null;
+  next_action: string;
+  why_it_matters: string;
+};
 type Work = {
+  business: Business;
   work_item_id: string;
   customer_id: string;
   customer_name?: string;
@@ -80,9 +91,14 @@ type Snapshot = {
   document_count?: number;
   customer_count?: number;
   provenance?: string;
+  business_counts: Record<string, number>;
+  scenarios: { key: string; label: string; work_item_id: string | null }[];
 };
 type Detail = { item: Work; documents: Source[]; permitted_actions: string[]; read_only: boolean };
-type Result = Record<string, number | string>;
+type Result = {
+  [key: string]: number | string | Record<string, number>;
+  queue_outcome: Record<string, number>;
+};
 type Action = { mode: string; label: string; item?: Work };
 const labels: Record<string, string> = {
   auto: 'Auto Complete',
@@ -93,7 +109,7 @@ const labels: Record<string, string> = {
   accept: 'Accept suggested workflow disposition',
   reject: 'Reject recommendation',
   review: 'Route to Maya for review',
-  auto_all: 'Auto Complete All',
+  auto_all: 'Process All Work',
   load: 'Load Sample Documents',
   restart: 'Restart Demo',
 };
@@ -106,7 +122,9 @@ const title = (s: string) => s.replaceAll('_', ' ').replace(/^./, (c) => c.toUpp
 export default function DocumentWorkspace() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [detail, setDetail] = useState<Detail | null>(null);
-  const [filter, setFilter] = useState('All'),
+  const [walkShown, setWalkShown] = useState(false);
+  const [walkItem, setWalkItem] = useState<string | null>(null);
+  const [filter, setFilter] = useState('All Work'),
     [search, setSearch] = useState(''),
     [limit, setLimit] = useState(25);
   const [busy, setBusy] = useState(false),
@@ -160,6 +178,9 @@ export default function DocumentWorkspace() {
     return () => window.clearInterval(id);
   }, [snapshot?.processing_active]);
   useEffect(() => {
+    setWalkShown(false);
+  }, [snapshot?.session_id]);
+  useEffect(() => {
     if (detail) dialog.current?.showModal();
     else dialog.current?.close();
   }, [detail]);
@@ -167,11 +188,11 @@ export default function DocumentWorkspace() {
     if (action) actionDialog.current?.showModal();
     else actionDialog.current?.close();
   }, [action]);
-  function begin(mode: string, item?: Work) {
+  function begin(mode: string, item?: Work, label?: string) {
     setError('');
     setAction({
       mode,
-      label: mode === 'routine' && !item ? 'Process Routine Work' : labels[mode],
+      label: label ?? (mode === 'routine' && !item ? 'Process Routine Work' : labels[mode]),
       item,
     });
     setConfirmed(false);
@@ -240,7 +261,7 @@ export default function DocumentWorkspace() {
       if (a.mode === 'load' || a.mode === 'restart') {
         setDetail(null);
         setResult(null);
-        setFilter('All');
+        setFilter('All Work');
         setSearch('');
         setNotice(
           a.mode === 'restart'
@@ -254,7 +275,7 @@ export default function DocumentWorkspace() {
         );
       }
       const next = await refresh();
-      if (a.item && next.session_id === sid)
+      if (a.item && next.session_id === sid && !walkShown)
         setDetail(
           await api<Detail>(`/document-workspace/sessions/${sid}/items/${a.item.work_item_id}`),
         );
@@ -270,14 +291,11 @@ export default function DocumentWorkspace() {
   }
   const items = (snapshot?.items ?? []).filter(
     (w) =>
-      (filter === 'All' ||
-        (filter === 'Routine' && w.automation_eligible && w.status !== 'Closed') ||
-        (filter === 'Needs Review' &&
-          w.status !== 'Closed' &&
-          w.status !== 'Escalated' &&
-          w.human_review_required) ||
-        (filter === 'Escalated' && w.status === 'Escalated') ||
-        (filter === 'Completed' && w.status === 'Closed')) &&
+      (filter === 'All Work' ||
+        w.business.view === filter ||
+        (filter === 'Sarah' && w.status === 'Escalated') ||
+        (filter === 'Finance' && w.status === 'Awaiting Financial Review') ||
+        (filter === 'Missing evidence' && w.status === 'Awaiting Evidence')) &&
       `${w.work_item_id} ${w.customer_id} ${w.customer_name ?? ''} ${w.required_action} ${w.category}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -384,22 +402,26 @@ export default function DocumentWorkspace() {
             )}
             <section className="mw-metrics" aria-label="Work metrics">
               {[
-                ['Total work items', 'total'],
-                ['Automatically completed', 'automatically_completed'],
-                ['Awaiting Maya', 'awaiting_maya'],
-                ['Escalated to management', 'escalated'],
-              ].map(([label, key]) => (
+                ['Work received', 'total', snapshot.business_counts.total],
+                [
+                  'Verified checks completed',
+                  'automatically_completed',
+                  snapshot.metrics.automatically_completed,
+                ],
+                ['Needs My Attention', 'needs_maya', snapshot.business_counts.needs_maya],
+                ['Awaiting Others', 'awaiting_others', snapshot.business_counts.awaiting_others],
+              ].map(([label, key, value]) => (
                 <article key={key}>
                   <span>{label}</span>
-                  <strong data-testid={key}>{snapshot.metrics[key]}</strong>
+                  <strong data-testid={key}>{value}</strong>
                   <small>
-                    {key === 'automatically_completed'
-                      ? 'Revalidated administrative checks'
-                      : key === 'total'
-                        ? `${snapshot.metrics.routine_eligible} routine-eligible · ${snapshot.metrics.exceptions} exceptions`
-                        : key === 'escalated'
-                          ? 'Persisted in Sarah’s internal inbox'
-                          : 'Open work and review coordination'}
+                    {key === 'total'
+                      ? `${snapshot.metrics.routine_eligible} routine-eligible · ${snapshot.metrics.exceptions} exceptions`
+                      : key === 'automatically_completed'
+                        ? 'Administrative checks, not financial corrections'
+                        : key === 'awaiting_others'
+                          ? 'Sarah, Finance or missing documentation'
+                          : 'Ready checks and decisions for Maya'}
                   </small>
                 </article>
               ))}
@@ -412,47 +434,99 @@ export default function DocumentWorkspace() {
                 </div>
                 <div className="mw-command-row">
                   <button
+                    disabled={busy}
+                    onClick={() => {
+                      setWalkItem(null);
+                      setWalkShown(true);
+                    }}
+                  >
+                    Show Me the Work
+                  </button>
+                  <button
                     className="mw-primary"
                     disabled={disabled}
-                    onClick={() => begin('routine')}
+                    onClick={() => begin('auto_all')}
                   >
-                    Process Routine Work
-                  </button>
-                  <button disabled={disabled} onClick={() => begin('auto_all')}>
-                    Auto Complete All
+                    Process All Work
                   </button>
                 </div>
               </div>
               {result && (
                 <section className="mw-result" aria-label="Processing result">
-                  <h3>Recorded outcome</h3>
+                  <span className="mw-eyebrow">RECORDED WORKFLOW OUTCOME</span>
+                  <h2>
+                    {Number(result.failed) > 0
+                      ? 'Processing needs review'
+                      : "Here's What Ledgerline Accomplished"}
+                  </h2>
+                  {Number(result.failed) > 0 && (
+                    <p role="alert">
+                      Processing failed or was partial. Inspect the failed work before treating any
+                      outcome as complete.
+                    </p>
+                  )}
+                  <p>
+                    Completed checks and work routed for another decision are different outcomes. No
+                    revenue recovery or financial approval is claimed.
+                  </p>
                   <dl>
-                    {Object.entries({
-                      'Automatically closed': 'automatically_closed',
-                      'Routed to Maya': 'routed_to_maya',
-                      'Escalated to Sarah': 'escalated_to_sarah',
-                      'Awaiting evidence or authority': 'awaiting_evidence_or_authority',
-                      'Unchanged due to safeguards': 'unchanged_due_to_safeguards',
-                      Skipped: 'skipped',
-                      Failed: 'failed',
-                      'Items requiring review': 'items_requiring_review',
-                      'Human queue remaining': 'human_queue_remaining',
-                    }).map(([label, key]) => (
+                    {[
+                      ['Total work examined', 'total_examined'],
+                      ['Routine checks completed', 'checks_completed'],
+                      ['Items skipped', 'skipped'],
+                      ['Blocked or unchanged', 'unchanged_due_to_safeguards'],
+                      ['Processing failures', 'failed'],
+                      ['System processing duration (seconds)', 'duration_seconds'],
+                    ].map(([label, key]) => (
                       <div key={key}>
                         <dt>{label}</dt>
-                        <dd>{result[key]}</dd>
+                        <dd>{String(result[key] ?? 'Not recorded')}</dd>
                       </div>
                     ))}
                   </dl>
+                  <h3>Where the work stands now</h3>
+                  <div className="mw-queue-breakdown">
+                    {[
+                      ['Completed', 'completed', 'Completed'],
+                      ['Needs Maya', 'needs_maya', 'Needs My Attention'],
+                      ['Awaiting Sarah', 'awaiting_sarah', 'Sarah'],
+                      ['Awaiting Finance', 'awaiting_finance', 'Finance'],
+                      ['Awaiting missing evidence', 'awaiting_evidence', 'Missing evidence'],
+                    ].map(([label, key, view]) => (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          setFilter(view);
+                          setSearch('');
+                        }}
+                      >
+                        <strong>{snapshot.business_counts[key]}</strong>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   <small>
-                    Administrative outcomes only. No invoices, credits, cash allocations or contract
-                    authority were changed.
+                    These current-state counts come from the saved queue, not a projected success
+                    rate. Open a group to inspect its work items. Runtime is not employee labor
+                    time.
                   </small>
                 </section>
               )}
+              <details className="mw-granular">
+                <summary>Granular processing controls</summary>
+                <button disabled={disabled} onClick={() => begin('routine')}>
+                  Process Routine Work
+                </button>
+                <button
+                  disabled={disabled}
+                  onClick={() => begin('auto_all', undefined, 'Auto Complete All')}
+                >
+                  Auto Complete All
+                </button>
+              </details>
               <div className="mw-filters">
                 <div role="group" aria-label="Work queue filters">
-                  {['All', 'Routine', 'Needs Review', 'Escalated', 'Completed'].map((f) => (
+                  {['Needs My Attention', 'Awaiting Others', 'Completed', 'All Work'].map((f) => (
                     <button
                       key={f}
                       aria-pressed={f === filter}
@@ -481,7 +555,7 @@ export default function DocumentWorkspace() {
                     <tr>
                       {[
                         'Work item / Customer',
-                        'Document type',
+                        'Potential business impact',
                         'Required action',
                         'Priority',
                         'Assigned owner',
@@ -506,14 +580,25 @@ export default function DocumentWorkspace() {
                             <span className="mw-sr">Open work item</span>
                           </button>
                         </td>
-                        <td>{title(w.business_object_type)}</td>
-                        <td>{w.required_action}</td>
+                        <td>{w.business.impact_text}</td>
+                        <td>
+                          {w.business.title}
+                          <small className="mw-row-reason">{title(w.business_object_type)}</small>
+                          <small className="mw-row-reason">{w.eligibility_reason}</small>
+                        </td>
                         <td>
                           <span className={`mw-priority ${w.priority === 'High' ? 'high' : ''}`}>
                             {w.priority}
                           </span>
                         </td>
-                        <td>{w.assigned_owner}</td>
+                        <td>
+                          {w.business.case_owner}
+                          <small className="mw-row-reason">
+                            {w.business.waiting_on
+                              ? `Waiting on ${w.business.waiting_on}`
+                              : 'Next: Maya'}
+                          </small>
+                        </td>
                         <td>
                           <span
                             className={`mw-status ${w.status === 'Closed' ? 'closed' : w.status === 'Escalated' ? 'escalated' : ''}`}
@@ -521,7 +606,7 @@ export default function DocumentWorkspace() {
                             {statuses[w.status] ?? w.status}
                           </span>
                         </td>
-                        <td>{w.recommendation.suggested_action}</td>
+                        <td>{w.business.next_action}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -634,7 +719,7 @@ export default function DocumentWorkspace() {
                 <span className="mw-eyebrow">
                   {detail.item.customer_id} · {detail.item.work_item_id}
                 </span>
-                <h2 id="mw-detail-title">{detail.item.required_action}</h2>
+                <h2 id="mw-detail-title">{detail.item.business.title}</h2>
               </div>
               <button aria-label="Close work item" onClick={closeDetail}>
                 Close ×
@@ -644,16 +729,28 @@ export default function DocumentWorkspace() {
               <span className="mw-status">
                 {statuses[detail.item.status] ?? detail.item.status}
               </span>{' '}
-              · {detail.item.assigned_owner} · Version {detail.item.version}
+              · Owner: {detail.item.business.case_owner} · Waiting on:{' '}
+              {detail.item.business.waiting_on ?? 'Maya’s next action'}
             </p>
+            <button
+              onClick={() => {
+                setDetail(null);
+                setWalkItem(detail.item.work_item_id);
+                setWalkShown(true);
+              }}
+            >
+              Show Me the Work
+            </button>
             <section>
-              <h3>Business problem</h3>
+              <h3>What's happening?</h3>
               <p>
                 {detail.item.required_action}.{' '}
                 {detail.item.automation_eligible
                   ? 'This is a supported read-only reconciliation check.'
                   : detail.item.eligibility_reason}
               </p>
+              <h3>Why does it matter?</h3>
+              <p>{detail.item.business.why_it_matters}</p>
               <p>Contract: {detail.item.contract_id}</p>
               {financial ? (
                 <dl className="mw-financial">
@@ -678,15 +775,35 @@ export default function DocumentWorkspace() {
             <section className="mw-suggestion">
               <span className="mw-eyebrow">SYSTEM RECOMMENDATION</span>
               <small>{detail.item.recommendation.source}</small>
-              <h3>Suggested action</h3>
-              <p>{detail.item.recommendation.suggested_action}</p>
+              <h3>What happens next?</h3>
+              <p>{detail.item.business.next_action}</p>
+              {detail.permitted_actions.includes(detail.item.recommendation.disposition) && (
+                <button
+                  className="mw-primary"
+                  disabled={disabled}
+                  onClick={() => begin(detail.item.recommendation.disposition, detail.item)}
+                >
+                  {
+                    (
+                      {
+                        routine: 'Complete Verified Check',
+                        financial_review: 'Refer to Financial Review',
+                        escalate: 'Escalate to Sarah',
+                        request_evidence: 'Request Missing Documentation',
+                        review: 'Review Billing Difference',
+                      } as Record<string, string>
+                    )[detail.item.recommendation.disposition]
+                  }
+                </button>
+              )}
               <h4>Why</h4>
               <p>{detail.item.recommendation.why}</p>
               <h4>What still requires human judgment</h4>
               <p>{detail.item.recommendation.human_judgment}</p>
             </section>
             <section>
-              <h3>Supporting evidence</h3>
+              <h3>What did Ledgerline find?</h3>
+              <h4>Supporting evidence</h4>
               <p>
                 Original PDFs and fields extracted by Stage 1. References remain linked to the saved
                 work item.
@@ -740,8 +857,8 @@ export default function DocumentWorkspace() {
                 </details>
               ))}
             </section>
-            <section>
-              <h3>Available actions</h3>
+            <details>
+              <summary>Other review actions</summary>
               <p>
                 Auto Complete applies the suggested permitted disposition. It does not
                 unconditionally close exceptions.
@@ -773,7 +890,7 @@ export default function DocumentWorkspace() {
               {detail.item.status === 'Closed' && (
                 <p>Read-only check completed. No financial action was executed.</p>
               )}
-            </section>
+            </details>
             <details>
               <summary>Audit history &amp; technical details</summary>
               <ol className="mw-audit">
@@ -786,6 +903,10 @@ export default function DocumentWorkspace() {
                       {e.before || e.after ? ` · ${e.before ?? '—'} → ${e.after ?? '—'}` : ''}
                     </small>
                     <p>{e.rationale}</p>
+                    <details>
+                      <summary>Full recorded event</summary>
+                      <pre>{JSON.stringify(e, null, 2)}</pre>
+                    </details>
                   </li>
                 ))}
               </ol>
@@ -793,6 +914,30 @@ export default function DocumentWorkspace() {
           </>
         )}
       </dialog>
+      {walkShown && snapshot?.session_id && (
+        <WorkWalkthrough
+          sid={snapshot.session_id}
+          scenarios={snapshot.scenarios}
+          initialItem={walkItem}
+          completedOperationId={
+            typeof result?.operation_id === 'string' ? result.operation_id : undefined
+          }
+          revision={snapshot}
+          disabled={disabled}
+          onClose={() => setWalkShown(false)}
+          onProcess={(item) => {
+            void api<Detail>(
+              `/document-workspace/sessions/${snapshot.session_id}/items/${item.work_item_id}`,
+            )
+              .then((d) => begin('auto', d.item, 'Process This Work Item'))
+              .catch((e) => setError((e as Error).message));
+          }}
+          onRemaining={() => {
+            setWalkShown(false);
+            begin('auto_all', undefined, 'Process All Remaining Work');
+          }}
+        />
+      )}
       <dialog
         ref={actionDialog}
         className="mw-confirm"
