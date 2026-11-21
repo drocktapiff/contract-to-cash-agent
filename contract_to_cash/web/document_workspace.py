@@ -46,6 +46,19 @@ class WorkspaceCommand(BaseModel):
     )
 
 
+def financial_referral_supported(work):
+    impact = work["financial_impact"]
+    return bool(
+        impact
+        and (
+            work["category"] == "credit_review"
+            and impact.get("proposed_credit") is not None
+            or work["category"] in ("contract_price_validation", "invoice_reconciliation")
+            and impact.get("difference") not in (None, "0.00")
+        )
+    )
+
+
 def recommendation(work):
     category = work["category"]
     if work.get("recommendation_rejected"):
@@ -72,10 +85,7 @@ def recommendation(work):
             "request_evidence",
             "Missing, ambiguous or invalid records do not establish an authoritative outcome.",
         )
-    elif category == "credit_review" or (
-        work["financial_impact"]
-        and work["financial_impact"].get("difference") not in (None, "0.00")
-    ):
+    elif financial_referral_supported(work):
         disposition, why = (
             "financial_review",
             "A potential financial correction needs separately authorized review; no correction is approved here.",
@@ -610,11 +620,7 @@ class DocumentWorkspace:
         actions = ["auto", "request_evidence", "escalate", "accept", "reject", "review"]
         if work["automation_eligible"]:
             actions.append("routine")
-        if work["financial_impact"] and work["category"] in (
-            "credit_review",
-            "contract_price_validation",
-            "invoice_reconciliation",
-        ):
+        if financial_referral_supported(work):
             actions.append("financial_review")
         return actions
 
@@ -803,6 +809,13 @@ class DocumentWorkspace:
                                 work["eligibility_reason"] = fresh["eligibility_reason"]
                                 work["financial_impact"] = fresh["financial_impact"]
                                 disposition = recommendation(work)["disposition"]
+                            if mode == "financial_review" and not financial_referral_supported(
+                                work
+                            ):
+                                raise StoreError(
+                                    409,
+                                    "Current evidence no longer supports this financial referral; reload and review the source records",
+                                )
                             if mode == "reject":
                                 work["recommendation_rejected"] = True
                                 work["automation_eligible"] = False

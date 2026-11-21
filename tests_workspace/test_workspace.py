@@ -345,6 +345,20 @@ class WorkspaceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_proposal({**payload, **changes}, work)
 
+    def test_repeat_import_retains_processed_state_and_referral_scope(self):
+        work = self.work("contract_price_validation", eligible=True)
+        self.assertNotIn("financial_review", self.ws.allowed(work))
+        with self.assertRaises(StoreError):
+            self.ws.perform(
+                self.sid, "financial_review", self.item_command(work), work["work_item_id"]
+            )
+        self.ws.perform(self.sid, "routine", command())
+        current = self.ws.snapshot()
+        imported = self.ws.load(command=command())
+        self.assertEqual(imported["session_id"], self.sid)
+        self.assertEqual(imported["metrics"], current["metrics"])
+        self.assertEqual(imported["metrics"]["automatically_completed"], 73)
+
 
 if __name__ == "__main__":
     unittest.main()

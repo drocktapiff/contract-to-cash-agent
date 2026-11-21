@@ -245,7 +245,7 @@ export default function DocumentWorkspace() {
         setNotice(
           a.mode === 'restart'
             ? 'Fresh session ready. Previous work and decisions are retained.'
-            : 'Actual sample PDFs loaded. No work has been marked completed.',
+            : 'Sample PDFs are available in the active session. Existing decisions are retained.',
         );
       } else {
         setResult(answer as Result);
