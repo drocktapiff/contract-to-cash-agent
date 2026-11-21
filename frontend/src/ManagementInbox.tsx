@@ -1085,7 +1085,9 @@ export default function ManagementInbox({
                   <p>
                     Usage:{' '}
                     {a.metrics
-                      ? `${a.metrics.api_requests} API requests · ${a.metrics.input_tokens} input / ${a.metrics.output_tokens} output tokens · ${a.metrics.duration_seconds} seconds`
+                      ? a.metrics.cost_accounting_complete
+                        ? `${a.metrics.api_requests} API requests · ${a.metrics.input_tokens} input / ${a.metrics.output_tokens} output tokens · ${a.metrics.duration_seconds} seconds`
+                        : `${a.metrics.api_requests} attempted API requests · Token usage incomplete / unknown (${a.metrics.input_tokens} input / ${a.metrics.output_tokens} output reported before failure)`
                       : 'Unknown / not reported'}{' '}
                     · Cost:{' '}
                     {a.metrics?.cost_accounting_complete
