@@ -456,6 +456,7 @@ export default function DocumentWorkspace() {
         </div>
         <button
           onClick={() => {
+            if (viewSarah) void refresh().catch((e) => setError((e as Error).message));
             setViewSarah((v) => !v);
             setDetail(null);
             setSelection({ sid: snapshot?.session_id ?? null, items: {} });
@@ -1033,7 +1034,7 @@ export default function DocumentWorkspace() {
                       snapshot.telemetry.processing_duration_seconds,
                     ],
                     [
-                      'Document-session OpenAI cost (USD)',
+                      'Estimated document-session OpenAI cost (USD)',
                       snapshot.telemetry.api_cost_complete === false
                         ? 'Unknown / incomplete usage'
                         : snapshot.telemetry.api_cost_usd,

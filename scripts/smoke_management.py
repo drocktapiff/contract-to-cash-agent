@@ -269,6 +269,13 @@ def main():
                         "document.documentElement.scrollWidth<=innerWidth"
                     ), "Mobile insight overflow"
                     capture("08-mobile-recorded-insight.png")
+                    records = page.request.get(
+                        f"/api/document-workspace/sessions/{sid}/management/analyses"
+                    ).json()
+                    cost = records[0]["metrics"]["estimated_api_cost_usd"]
+                    page.get_by_role("button", name="Maya — Revenue Operations", exact=True).click()
+                    page.get_by_text("Workflow telemetry", exact=True).click()
+                    expect(page.get_by_text(cost, exact=True)).to_be_visible()
                     assert (
                         len([url for url in posts if url.endswith("/management/analyses")]) == 1
                     ), "Navigation or replay started another analysis"
