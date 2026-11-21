@@ -1433,6 +1433,108 @@
     "title": "ScenarioUpdate",
     "type": "object"
   },
+  "SelectedCommand": {
+    "$defs": {
+      "SelectedItem": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^WI-[a-f0-9]{24}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Note",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "title": "SelectedItem",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "actor": {
+        "maxLength": 120,
+        "minLength": 1,
+        "title": "Actor",
+        "type": "string"
+      },
+      "confirmation": {
+        "maxLength": 100,
+        "title": "Confirmation",
+        "type": "string"
+      },
+      "evidence_hashes": {
+        "items": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "maxItems": 50,
+        "title": "Evidence Hashes",
+        "type": "array"
+      },
+      "expected_session": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Expected Session",
+        "type": "string"
+      },
+      "expected_version": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Expected Version"
+      },
+      "operation_id": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Operation Id",
+        "type": "string"
+      },
+      "rationale": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Rationale",
+        "type": "string"
+      },
+      "selected": {
+        "items": {
+          "$ref": "#/$defs/SelectedItem"
+        },
+        "maxItems": 500,
+        "minItems": 1,
+        "title": "Selected",
+        "type": "array"
+      }
+    },
+    "required": [
+      "operation_id",
+      "actor",
+      "rationale",
+      "confirmation",
+      "expected_session",
+      "selected"
+    ],
+    "title": "SelectedCommand",
+    "type": "object"
+  },
   "WorkspaceCommand": {
     "additionalProperties": false,
     "properties": {

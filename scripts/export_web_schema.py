@@ -14,6 +14,7 @@ from contract_to_cash.web.models import (
 )
 
 from contract_to_cash.web.document_workspace import WorkspaceCommand
+from contract_to_cash.web.selected_workflow import SelectedCommand
 
 from contract_to_cash.web.enterprise import (
     AnalysisRequest,
@@ -32,6 +33,7 @@ def public_schema():
         model.__name__: model.model_json_schema()
         for model in (
             WorkspaceCommand,
+            SelectedCommand,
             DatasetView,
             EventView,
             Health,

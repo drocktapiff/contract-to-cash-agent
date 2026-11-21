@@ -2,6 +2,13 @@
 Contract-to-cash-agent
 
 
+## Bulk work and management oversight (Stage 2.6)
+
+Select actual work across pages, use **AI Powered Close** for deterministic read-only
+checks, then hand remaining cases to **Sarah’s Inbox** with one confirmed request.
+Finance/evidence decision authority stays separate from management oversight.
+[Windows setup, workflow, safety boundaries and screenshots](docs/LEDGERLINE2_STAGE26.md).
+
 ## Show Me the Work (Ledgerline 2.0 Stage 2.5)
 
 A source-backed walkthrough connects traditional manual work, actual PDF extraction,

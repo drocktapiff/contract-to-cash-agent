@@ -939,3 +939,139 @@
 .mw-detail .mw-suggestion button {
   margin-top: 8px;
 }
+.mw-bulk-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #e8f2ec;
+  border: 1px solid #a8c9b6;
+  padding: 17px 24px;
+  box-shadow: 0 5px 16px #1c493512;
+}
+.mw-bulk-toolbar strong,
+.mw-bulk-toolbar small {
+  display: block;
+}
+.mw-bulk-toolbar .mw-command-row {
+  margin-top: 10px;
+}
+.mw-bulk-toolbar p {
+  font-size: 11px;
+  margin: 9px 0 0;
+}
+.mw-selection-scope {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 24px 16px;
+}
+.mw-selection-scope span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.mw-selection-scope button {
+  font-size: 11px;
+}
+.mw-inbox {
+  padding: 25px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.mw-inbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+.mw-inbox article {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  min-width: 0;
+}
+.mw-inbox article h3 {
+  font-size: 17px;
+}
+.mw-inbox article dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mw-inbox article dd {
+  font-size: 12px;
+}
+.mw-inbox article a {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.mw-inbox article p {
+  font-size: 12px;
+}
+.mw-inbox-boundary {
+  margin-top: 24px !important;
+  font-size: 11px;
+}
+.mw-oversight {
+  padding: 15px;
+  background: #eef0fa;
+  border-radius: 7px;
+}
+.mw-result > small {
+  display: block;
+  margin-top: 12px;
+}
+.mw-result ul {
+  padding-left: 18px;
+  font-size: 12px;
+}
+.mw-result li {
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.mw-result li button {
+  font-size: 10px;
+}
+.mw-confirm details textarea {
+  margin-bottom: 12px;
+}
+.mw-table-scroll th:first-child,
+.mw-table-scroll td:first-child {
+  width: 40px;
+  padding-right: 5px;
+}
+@media (max-width: 800px) {
+  .mw-inbox-grid {
+    grid-template-columns: 1fr;
+  }
+  .mw-bulk-toolbar {
+    padding: 14px;
+    top: 0;
+  }
+  .mw-bulk-toolbar .mw-command-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .mw-bulk-toolbar .mw-command-row button {
+    font-size: 12px;
+  }
+  .mw-selection-scope {
+    padding: 0 15px 15px;
+  }
+  .mw-inbox {
+    padding: 18px;
+  }
+  .mw-table-footer {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mw-top > button {
+    font-size: 11px;
+    padding: 6px 9px;
+  }
+}
+/* The queue itself must not create an overflow scroll container around the sticky toolbar. */
+.mywork .mw-queue {
+  overflow: visible;
+}
