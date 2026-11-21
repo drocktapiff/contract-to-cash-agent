@@ -124,6 +124,7 @@ def main():
                     expect(source.locator("dl")).to_be_visible()
                     capture("03-original-evidence-and-recommendation.png")
                     detail.get_by_role("button", name="Close work item", exact=True).click()
+                    page.get_by_text("Granular processing controls", exact=True).click()
                     page.get_by_role("button", name="Process Routine Work", exact=True).click()
                     outcome = confirm("Process Routine Work", "/process/routine")
                     assert (
@@ -131,17 +132,20 @@ def main():
                         and outcome["items_requiring_review"] == 29
                     )
                     expect(page.get_by_test_id("automatically_completed")).to_have_text("73")
-                    expect(page.get_by_test_id("awaiting_maya")).to_have_text("29")
+                    current = page.request.get("/api/document-workspace").json()
+                    assert (
+                        current["business_counts"]["needs_maya"]
+                        + current["business_counts"]["awaiting_others"]
+                        == 29
+                    )
                     capture("04-routine-processing-outcome.png")
                     page.get_by_role("button", name="Completed", exact=True).click()
                     expect(page.locator(".mw-table-footer")).to_contain_text(
                         "of 73 matching work items"
                     )
-                    page.get_by_role("button", name="Routine", exact=True).click()
-                    expect(
-                        page.get_by_text("No work items match this view.", exact=True)
-                    ).to_be_visible()
-                    page.get_by_role("button", name="Needs Review", exact=True).click()
+                    page.get_by_role("button", name="Awaiting Others", exact=True).click()
+                    expect(page.locator(".mw-item-link").first).to_be_visible()
+                    page.get_by_role("button", name="All Work", exact=True).click()
                     page.get_by_role("textbox", name="Search work items", exact=True).fill(
                         "contract_conflict"
                     )
@@ -153,10 +157,15 @@ def main():
                         escalation["automatically_closed"] == 0
                         and escalation["escalated_to_sarah"] == 1
                     )
-                    expect(detail).to_contain_text("Sarah Chen")
+                    expect(detail).to_contain_text("Waiting on: Sarah")
                     capture("05-human-escalation-recorded.png")
                     detail.get_by_role("button", name="Close work item", exact=True).click()
-                    expect(page.get_by_test_id("escalated")).to_have_text("1")
+                    assert (
+                        page.request.get("/api/document-workspace").json()["business_counts"][
+                            "awaiting_sarah"
+                        ]
+                        == 1
+                    )
                     inbox = page.request.get(
                         f"/api/document-workspace/sessions/{first_session}/management-inbox"
                     ).json()
@@ -193,7 +202,7 @@ def main():
                     )
                     page.set_viewport_size({"width": 390, "height": 844})
                     expect(
-                        page.get_by_role("button", name="Process Routine Work", exact=True)
+                        page.get_by_role("button", name="Process All Work", exact=True)
                     ).to_be_visible()
                     assert page.evaluate(
                         "document.documentElement.scrollWidth<=innerWidth"

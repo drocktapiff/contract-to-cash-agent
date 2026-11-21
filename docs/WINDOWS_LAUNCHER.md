@@ -11,6 +11,9 @@ The default dashboard is now [Maya’s document-driven My Work workspace](LEDGER
 The original paid investigation/persona application remains at `/legacy`. Reinstall
 `requirements-web.txt` after updating to include the PDF parser dependencies.
 
+See [Stage 2.5 Show Me the Work](LEDGERLINE2_STAGE25.md) for the guided source-backed
+presentation and consolidated Process All Work action. No paid advisor is introduced.
+
 ## One-time setup (Windows Git Bash / Python 3.13)
 
 Install Python 3.13 and Node.js 22.12+. From the checkout:
