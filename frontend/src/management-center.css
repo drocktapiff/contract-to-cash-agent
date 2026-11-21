@@ -264,3 +264,9 @@
 .mc-charts {
   align-items: start;
 }
+
+/* Keep the active tab legible when the shared workspace hover style applies. */
+.mc-center .mc-tabs button[aria-pressed='true']:hover {
+  color: #fff;
+  background: #20594c;
+}

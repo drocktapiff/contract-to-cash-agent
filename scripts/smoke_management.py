@@ -162,6 +162,13 @@ def main():
                     expect(center).to_contain_text("Investigate")
                     capture("04-corrective-action.png")
                     center.get_by_role("button", name="Management Intelligence", exact=True).click()
+                    active_tab = center.get_by_role(
+                        "button", name="Management Intelligence", exact=True
+                    )
+                    active_tab.hover()
+                    expect(active_tab).to_have_css("background-color", "rgb(32, 89, 76)")
+                    expect(active_tab).to_have_css("color", "rgb(255, 255, 255)")
+
                     center.get_by_role(
                         "button", name="Analyze Team Performance", exact=True
                     ).click()
@@ -244,14 +251,23 @@ def main():
                     page.set_viewport_size({"width": 390, "height": 844})
                     center.get_by_role("button", name="Overview", exact=True).click()
                     expect(page.get_by_test_id("management-total")).to_have_text("102")
+                    assert page.evaluate(
+                        "document.documentElement.scrollWidth<=innerWidth"
+                    ), "Mobile overview overflow"
                     capture("06-mobile-overview.png")
                     center.get_by_role("button", name="Escalations", exact=True).click()
                     expect(center.locator("tbody tr")).to_have_count(15)
+                    assert page.evaluate(
+                        "document.documentElement.scrollWidth<=innerWidth"
+                    ), "Mobile queue overflow"
                     capture("07-mobile-management-queue.png")
                     center.get_by_role("button", name="Management Intelligence", exact=True).click()
                     expect(
                         center.get_by_role("heading", name="Coordinate evidence-backed follow-up")
                     ).to_be_visible()
+                    assert page.evaluate(
+                        "document.documentElement.scrollWidth<=innerWidth"
+                    ), "Mobile insight overflow"
                     capture("08-mobile-recorded-insight.png")
                     assert (
                         len([url for url in posts if url.endswith("/management/analyses")]) == 1

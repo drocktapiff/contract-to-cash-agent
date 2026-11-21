@@ -525,6 +525,9 @@ class ManagementTests(unittest.TestCase):
                 client, "gpt-6.1-sol", tools, journal, Limits(), instructions=INSTRUCTIONS
             ).run("Analyze authorized evidence.")
         self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["workflow_kind"], "document_management_advisory")
+        self.assertNotIn("financial_totals", report)
+        self.assertEqual(report["financial_exposure"], inputs["financial"])
         self.assertIn(attack, json.dumps(client.requests[1]["input"]))
         for request in client.requests:
             self.assertEqual(request["instructions"], INSTRUCTIONS)

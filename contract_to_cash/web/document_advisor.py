@@ -253,6 +253,24 @@ class ManagementTools:
         return dict(saved=True, insight_count=len(validated))
 
     def finalize_report(self, report):
+        # This adapter interprets already-investigated work. Generic empty billing
+        # coverage/zero totals from the shared runtime are not management results.
+        for field in (
+            "customers_compared",
+            "screening_complete",
+            "customers_with_retrieved_documents",
+            "clean_customers",
+            "findings",
+            "reviews",
+            "validated_financial_discrepancies",
+            "financial_totals",
+        ):
+            report.pop(field, None)
+        report.update(
+            workflow_kind="document_management_advisory",
+            authorized_case_ids=self.inputs["case_ids"],
+            financial_exposure=self.inputs["financial"],
+        )
         report["analysis_result"] = self.result
         if (
             not self.result
