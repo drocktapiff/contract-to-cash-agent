@@ -601,13 +601,27 @@ export default function ManagementInbox({
       </p>
       {data && (
         <>
-          <strong>{data.metrics.handoffs} oversight cases</strong>
-          <p className="mc-recency">
-            Source evidence checked {new Date(data.checked_at).toLocaleString()}.{' '}
-            {data.changed_source_cases
-              ? `${data.changed_source_cases} handoffs have changed or missing sources; saved facts are historical.`
-              : 'Current source PDFs verified for all handoffs.'}
-          </p>
+          <details className="mp-evidence-status">
+            <summary>
+              {data.changed_source_cases
+                ? `${data.changed_source_cases} cases need source verification`
+                : 'Source evidence verified'}{' '}
+              · {new Date(data.checked_at).toLocaleTimeString()}
+            </summary>
+            <p>
+              {data.metrics.handoffs} oversight cases. Source evidence checked{' '}
+              {new Date(data.checked_at).toLocaleString()}.{' '}
+              {data.changed_source_cases
+                ? 'Some handoffs have changed or missing PDFs; saved facts are historical.'
+                : 'Current source PDFs verified for all handoffs.'}
+            </p>
+          </details>
+          {data.changed_source_cases > 0 && (
+            <p className="mw-alert">
+              {data.changed_source_cases} handoffs have changed or missing sources. Saved facts are
+              historical; inspect source integrity before acting.
+            </p>
+          )}
           {(readOnly || data.read_only) && (
             <p className="mw-alert">
               Retained session · Management history and analyses are read-only.
@@ -625,163 +639,166 @@ export default function ManagementInbox({
                   onCases={selectChart}
                 />
               </details>
-              <section className="mc-metrics" aria-label="Management performance metrics">
-                {[
-                  ['Total work items', 'total'],
-                  ['Completed work items', 'completed'],
-                  ['Legacy automated closures', 'legacy_closed'],
-                  ['Outstanding work', 'outstanding'],
-                  ['Management handoffs', 'handoffs'],
-                  ['Sarah’s direct attention', 'sarah_direct'],
-                  ['Awaiting Finance', 'awaiting_finance'],
-                  ['Awaiting Evidence', 'awaiting_evidence'],
-                  ['Management reviews completed', 'management_reviews_completed'],
-                ].map(([label, k]) => (
-                  <article key={k}>
-                    <span>{label}</span>
-                    <strong data-testid={'management-' + k}>{data.metrics[k]}</strong>
-                  </article>
-                ))}
-                <article>
-                  <span>Automation preparation rate</span>
-                  <strong>
-                    {new Intl.NumberFormat('en-CA', {
-                      style: 'percent',
-                      maximumFractionDigits: 1,
-                    }).format(data.metrics.automation_rate)}
-                  </strong>
-                  <small>Prepared checks / all work; review remains separate</small>
-                </article>
-              </section>
-              <div className="mc-charts">
-                <Chart
-                  title="Workload distribution"
-                  values={data.charts.workload}
-                  onSelect={(key) => {
-                    const ids = data.work_items
-                      .filter((w) =>
-                        key === 'Outstanding'
-                          ? w.status !== 'Closed'
-                          : key === 'Legacy automatic closure'
-                            ? w.status === 'Closed' && !w.review
-                            : w.status === 'Closed' && w.review?.decision === 'approve',
-                      )
-                      .map((w) => w.work_item_id);
-                    selectChart(ids);
-                  }}
-                />
-                <Chart
-                  title="Escalations by category"
-                  values={data.charts.categories}
-                  onSelect={(key) =>
-                    selectChart(
-                      data.cases.filter((w) => w.category === key).map((w) => w.work_item_id),
-                    )
-                  }
-                />
-                <Chart
-                  title="Current decision ownership"
-                  values={data.charts.decision_owners}
-                  onSelect={(key) =>
-                    selectChart(
-                      data.cases
-                        .filter((w) =>
-                          key === 'Finance'
-                            ? w.status === 'Awaiting Financial Review'
-                            : key === 'Evidence / contract authority'
-                              ? w.status === 'Awaiting Evidence'
-                              : key === 'Maya'
-                                ? w.management.review_status === 'Returned to Maya'
-                                : w.status === 'Escalated' &&
-                                  w.management.review_status !== 'Returned to Maya',
-                        )
-                        .map((w) => w.work_item_id),
-                    )
-                  }
-                />
-                <Chart
-                  title="Operational flow — outcome branches"
-                  values={Object.fromEntries(
-                    Object.entries(data.charts.flow).filter(([k]) => k !== 'Incoming'),
-                  )}
-                  onSelect={(key) =>
-                    selectChart(
-                      data.work_items
-                        .filter((w) =>
-                          key === 'Completed'
-                            ? w.status === 'Closed'
-                            : key === 'Outstanding with oversight'
-                              ? w.status !== 'Closed' && !!w.oversight
-                              : w.status !== 'Closed' && !w.oversight,
-                        )
-                        .map((w) => w.work_item_id),
-                    )
-                  }
-                />
-                <Chart
-                  title="Actual state aging"
-                  values={Object.fromEntries(
-                    Object.entries(data.aging_groups).map(([k, v]) => [k, v.length]),
-                  )}
-                  onSelect={(key) => selectChart(data.aging_groups[key])}
-                />
-                <section className="mc-chart">
-                  <h3>Processing performance</h3>
-                  <p>Measured system duration, not employee labor.</p>
-                  <strong>{data.telemetry.processing_duration_seconds.toFixed(3)} seconds</strong>
-                  <p>
-                    {data.operations.length} saved operations · {data.metrics.completed} completed
-                    work items
-                  </p>
-                  <small>Human labor: Not Measured</small>
-                  <details>
-                    <summary>Measured operation records</summary>
-                    {data.operations.map((o) => (
-                      <button key={o.id} onClick={() => selectChart(o.case_ids)}>
-                        {o.status} · {o.duration_seconds ?? 'Not measured'} seconds · {o.completed}{' '}
-                        checks
-                      </button>
-                    ))}
-                  </details>
-                  <label>
-                    Prospective SLA target (hours; assumption)
-                    <input
-                      type="number"
-                      min={1}
-                      max={720}
-                      value={sla}
-                      onChange={(e) =>
-                        setSla(Math.max(1, Math.min(720, Number(e.target.value) || 1)))
-                      }
-                    />
-                  </label>
-                  <p>
-                    {data.cases.filter((w) => w.age.seconds > sla * 3600).length} cases exceed this
-                    assumed target. No fabricated historical aging.
-                  </p>
-                </section>
-              </div>
-              <section className="mc-exposure">
-                <h3>Potential financial exposure — separate categories</h3>
-                <dl>
+              <details className="mp-advanced mp-operational">
+                <summary>Operational metrics &amp; exposure</summary>
+                <section className="mc-metrics" aria-label="Management performance metrics">
                   {[
-                    ['Potential underbilling', 'potential_underbilling'],
-                    ['Potential overbilling', 'potential_overbilling'],
-                    ['Proposed credits', 'proposed_credits'],
-                    ['Payment review balances', 'payment_review_balances'],
+                    ['Total work items', 'total'],
+                    ['Completed work items', 'completed'],
+                    ['Legacy automated closures', 'legacy_closed'],
+                    ['Outstanding work', 'outstanding'],
+                    ['Management handoffs', 'handoffs'],
+                    ['Sarah’s direct attention', 'sarah_direct'],
+                    ['Awaiting Finance', 'awaiting_finance'],
+                    ['Awaiting Evidence', 'awaiting_evidence'],
+                    ['Management reviews completed', 'management_reviews_completed'],
                   ].map(([label, k]) => (
-                    <div key={k}>
-                      <dt>{label}</dt>
-                      <dd>CAD {data.exposure[k]}</dd>
-                    </div>
+                    <article key={k}>
+                      <span>{label}</span>
+                      <strong data-testid={'management-' + k}>{data.metrics[k]}</strong>
+                    </article>
                   ))}
-                  <div>
-                    <dt>Unknown customer/contract scopes</dt>
-                    <dd>{data.exposure.unknown_customer_contracts}</dd>
-                  </div>
-                </dl>
-                <p>{data.exposure.limitations}</p>
-              </section>
+                  <article>
+                    <span>Automation preparation rate</span>
+                    <strong>
+                      {new Intl.NumberFormat('en-CA', {
+                        style: 'percent',
+                        maximumFractionDigits: 1,
+                      }).format(data.metrics.automation_rate)}
+                    </strong>
+                    <small>Prepared checks / all work; review remains separate</small>
+                  </article>
+                </section>
+                <div className="mc-charts">
+                  <Chart
+                    title="Workload distribution"
+                    values={data.charts.workload}
+                    onSelect={(key) => {
+                      const ids = data.work_items
+                        .filter((w) =>
+                          key === 'Outstanding'
+                            ? w.status !== 'Closed'
+                            : key === 'Legacy automatic closure'
+                              ? w.status === 'Closed' && !w.review
+                              : w.status === 'Closed' && w.review?.decision === 'approve',
+                        )
+                        .map((w) => w.work_item_id);
+                      selectChart(ids);
+                    }}
+                  />
+                  <Chart
+                    title="Escalations by category"
+                    values={data.charts.categories}
+                    onSelect={(key) =>
+                      selectChart(
+                        data.cases.filter((w) => w.category === key).map((w) => w.work_item_id),
+                      )
+                    }
+                  />
+                  <Chart
+                    title="Current decision ownership"
+                    values={data.charts.decision_owners}
+                    onSelect={(key) =>
+                      selectChart(
+                        data.cases
+                          .filter((w) =>
+                            key === 'Finance'
+                              ? w.status === 'Awaiting Financial Review'
+                              : key === 'Evidence / contract authority'
+                                ? w.status === 'Awaiting Evidence'
+                                : key === 'Maya'
+                                  ? w.management.review_status === 'Returned to Maya'
+                                  : w.status === 'Escalated' &&
+                                    w.management.review_status !== 'Returned to Maya',
+                          )
+                          .map((w) => w.work_item_id),
+                      )
+                    }
+                  />
+                  <Chart
+                    title="Operational flow — outcome branches"
+                    values={Object.fromEntries(
+                      Object.entries(data.charts.flow).filter(([k]) => k !== 'Incoming'),
+                    )}
+                    onSelect={(key) =>
+                      selectChart(
+                        data.work_items
+                          .filter((w) =>
+                            key === 'Completed'
+                              ? w.status === 'Closed'
+                              : key === 'Outstanding with oversight'
+                                ? w.status !== 'Closed' && !!w.oversight
+                                : w.status !== 'Closed' && !w.oversight,
+                          )
+                          .map((w) => w.work_item_id),
+                      )
+                    }
+                  />
+                  <Chart
+                    title="Actual state aging"
+                    values={Object.fromEntries(
+                      Object.entries(data.aging_groups).map(([k, v]) => [k, v.length]),
+                    )}
+                    onSelect={(key) => selectChart(data.aging_groups[key])}
+                  />
+                  <section className="mc-chart">
+                    <h3>Processing performance</h3>
+                    <p>Measured system duration, not employee labor.</p>
+                    <strong>{data.telemetry.processing_duration_seconds.toFixed(3)} seconds</strong>
+                    <p>
+                      {data.operations.length} saved operations · {data.metrics.completed} completed
+                      work items
+                    </p>
+                    <small>Human labor: Not Measured</small>
+                    <details>
+                      <summary>Measured operation records</summary>
+                      {data.operations.map((o) => (
+                        <button key={o.id} onClick={() => selectChart(o.case_ids)}>
+                          {o.status} · {o.duration_seconds ?? 'Not measured'} seconds ·{' '}
+                          {o.completed} checks
+                        </button>
+                      ))}
+                    </details>
+                    <label>
+                      Prospective SLA target (hours; assumption)
+                      <input
+                        type="number"
+                        min={1}
+                        max={720}
+                        value={sla}
+                        onChange={(e) =>
+                          setSla(Math.max(1, Math.min(720, Number(e.target.value) || 1)))
+                        }
+                      />
+                    </label>
+                    <p>
+                      {data.cases.filter((w) => w.age.seconds > sla * 3600).length} cases exceed
+                      this assumed target. No fabricated historical aging.
+                    </p>
+                  </section>
+                </div>
+                <section className="mc-exposure">
+                  <h3>Potential financial exposure — separate categories</h3>
+                  <dl>
+                    {[
+                      ['Potential underbilling', 'potential_underbilling'],
+                      ['Potential overbilling', 'potential_overbilling'],
+                      ['Proposed credits', 'proposed_credits'],
+                      ['Payment review balances', 'payment_review_balances'],
+                    ].map(([label, k]) => (
+                      <div key={k}>
+                        <dt>{label}</dt>
+                        <dd>CAD {data.exposure[k]}</dd>
+                      </div>
+                    ))}
+                    <div>
+                      <dt>Unknown customer/contract scopes</dt>
+                      <dd>{data.exposure.unknown_customer_contracts}</dd>
+                    </div>
+                  </dl>
+                  <p>{data.exposure.limitations}</p>
+                </section>
+              </details>
               <section className="mc-rule">
                 <span className="mw-eyebrow">FREE · NO PROVIDER REQUESTS</span>
                 <h3>Rule-based operational overview</h3>

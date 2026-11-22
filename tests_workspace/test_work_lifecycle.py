@@ -277,6 +277,120 @@ class LifecycleTests(unittest.TestCase):
             any(d["code"] == "foreign_session_event" for d in model["integrity"]["diagnostics"])
         )
 
+    def test_performance_kpis_exact_memberships(self):
+        p = self.handoff["performance"]
+        k = {n["id"]: n for n in p["kpis"]}
+        self.assertEqual(
+            [k[i]["count"] for i in ("identified", "reviewed_closed", "open", "preparation_rate")],
+            [102, 73, 29, 73],
+        )
+        self.assertEqual(k["preparation_rate"]["rate"], 73 / 102)
+        all_ids = {i["id"] for i in self.handoff["items"]}
+        self.assertEqual(set(k["identified"]["item_ids"]), all_ids)
+        self.assertEqual(
+            set(k["open"]["item_ids"]), all_ids - set(k["reviewed_closed"]["item_ids"])
+        )
+        self.assertEqual(
+            set(k["preparation_rate"]["item_ids"]),
+            set(self.nodes(self.handoff)["prepared"]["item_ids"]),
+        )
+
+    def test_performance_distribution_reuses_partition_without_overlaps(self):
+        for model in (self.initial, self.prepared, self.approved, self.handoff):
+            p = model["performance"]
+            self.assertTrue(p["reconciled"])
+            states = {
+                n["id"].replace("state-", ""): set(n["item_ids"]) for n in model["current_state"]
+            }
+            for n in p["distribution"]:
+                self.assertEqual(set(n["item_ids"]), states[n["id"].replace("distribution-", "")])
+                self.assertAlmostEqual(n["share"], n["count"] / 102)
+            ids = [i for n in p["distribution"] for i in n["item_ids"]]
+            self.assertEqual(len(ids), len(set(ids)))
+            self.assertEqual(len(ids), 102)
+            self.assertAlmostEqual(sum(n["share"] for n in p["distribution"]), 1)
+
+    def test_performance_contributions_overlap_not_outcomes(self):
+        p = self.handoff["performance"]
+        auto, maya, sarah = p["contributions"]
+        self.assertEqual([n["count"] for n in p["contributions"]], [73, 73, 29])
+        self.assertEqual(auto["item_ids"], maya["item_ids"])
+        self.assertEqual([n["count"] for n in maya["breakdowns"]], [1, 72, 0])
+        self.assertEqual(sarah["count"], 29)
+        self.assertEqual(sum(n["count"] for n in sarah["breakdowns"]), 29)
+        for c in p["contributions"]:
+            for n in c["breakdowns"]:
+                self.assertTrue(set(n["item_ids"]) <= set(c["item_ids"]))
+
+    def test_partial_handoffs_are_not_current_disposition_or_manual_triage(self):
+        works, docs, events = self.raw()
+        received = set(self.nodes(self.handoff)["handoff"]["item_ids"][:12])
+        all_handoffs = set(self.nodes(self.handoff)["handoff"]["item_ids"])
+        for w in works:
+            if w["work_item_id"] in all_handoffs - received:
+                w.pop("oversight", None)
+                w.pop("management", None)
+                w.pop("current_decision_owner", None)
+                w["status"] = "Human Review Required"
+        events = [
+            e
+            for e in events
+            if e.get("item_id") not in all_handoffs - received
+            or e["type"] not in ("escalated", "management_handoff_received")
+        ]
+        model = project(self.sid, works, docs, events, [])
+        p = model["performance"]
+        self.assertEqual(p["contributions"][2]["count"], 12)
+        self.assertEqual(next(k for k in p["kpis"] if k["id"] == "open")["count"], 29)
+        self.assertEqual(sum(n["count"] for n in p["distribution"]), 102)
+        self.assertNotIn("manual", self.nodes(model))
+
+    def test_review_activity_includes_rejection_without_claiming_closure(self):
+        works, docs, events = self.raw()
+        approved = next(
+            e
+            for e in events
+            if e["type"] == "human_review_approved" and e["details"]["attestation"] == "individual"
+        )
+        wid = approved["item_id"]
+        for w in works:
+            if w["work_item_id"] == wid:
+                w["status"] = "Review Rejected — Needs Investigation"
+                w["review"]["decision"] = "reject"
+        events = [
+            (
+                dict(
+                    e,
+                    type="human_review_rejected",
+                    after="Review Rejected — Needs Investigation",
+                    details={**e["details"], "decision": "reject"},
+                )
+                if e["id"] == approved["id"]
+                else e
+            )
+            for e in events
+        ]
+        p = project(self.sid, works, docs, events, [])["performance"]
+        self.assertEqual(p["contributions"][1]["count"], 73)
+        self.assertEqual(p["contributions"][1]["breakdowns"][2]["item_ids"], [wid])
+        self.assertEqual(next(n for n in p["kpis"] if n["id"] == "reviewed_closed")["count"], 72)
+        self.assertEqual(next(n for n in p["kpis"] if n["id"] == "open")["count"], 30)
+
+    def test_performance_legacy_and_empty_session_are_honest(self):
+        works, docs, events = self.raw()
+        for w in works:
+            w.pop("review", None)
+        events = [e for e in events if not e["type"].startswith("human_review_")]
+        p = project(self.sid, works, docs, events, [])["performance"]
+        self.assertEqual(p["legacy_closed"]["count"], 73)
+        self.assertEqual(next(k for k in p["kpis"] if k["id"] == "reviewed_closed")["count"], 0)
+        self.assertEqual(next(k for k in p["kpis"] if k["id"] == "open")["count"], 29)
+        empty = project(self.sid, [], [], [], [])["performance"]
+        self.assertTrue(empty["reconciled"])
+        self.assertEqual(empty["total"], 0)
+        self.assertIsNone(empty["kpis"][3]["rate"])
+        self.assertEqual(empty["distribution"], [])
+
     def test_unknown_status_and_missing_documents_are_visible(self):
         works, docs, events = self.raw()
         works[0]["status"] = None

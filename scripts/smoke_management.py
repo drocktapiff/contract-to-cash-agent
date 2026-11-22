@@ -100,6 +100,7 @@ def main():
                     expect(page.get_by_test_id("management-handoffs")).to_have_text("29")
                     expect(center).to_contain_text("Rule-based operational overview")
                     capture("02-management-overview.png")
+                    center.get_by_text("Operational metrics & exposure", exact=True).click()
                     center.get_by_role(
                         "button",
                         name="Workload distribution: Human-reviewed closure, 73. View supporting work",

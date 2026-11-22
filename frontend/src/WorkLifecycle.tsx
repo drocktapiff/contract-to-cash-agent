@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
+import ManagementPerformance, { type Performance } from './ManagementPerformance';
 import './work-lifecycle.css';
 
 type Node = {
@@ -74,6 +75,7 @@ type Model = {
   nodes: Node[];
   edges: Edge[];
   current_state: Node[];
+  performance: Performance;
   metrics: Node[];
   items: Case[];
   documents: Doc[];
@@ -256,164 +258,178 @@ export default function WorkLifecycle({
     );
   }
   return (
-    <section className="wl-panel" aria-label="Work Lifecycle & Accountability">
-      <header>
-        <div>
-          <span className="mw-eyebrow">FROM SOURCE EVIDENCE TO HUMAN ACCOUNTABILITY</span>
-          <h2>Work Lifecycle &amp; Accountability</h2>
-          <p>What entered, who handled it, and what still needs a decision.</p>
-        </div>
-        <div className="wl-toggle" role="group" aria-label="Lifecycle visualization mode">
-          <button
-            aria-pressed={mode === 'flow'}
-            onClick={() => {
-              setMode('flow');
-              setSelected(null);
-            }}
-          >
-            Lifecycle Flow
-          </button>
-          <button
-            aria-pressed={mode === 'state'}
-            onClick={() => {
-              setMode('state');
-              setSelected(null);
-            }}
-          >
-            Current State
-          </button>
-        </div>
-      </header>
+    <section className="mp-workspace" aria-label="Saved management analytics">
       {loading && <p role="status">Reading saved workflow…</p>}
       {error && <p role="alert">{error}</p>}
       {data && (
-        <>
-          <div className="wl-metrics" aria-label="Lifecycle supporting metrics">
-            {data.metrics.map((n) => (
-              <button key={n.id} onClick={() => choose(n)}>
-                <strong>{n.count}</strong>
-                <span>{n.label}</span>
-              </button>
-            ))}
-          </div>
-          {mode === 'flow' ? (
-            <>
-              <p className="wl-note">
-                Lifecycle contributions overlap. A case can pass through several stages; stage
-                counts are not additive. Select a stage or connection to inspect its evidence.
-              </p>
-              <div
-                className="wl-flow"
-                ref={canvas}
-                style={{
-                  gridTemplateColumns: `repeat(${Math.max(...data.nodes.map((n) => n.column)) + 1}, minmax(0,1fr))`,
+        <ManagementPerformance
+          data={data.performance}
+          documents={data.nodes.find((n) => n.id === 'documents')!}
+          onSelect={choose}
+        />
+      )}
+      <details className="mp-advanced">
+        <summary>Detailed Lifecycle &amp; Accountability</summary>
+        <section className="wl-panel" aria-label="Work Lifecycle & Accountability">
+          <header>
+            <div>
+              <span className="mw-eyebrow">FROM SOURCE EVIDENCE TO HUMAN ACCOUNTABILITY</span>
+              <h2>Work Lifecycle &amp; Accountability</h2>
+              <p>What entered, who handled it, and what still needs a decision.</p>
+            </div>
+            <div className="wl-toggle" role="group" aria-label="Lifecycle visualization mode">
+              <button
+                aria-pressed={mode === 'flow'}
+                onClick={() => {
+                  setMode('flow');
+                  setSelected(null);
                 }}
               >
-                <svg className="wl-links" aria-hidden="true">
-                  <defs>
-                    <marker
-                      id="wl-arrow"
-                      viewBox="0 0 10 10"
-                      refX="9"
-                      refY="5"
-                      markerWidth="5"
-                      markerHeight="5"
-                      orient="auto-start-reverse"
-                    >
-                      <path d="M0,0 L10,5 L0,10 z" />
-                    </marker>
-                  </defs>
-                  {paths.map((p) => (
-                    <g key={p.edge.id}>
-                      <path
-                        d={p.d}
-                        strokeWidth={Math.min(5, 1 + Math.sqrt(p.edge.count) / 3)}
-                        markerEnd="url(#wl-arrow)"
-                      />
-                      <path
-                        className="wl-link-hit"
-                        d={p.d}
-                        onClick={() =>
-                          choose({
-                            ...p.edge,
-                            label: `${data.nodes.find((n) => n.id === p.edge.source)?.label} → ${data.nodes.find((n) => n.id === p.edge.target)?.label}`,
-                          })
-                        }
-                      />
-                      <text x={p.x} y={p.y - 5} textAnchor="middle">
-                        {p.edge.count}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
-                {STAGES.map(
-                  (label, column) =>
-                    data.nodes.some((n) => n.column === column) && (
-                      <div className="wl-column" key={label}>
-                        <h3>
-                          <span>{column + 1}</span>
-                          {label}
-                        </h3>
-                        {data.nodes.filter((n) => n.column === column).map(node)}
-                      </div>
-                    ),
-                )}
-              </div>
-              <details className="wl-connections">
-                <summary>Inspect recorded transitions ({data.edges.length})</summary>
-                <div>
-                  {data.edges.map((e) => (
-                    <button
-                      key={e.id}
-                      onClick={() =>
-                        choose({
-                          ...e,
-                          label: `${data.nodes.find((n) => n.id === e.source)?.label} → ${data.nodes.find((n) => n.id === e.target)?.label}`,
-                        })
-                      }
-                    >
-                      {data.nodes.find((n) => n.id === e.source)?.label} →{' '}
-                      {data.nodes.find((n) => n.id === e.target)?.label} · {e.count} distinct work
-                      items
-                    </button>
-                  ))}
-                </div>
-              </details>
-            </>
-          ) : (
+                Lifecycle Flow
+              </button>
+              <button
+                aria-pressed={mode === 'state'}
+                onClick={() => {
+                  setMode('state');
+                  setSelected(null);
+                }}
+              >
+                Current State
+              </button>
+            </div>
+          </header>
+          {loading && <p role="status">Reading saved workflow…</p>}
+          {error && <p role="alert">{error}</p>}
+          {data && (
             <>
-              <p className="wl-reconciliation" role="status">
-                {data.integrity.reconciled
-                  ? `${data.integrity.accounted} of ${data.integrity.total} work items accounted for`
-                  : 'Reconciliation requires investigation'}
-              </p>
-              <p className="wl-note">
-                Each work item appears exactly once. Financial decisions and missing evidence remain
-                unresolved after management review.
-              </p>
-              <div className="wl-state">{data.current_state.map(node)}</div>
+              <div className="wl-metrics" aria-label="Lifecycle supporting metrics">
+                {data.metrics.map((n) => (
+                  <button key={n.id} onClick={() => choose(n)}>
+                    <strong>{n.count}</strong>
+                    <span>{n.label}</span>
+                  </button>
+                ))}
+              </div>
+              {mode === 'flow' ? (
+                <>
+                  <p className="wl-note">
+                    Lifecycle contributions overlap. A case can pass through several stages; stage
+                    counts are not additive. Select a stage or connection to inspect its evidence.
+                  </p>
+                  <div
+                    className="wl-flow"
+                    ref={canvas}
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.max(...data.nodes.map((n) => n.column)) + 1}, minmax(0,1fr))`,
+                    }}
+                  >
+                    <svg className="wl-links" aria-hidden="true">
+                      <defs>
+                        <marker
+                          id="wl-arrow"
+                          viewBox="0 0 10 10"
+                          refX="9"
+                          refY="5"
+                          markerWidth="5"
+                          markerHeight="5"
+                          orient="auto-start-reverse"
+                        >
+                          <path d="M0,0 L10,5 L0,10 z" />
+                        </marker>
+                      </defs>
+                      {paths.map((p) => (
+                        <g key={p.edge.id}>
+                          <path
+                            d={p.d}
+                            strokeWidth={Math.min(5, 1 + Math.sqrt(p.edge.count) / 3)}
+                            markerEnd="url(#wl-arrow)"
+                          />
+                          <path
+                            className="wl-link-hit"
+                            d={p.d}
+                            onClick={() =>
+                              choose({
+                                ...p.edge,
+                                label: `${data.nodes.find((n) => n.id === p.edge.source)?.label} → ${data.nodes.find((n) => n.id === p.edge.target)?.label}`,
+                              })
+                            }
+                          />
+                          <text x={p.x} y={p.y - 5} textAnchor="middle">
+                            {p.edge.count}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                    {STAGES.map(
+                      (label, column) =>
+                        data.nodes.some((n) => n.column === column) && (
+                          <div className="wl-column" key={label}>
+                            <h3>
+                              <span>{column + 1}</span>
+                              {label}
+                            </h3>
+                            {data.nodes.filter((n) => n.column === column).map(node)}
+                          </div>
+                        ),
+                    )}
+                  </div>
+                  <details className="wl-connections">
+                    <summary>Inspect recorded transitions ({data.edges.length})</summary>
+                    <div>
+                      {data.edges.map((e) => (
+                        <button
+                          key={e.id}
+                          onClick={() =>
+                            choose({
+                              ...e,
+                              label: `${data.nodes.find((n) => n.id === e.source)?.label} → ${data.nodes.find((n) => n.id === e.target)?.label}`,
+                            })
+                          }
+                        >
+                          {data.nodes.find((n) => n.id === e.source)?.label} →{' '}
+                          {data.nodes.find((n) => n.id === e.target)?.label} · {e.count} distinct
+                          work items
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                </>
+              ) : (
+                <>
+                  <p className="wl-reconciliation" role="status">
+                    {data.integrity.reconciled
+                      ? `${data.integrity.accounted} of ${data.integrity.total} work items accounted for`
+                      : 'Reconciliation requires investigation'}
+                  </p>
+                  <p className="wl-note">
+                    Each work item appears exactly once. Financial decisions and missing evidence
+                    remain unresolved after management review.
+                  </p>
+                  <div className="wl-state">{data.current_state.map(node)}</div>
+                </>
+              )}
+              {!data.items.length && <p>No work items are saved in this session.</p>}
+              <footer>
+                <span>
+                  {data.provenance} · Session {sid.slice(0, 8)}
+                  {data.read_only ? ' · Retained session' : ''}
+                </span>
+                <details>
+                  <summary>Counting, authority and integrity</summary>
+                  <p>{data.methodology}</p>
+                  <p>
+                    {data.integrity.unclassified} unclassified cases.{' '}
+                    {data.integrity.diagnostics.length} history or evidence diagnostics.
+                  </p>
+                  {data.integrity.diagnostics.length > 0 && (
+                    <pre>{JSON.stringify(data.integrity.diagnostics, null, 2)}</pre>
+                  )}
+                </details>
+              </footer>
             </>
           )}
-          {!data.items.length && <p>No work items are saved in this session.</p>}
-          <footer>
-            <span>
-              {data.provenance} · Session {sid.slice(0, 8)}
-              {data.read_only ? ' · Retained session' : ''}
-            </span>
-            <details>
-              <summary>Counting, authority and integrity</summary>
-              <p>{data.methodology}</p>
-              <p>
-                {data.integrity.unclassified} unclassified cases.{' '}
-                {data.integrity.diagnostics.length} history or evidence diagnostics.
-              </p>
-              {data.integrity.diagnostics.length > 0 && (
-                <pre>{JSON.stringify(data.integrity.diagnostics, null, 2)}</pre>
-              )}
-            </details>
-          </footer>
-        </>
-      )}
+        </section>
+      </details>
       <dialog
         ref={dialog}
         className="wl-drawer"
@@ -544,8 +560,8 @@ export default function WorkLifecycle({
                       <pre>
                         {JSON.stringify(
                           {
-                            automated_check: i.automated_result ?? 'Not recorded',
                             human_review: i.review ?? 'Not recorded',
+                            automated_check: i.automated_result ?? 'Not recorded',
                           },
                           null,
                           2,
@@ -554,8 +570,14 @@ export default function WorkLifecycle({
                     </details>
                     <details>
                       <summary>Actual case activity &amp; Sarah escalation history</summary>
+                      <p>Selected contribution events first; original timestamps retained.</p>
                       {data.events
                         .filter((e) => i.event_ids.includes(e.id))
+                        .sort(
+                          (a, b) =>
+                            Number(selected.event_ids.includes(b.id)) -
+                            Number(selected.event_ids.includes(a.id)),
+                        )
                         .map((e) => (
                           <div className="wl-event" key={e.id}>
                             <strong>{e.type.replaceAll('_', ' ')}</strong>
