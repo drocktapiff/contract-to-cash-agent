@@ -51,6 +51,7 @@ from .document_workspace import DocumentWorkspace, WorkspaceCommand
 from .selected_workflow import SelectedCommand, selected_operation
 from .human_review import ReviewCommand, review as human_review, preview as review_preview
 from .operational_activity import activity
+from .work_lifecycle import lifecycle
 from .management_center import ManagementCenter, ManagementCommand, CorrectiveCommand
 from .document_advisor import DocumentAdvisor, AdvisorRequest, AdvisorScope
 
@@ -601,6 +602,10 @@ def create_app(settings=None, runner=None):
     @app.get("/api/document-workspace/sessions/{sid}/management", dependencies=[Depends(reader)])
     async def management_overview(sid: str):
         return await asyncio.to_thread(management.overview, sid)
+
+    @app.get("/api/document-workspace/sessions/{sid}/lifecycle", dependencies=[Depends(reader)])
+    async def work_lifecycle(sid: str):
+        return await asyncio.to_thread(lifecycle, documents, sid)
 
     @app.get("/api/document-workspace/sessions/{sid}/activity", dependencies=[Depends(reader)])
     async def operational_activity(

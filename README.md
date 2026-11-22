@@ -24,6 +24,14 @@ Sarah’s persisted inbox. [Windows setup, demo flow, safeguards and screenshots
 The original Phase 6.1 application remains at `/legacy`; existing history is preserved.
 No OpenAI calls are needed for the document workflow.
 
+## Ledgerline 2.0 — Work Lifecycle & Accountability (Stage 3.2)
+
+Sarah’s Overview now traces the saved workflow from source PDFs through automation,
+Maya’s individual/bulk review and management oversight. Switch to **Current State**
+for an exhaustive, non-overlapping case partition. Click stages or transitions for
+searchable evidence and original PDFs. **Activity Over Time** retains Stage 3.1’s graph.
+[Windows update, free presenter flow, counting contract and screenshots](docs/LEDGERLINE2_STAGE32.md).
+
 ## Ledgerline 2.0 — Mandatory Human Review and Operational Activity
 
 Automation now prepares checks for Maya’s explicit individual or bulk-attested review.

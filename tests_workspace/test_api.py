@@ -472,6 +472,39 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
             (await self.client.get(prefix + "/activity?group=invented")).status_code, 422
         )
 
+    async def test_lifecycle_read_only_isolated_authorized_evidence(self):
+        data = await self.load()
+        sid = data["session_id"]
+        prefix = f"/api/document-workspace/sessions/{sid}"
+        before = (await self.client.get(prefix + "/events")).json()
+        graph = await self.client.get(prefix + "/lifecycle")
+        self.assertEqual(graph.status_code, 200, graph.text)
+        model = graph.json()
+        self.assertEqual(model["integrity"]["total"], 102)
+        self.assertEqual(model["integrity"]["accounted"], 102)
+        self.assertEqual(len(model["documents"]), 149)
+        pdf = await self.client.get(model["documents"][0]["pdf_url"])
+        self.assertEqual(pdf.status_code, 200)
+        self.assertTrue(pdf.content.startswith(b"%PDF-"))
+        self.assertEqual(
+            (
+                await self.client.post(prefix + "/lifecycle", headers=self.headers, json={})
+            ).status_code,
+            405,
+        )
+        self.assertEqual(
+            (
+                await self.client.get("/api/document-workspace/sessions/" + "0" * 32 + "/lifecycle")
+            ).status_code,
+            404,
+        )
+        self.assertEqual((await self.client.get(prefix + "/events")).json(), before)
+        # Existing reader gate must also protect analytics against cross-site requests.
+        response = await self.client.get(
+            prefix + "/lifecycle", headers={"origin": "https://attacker.invalid"}
+        )
+        self.assertEqual(response.status_code, 403)
+
 
 if __name__ == "__main__":
     unittest.main()

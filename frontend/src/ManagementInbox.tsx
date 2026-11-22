@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import './management-center.css';
 import OperationalActivity from './OperationalActivity';
+import WorkLifecycle from './WorkLifecycle';
 type Case = {
   review?: { decision: string };
   work_item_id: string;
@@ -614,12 +615,16 @@ export default function ManagementInbox({
           )}
           {tab === 'Overview' && (
             <>
-              <OperationalActivity
-                sid={sid}
-                revision={revision}
-                onOpen={onOpen}
-                onCases={selectChart}
-              />
+              <WorkLifecycle sid={sid} revision={revision} onOpen={onOpen} />
+              <details className="mc-activity-time">
+                <summary>Activity Over Time</summary>
+                <OperationalActivity
+                  sid={sid}
+                  revision={revision}
+                  onOpen={onOpen}
+                  onCases={selectChart}
+                />
+              </details>
               <section className="mc-metrics" aria-label="Management performance metrics">
                 {[
                   ['Total work items', 'total'],

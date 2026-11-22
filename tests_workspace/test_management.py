@@ -69,6 +69,9 @@ def insight_payload(inputs):
     )
 
 
+from contract_to_cash.web.work_lifecycle import lifecycle
+
+
 class ManagementTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -208,6 +211,14 @@ class ManagementTests(unittest.TestCase):
         self.assertEqual(after["status"], "Awaiting Financial Review")
         self.assertEqual(after["current_decision_owner"], "Finance")
         self.assertEqual(self.mc.overview(self.sid)["metrics"]["completed"], 73)
+        graph = lifecycle(self.ws, self.sid)
+        self.assertIn(
+            target, next(n for n in graph["nodes"] if n["id"] == "management_complete")["item_ids"]
+        )
+        self.assertIn(
+            target,
+            next(n for n in graph["current_state"] if n["id"] == "state-finance")["item_ids"],
+        )
 
     def test_priority_return_and_followup_retain_original_handoff(self):
         w = next(w for w in self.cases if w["status"] == "Escalated")
@@ -281,6 +292,12 @@ class ManagementTests(unittest.TestCase):
         self.assertEqual(len(updated["event_history"]), 2)
         self.assertEqual(self.ws.snapshot()["items"], before)
         self.assertEqual(len(ManagementCenter(self.ws).read_actions(self.sid)), 1)
+        graph = lifecycle(self.ws, self.sid)
+        linked = next(n for n in graph["nodes"] if n["id"] == "corrective")
+        self.assertEqual(linked["item_ids"], sorted(updated["related_ids"]))
+        self.assertEqual(graph["corrective_actions"][0]["status"], "Completed")
+        self.assertEqual(next(n for n in graph["nodes"] if n["id"] == "closed")["count"], 73)
+        self.assertEqual(self.ws.snapshot()["items"], before)
         with self.assertRaises(StoreError):
             self.mc.corrective(self.sid, self.action(action_id=a["id"], action_version=1))
         self.assertTrue(any(e["type"] == "insight_accepted" for e in self.events()))
