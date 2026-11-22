@@ -132,6 +132,7 @@ def main():
                     page.get_by_role(
                         "button", name="Sarah — Management Command Center", exact=True
                     ).click()
+                    page.get_by_text("Activity Over Time", exact=True).click()
                     graph = page.get_by_role("region", name="Operational Activity", exact=True)
                     expect(
                         graph.get_by_role(
@@ -212,6 +213,7 @@ def main():
                     page.get_by_role(
                         "button", name="Sarah — Management Command Center", exact=True
                     ).click()
+                    page.get_by_text("Activity Over Time", exact=True).click()
                     expect(graph.locator("svg [role=button]")).to_have_count(4)
                     assert (
                         page.request.get(f"/api/document-workspace/sessions/{sid}/events").json()
