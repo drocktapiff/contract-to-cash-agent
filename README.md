@@ -24,6 +24,13 @@ Sarah’s persisted inbox. [Windows setup, demo flow, safeguards and screenshots
 The original Phase 6.1 application remains at `/legacy`; existing history is preserved.
 No OpenAI calls are needed for the document workflow.
 
+## Ledgerline 2.0 — Management Dashboard Polish (Stage 3.3)
+
+Sarah’s Overview now leads with four KPIs, a reconciled current-work distribution
+and interactive contribution bars for Ledgerline, Maya and Sarah. Every selection
+uses the existing case/PDF drawer. Detailed lifecycle and time-series analytics remain
+available in collapsed sections. [Windows setup, recording walkthrough, counting rules and screenshots](docs/LEDGERLINE2_STAGE33.md).
+
 ## Ledgerline 2.0 — Work Lifecycle & Accountability (Stage 3.2)
 
 Sarah’s Overview now traces the saved workflow from source PDFs through automation,

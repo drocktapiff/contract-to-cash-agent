@@ -49,3 +49,4 @@ jobs:
       - run: python -m scripts.smoke_management
       - run: python -m scripts.smoke_human_review_activity
       - run: python -m scripts.smoke_work_lifecycle
+      - run: python -m scripts.smoke_management_performance

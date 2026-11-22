@@ -132,6 +132,7 @@ def main():
                     page.get_by_role(
                         "button", name="Sarah — Management Command Center", exact=True
                     ).click()
+                    page.get_by_text("Detailed Lifecycle & Accountability", exact=True).click()
                     graph = page.get_by_role(
                         "region", name="Work Lifecycle & Accountability", exact=True
                     )

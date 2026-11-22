@@ -219,6 +219,12 @@ class ManagementTests(unittest.TestCase):
             target,
             next(n for n in graph["current_state"] if n["id"] == "state-finance")["item_ids"],
         )
+        summary = graph["performance"]
+        self.assertIn(target, summary["contributions"][2]["breakdowns"][1]["item_ids"])
+        self.assertIn(target, summary["contributions"][2]["breakdowns"][3]["item_ids"])
+        self.assertEqual(
+            next(k for k in summary["kpis"] if k["id"] == "reviewed_closed")["count"], 73
+        )
 
     def test_priority_return_and_followup_retain_original_handoff(self):
         w = next(w for w in self.cases if w["status"] == "Escalated")

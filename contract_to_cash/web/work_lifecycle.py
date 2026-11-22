@@ -320,10 +320,19 @@ def project(sid, works, documents, events, actions, active=None):
                     source,
                 )
                 move("closed", wid, e)
+                add("human_reviews", wid, e)
+                add("reviews_" + details["attestation"], wid, e)
             elif kind == "human_review_rejected":
                 move("rejected", wid, e, source)
+                add("human_reviews", wid, e)
+                add("reviews_individual", wid, e)
             elif kind == "human_review_evidence_requested":
                 move("further", wid, e, source)
+                add("human_reviews", wid, e)
+                add("reviews_individual", wid, e)
+            elif kind == "human_review_escalated":
+                add("human_reviews", wid, e)
+                add("reviews_individual", wid, e)
             # Escalation is represented by its actual handoff, not an invented manual triage.
         elif kind == "management_handoff_received" or kind == "escalated":
             pair = (wid, e.get("operation_id"))
@@ -516,6 +525,7 @@ def project(sid, works, documents, events, actions, active=None):
             for v in links.values()
         ],
         current_state=current,
+        performance=performance(items, memberships, node_events, current),
         metrics=metrics,
         items=case_rows,
         documents=doc_rows,
@@ -529,6 +539,203 @@ def project(sid, works, documents, events, actions, active=None):
             diagnostics=diagnostics,
         ),
         methodology="Lifecycle contributions overlap and must not be summed. Connections require ordered recorded events for the same work ID; document associations use recorded evidence hashes, not one-to-one transformations. Current-state precedence: closed with provenance; outstanding Finance; evidence; returned; rejection; pending Maya; management oversight; investigation; other; unclassified. Management completion never resolves an outstanding financial decision. Bulk attestation is not individual inspection. Persona selection is not authenticated RBAC.",
+    )
+
+
+# Presentation-only summaries. State semantics remain in current_bucket above.
+DISTRIBUTION = {
+    "closed": (
+        "Reviewed & Closed",
+        "closed",
+        "Maya",
+        "Valid human review and administrative closure.",
+    ),
+    "legacy": (
+        "Legacy automated closure",
+        "legacy",
+        "Historical automation",
+        "No recorded human review. Historical closure is retained.",
+    ),
+    "pending": (
+        "Awaiting Maya Review",
+        "pending",
+        "Maya",
+        "Prepared result waiting for explicit human verification.",
+    ),
+    "rejected": (
+        "Review Rejected",
+        "rejected",
+        "Maya",
+        "Rejected result remains unresolved and requires investigation.",
+    ),
+    "finance": (
+        "Awaiting Finance",
+        "finance",
+        "Authorized Finance team",
+        "An outstanding financial decision; management coordination does not authorize it.",
+    ),
+    "evidence": (
+        "Awaiting Evidence",
+        "evidence",
+        "Evidence provider",
+        "Authoritative evidence or contractual clarification is outstanding.",
+    ),
+    "returned": (
+        "Returned to Maya",
+        "returned",
+        "Maya",
+        "Management returned the case for follow-up.",
+    ),
+    "sarah": (
+        "Awaiting Sarah Action",
+        "sarah",
+        "Sarah",
+        "An actual handoff requires management attention.",
+    ),
+    "managed": (
+        "Management Reviewed · Open",
+        "managed",
+        "Required decision team",
+        "Management review completed; the underlying case remains unresolved.",
+    ),
+    "ready": (
+        "Ready for Processing",
+        "ready",
+        "Ledgerline / Maya",
+        "Recorded work has not yet completed automated preparation.",
+    ),
+    "investigation": (
+        "Needs Investigation",
+        "investigation",
+        "Maya / required decision team",
+        "Unresolved work requiring investigation, not proof of manual triage.",
+    ),
+    "other": (
+        "Other Unresolved",
+        "other",
+        "Recorded case owner",
+        "An unresolved disposition outside the named queues.",
+    ),
+    "unclassified": (
+        "Requires Classification",
+        "unclassified",
+        "Revenue Operations",
+        "Missing or ambiguous state or provenance requires investigation.",
+    ),
+}
+
+
+def performance(items, memberships, node_events, current):
+    """Exact case sets for the management presentation; no mutations or new history."""
+    total = len(items)
+    states = {n["id"][6:]: set(n["item_ids"]) for n in current}
+
+    def record(key, label, ids, description="", owner="", category="", event_ids=()):
+        ids = sorted(set(ids))
+        return dict(
+            id=key,
+            label=label,
+            item_ids=ids,
+            count=len(ids),
+            share=len(ids) / total if total else 0,
+            description=description,
+            owner=owner,
+            category=category,
+            event_ids=sorted(set(event_ids)),
+        )
+
+    distribution = []
+    for key, ids in states.items():
+        label, category, owner, description = DISTRIBUTION[key]
+        distribution.append(record("distribution-" + key, label, ids, description, owner, category))
+    closed = states.get("closed", set())
+    legacy = states.get("legacy", set())
+    open_ids = set(items) - closed - legacy
+    prepared = memberships["prepared"]
+    kpis = [
+        record(
+            "identified",
+            "Work Items Identified",
+            items,
+            "Distinct work items in this saved session.",
+        ),
+        record(
+            "reviewed_closed",
+            "Reviewed & Closed",
+            closed,
+            "Valid completed human review and administrative closure.",
+        ),
+        record(
+            "open",
+            "Open Work",
+            open_ids,
+            "Current unresolved cases; legacy closures are shown separately.",
+        ),
+        dict(
+            record(
+                "preparation_rate",
+                "Automation Preparation Rate",
+                prepared,
+                "Recorded preparation / all work items. Preparation is not closure.",
+                event_ids=node_events["prepared"],
+            ),
+            rate=len(prepared) / total if total else None,
+        ),
+    ]
+
+    def stage(key, label):
+        return record("contribution-" + key, label, memberships[key], event_ids=node_events[key])
+
+    automation = stage("prepared", "Ledgerline — Automated Preparation")
+    automation.update(
+        category="automation",
+        description="Unique work items with completed deterministic preparation.",
+        breakdowns=[],
+    )
+    maya = stage("human_reviews", "Maya — Human Reviews")
+    maya.update(
+        category="maya",
+        description="Unique work items with a valid attributed review decision. Bulk attestation is not individual inspection.",
+        breakdowns=[
+            stage("reviews_individual", "Individually reviewed"),
+            stage("reviews_bulk_attested", "Bulk-attested"),
+            stage("rejected", "Rejected"),
+        ],
+    )
+    sarah = stage("handoff", "Sarah — Management Handoffs")
+    handoff = memberships["handoff"]
+    sarah.update(
+        category="sarah",
+        description="Unique cases with actual management handoff events. A handoff is not resolution.",
+        breakdowns=[
+            record("handoff-awaiting", "Awaiting action", handoff & states.get("sarah", set())),
+            record(
+                "handoff-completed",
+                "Coordination completed",
+                handoff & memberships["management_complete"],
+                "Recorded completed oversight; the case may still await another decision.",
+                event_ids=node_events["management_complete"],
+            ),
+            record("handoff-returned", "Returned to Maya", handoff & states.get("returned", set())),
+            record(
+                "handoff-authority",
+                "Pending other authority",
+                handoff & (states.get("finance", set()) | states.get("evidence", set())),
+                "Outstanding Finance or evidence decisions.",
+            ),
+        ],
+    )
+    return dict(
+        kpis=kpis,
+        distribution=distribution,
+        contributions=[automation, maya, sarah],
+        legacy_closed=record(
+            "legacy-closures", "Legacy automated closure — no recorded human review", legacy
+        ),
+        total=total,
+        reconciled=sum(n["count"] for n in distribution) == total
+        and len({i for n in distribution for i in n["item_ids"]}) == total,
+        methodology="Current distribution is mutually exclusive and reuses Stage 3.2 state precedence. Contribution bars count unique cases by function; their sets overlap and must not be added. Individual reviews include approval, rejection, evidence requests and review escalation; bulk attestations do not imply individual inspection. Sarah's completed coordination can overlap pending decision authority. Legacy closed cases are neither human-reviewed closure nor current open work. No labor savings, financial transactions or recoveries are claimed.",
     )
 
 
