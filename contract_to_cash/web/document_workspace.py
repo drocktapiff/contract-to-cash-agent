@@ -63,7 +63,20 @@ def financial_referral_supported(work):
 
 def recommendation(work):
     category = work["category"]
-    if work.get("recommendation_rejected"):
+    suggested = None
+    if work["status"] == "Closed" and work.get("evidence_current") is not False:
+        disposition = "review"
+        why = (
+            "Maya explicitly approved this administrative result after human verification."
+            if work.get("review", {}).get("decision") == "approve"
+            else "Legacy automated closure; no recorded human review exists."
+        )
+        suggested = "No further administrative action; financial authorization remains separate"
+    elif work["status"] == "Awaiting Maya Review" and work.get("evidence_current") is not False:
+        disposition = "review"
+        why = "The deterministic check passed. Maya must verify the prepared result and current evidence before closure."
+        suggested = "Review the prepared result and supporting evidence"
+    elif work.get("recommendation_rejected"):
         disposition, why = (
             "review",
             "Maya rejected the previous recommendation; human review remains required.",
@@ -104,7 +117,7 @@ def recommendation(work):
     return {
         "source": "Deterministic rules — not fresh LLM reasoning",
         "disposition": disposition,
-        "suggested_action": labels[disposition],
+        "suggested_action": suggested or labels[disposition],
         "why": why,
         "supporting_documents": work["source_documents"],
         "human_judgment": "No invoice changes, credit issuance, real cash allocation or contractual approval. A human must authorize any subsequent financial or legal decision.",
@@ -534,6 +547,7 @@ class DocumentWorkspace:
 
         for item in items:
             item["lifecycle_label"] = label(item)
+            item["recommendation"] = recommendation(item)
             item["business"] = business(item)
         counts = Counter(w["status"] for w in items)
         completions = {
@@ -691,6 +705,7 @@ class DocumentWorkspace:
         from .human_review import label
 
         work["lifecycle_label"] = label(work)
+        work["recommendation"] = recommendation(work)
         work["business"] = business(work)
         return dict(
             item=work,

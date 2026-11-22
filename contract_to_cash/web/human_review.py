@@ -6,7 +6,7 @@ from time import perf_counter
 from uuid import uuid4
 from typing import Literal
 from pydantic import Field, model_validator
-from .document_workspace import WorkspaceCommand, encoded, now
+from .document_workspace import WorkspaceCommand, encoded, now, recommendation
 from .selected_workflow import SelectedItem
 from .store import StoreError
 
@@ -348,6 +348,7 @@ def review(ws, sid, body):
                                 automatic_closure_allowed=False,
                                 human_review_required=after != "Closed",
                             )
+                            w["recommendation"] = recommendation(w)
                             event = ws.event(
                                 conn,
                                 sid,

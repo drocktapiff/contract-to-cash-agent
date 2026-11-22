@@ -131,6 +131,7 @@ class HumanReviewTests(unittest.TestCase):
         self.assertEqual(result["approved"], 1)
         after = self.ws.detail(self.sid, w["work_item_id"])["item"]
         self.assertEqual(after["lifecycle_label"], "Reviewed & Closed")
+        self.assertIn("explicitly approved", after["recommendation"]["why"])
         self.assertEqual(after["review"]["attestation"], "individual")
         self.assertEqual(after["review"]["reviewed_version"], w["version"])
         self.assertEqual(after["review"]["preparation_event_id"], w["automated_result"]["event_id"])
@@ -349,6 +350,7 @@ class HumanReviewTests(unittest.TestCase):
         after = self.ws.detail(self.sid, w["work_item_id"])["item"]
         self.assertIn("Legacy automated closure", after["lifecycle_label"])
         self.assertNotIn("review", after)
+        self.assertIn("no recorded human review", after["recommendation"]["why"])
         self.assertEqual(activity(self.ws, self.sid)["metrics"]["closed"]["value"], 0)
         self.assertEqual(activity(self.ws, self.sid)["legacy_closed"], 1)
 
