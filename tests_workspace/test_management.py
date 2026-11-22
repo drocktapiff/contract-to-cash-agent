@@ -83,6 +83,9 @@ class ManagementTests(unittest.TestCase):
         self.snap = self.ws.load()
         self.sid = self.snap["session_id"]
         self.selected("close", self.snap["items"])
+        from tests_workspace.test_human_review_activity import approve_pending
+
+        approve_pending(self.ws, self.sid)
         self.selected(
             "escalate", [w for w in self.ws.snapshot()["items"] if w["status"] != "Closed"]
         )
@@ -148,7 +151,7 @@ class ManagementTests(unittest.TestCase):
                 for k in (
                     "total",
                     "completed",
-                    "automatically_completed",
+                    "automated_checks_prepared",
                     "outstanding",
                     "handoffs",
                     "awaiting_finance",
@@ -533,7 +536,7 @@ class ManagementTests(unittest.TestCase):
             self.assertEqual(request["instructions"], INSTRUCTIONS)
             self.assertNotIn(attack, request["instructions"])
             self.assertNotIn("approve_invoice", {tool["name"] for tool in request["tools"]})
-        self.assertEqual(self.ws.snapshot()["metrics"]["automatically_completed"], 73)
+        self.assertEqual(self.ws.snapshot()["metrics"]["automated_checks_prepared"], 73)
 
     def test_schema_error_diagnostic_safe_and_no_retry(self):
         import httpx

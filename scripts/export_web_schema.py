@@ -13,6 +13,7 @@ from contract_to_cash.web.models import (
     RunView,
 )
 
+from contract_to_cash.web.human_review import ReviewCommand
 from contract_to_cash.web.document_workspace import WorkspaceCommand
 from contract_to_cash.web.selected_workflow import SelectedCommand
 from contract_to_cash.web.management_center import ManagementCommand, CorrectiveCommand
@@ -35,6 +36,7 @@ def public_schema():
         model.__name__: model.model_json_schema()
         for model in (
             WorkspaceCommand,
+            ReviewCommand,
             SelectedCommand,
             ManagementCommand,
             CorrectiveCommand,

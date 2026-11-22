@@ -7,6 +7,10 @@ from decimal import Decimal
 def bucket(work):
     if work["status"] == "Closed":
         return "Completed"
+    if work["status"] == "Awaiting Maya Review":
+        return "Awaiting My Review"
+    if work["status"] == "Review Rejected — Needs Investigation":
+        return "Review Rejected"
     if work.get("management", {}).get("review_status") == "Returned to Maya":
         return "Needs My Attention"
     if work.get("oversight") or work["status"] in (
@@ -104,6 +108,12 @@ def queue_counts(items):
         "total": len(items),
         "needs_maya": counts["Needs My Attention"],
         "completed": counts["Completed"],
+        "awaiting_review": counts["Awaiting My Review"],
+        "review_rejected": counts["Review Rejected"],
+        "reviewed_closed": sum(
+            w["status"] == "Closed" and w.get("review", {}).get("decision") == "approve"
+            for w in items
+        ),
         "awaiting_sarah": sum(w["status"] == "Escalated" for w in items),
         "management_oversight": sum(
             bool(w.get("oversight")) or w["status"] == "Escalated" for w in items
@@ -152,6 +162,8 @@ def scenarios(items):
 
 
 def walkthrough(detail):
+    from .human_review import label as lifecycle_label
+
     work = detail["item"]
     documents = detail["documents"]
     cards = []
@@ -250,7 +262,9 @@ def walkthrough(detail):
         and not detail["read_only"]
         and "auto" in detail["permitted_actions"],
         processing_label="Automated document analysis and rule-based processing — no live AI model",
+        human_review=work.get("review"),
         outcome=dict(
+            lifecycle_label=lifecycle_label(work),
             status=work["status"],
             administratively_completed=work["status"] == "Closed",
             waiting_on=business(work)["waiting_on"],

@@ -1545,6 +1545,144 @@
     "title": "ReviewAction",
     "type": "object"
   },
+  "ReviewCommand": {
+    "$defs": {
+      "ReviewItem": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_hashes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Evidence Hashes",
+            "type": "array"
+          },
+          "id": {
+            "pattern": "^WI-[a-f0-9]{24}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Note",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "evidence_hashes"
+        ],
+        "title": "ReviewItem",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "acknowledge_review": {
+        "const": true,
+        "title": "Acknowledge Review",
+        "type": "boolean"
+      },
+      "actor": {
+        "maxLength": 120,
+        "minLength": 1,
+        "title": "Actor",
+        "type": "string"
+      },
+      "attestation": {
+        "enum": [
+          "individual",
+          "bulk"
+        ],
+        "title": "Attestation",
+        "type": "string"
+      },
+      "confirmation": {
+        "maxLength": 100,
+        "title": "Confirmation",
+        "type": "string"
+      },
+      "decision": {
+        "enum": [
+          "approve",
+          "reject",
+          "evidence",
+          "escalate"
+        ],
+        "title": "Decision",
+        "type": "string"
+      },
+      "evidence_hashes": {
+        "items": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "maxItems": 50,
+        "title": "Evidence Hashes",
+        "type": "array"
+      },
+      "expected_session": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Expected Session",
+        "type": "string"
+      },
+      "expected_version": {
+        "anyOf": [
+          {
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Expected Version"
+      },
+      "operation_id": {
+        "pattern": "^[a-f0-9]{32}$",
+        "title": "Operation Id",
+        "type": "string"
+      },
+      "rationale": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Rationale",
+        "type": "string"
+      },
+      "selected": {
+        "items": {
+          "$ref": "#/$defs/ReviewItem"
+        },
+        "maxItems": 500,
+        "minItems": 1,
+        "title": "Selected",
+        "type": "array"
+      }
+    },
+    "required": [
+      "operation_id",
+      "actor",
+      "rationale",
+      "confirmation",
+      "expected_session",
+      "selected",
+      "decision",
+      "attestation",
+      "acknowledge_review"
+    ],
+    "title": "ReviewCommand",
+    "type": "object"
+  },
   "RunView": {
     "properties": {
       "candidates": {

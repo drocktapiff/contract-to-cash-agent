@@ -38,6 +38,8 @@ def can_complete(work, fresh):
     return bool(
         work["status"] not in ("Closed", "Escalated", "Awaiting Financial Review")
         and not work.get("oversight")
+        and work["status"] not in ("Awaiting Maya Review", "Review Rejected — Needs Investigation")
+        and work.get("review", {}).get("decision") != "reject"
         and not work.get("recommendation_rejected")
         and fresh
         and fresh["automation_eligible"]
@@ -142,6 +144,13 @@ def selected_operation(ws, sid, action, body):
                             if work["status"] == "Closed":
                                 outcome = "skipped"
                                 reason = "Already completed; no second closure or oversight handoff"
+                            elif (
+                                action == "close"
+                                and work["status"] == "Awaiting Maya Review"
+                                and fresh
+                            ):
+                                outcome = "awaiting_review"
+                                reason = "Prepared result is still awaiting human verification"
                             elif action == "escalate" and (
                                 work.get("oversight") or work["status"] == "Escalated"
                             ):
@@ -237,39 +246,11 @@ def selected_operation(ws, sid, action, body):
                                             body.operation_id,
                                             before=before,
                                         )
-                                        work.update(
-                                            status="Closed",
-                                            automation_eligible=True,
-                                            automatic_closure_allowed=True,
-                                            human_review_required=False,
-                                            last_disposition="routine",
-                                        )
-                                        ws.event(
-                                            conn,
-                                            sid,
-                                            work,
-                                            "routine_processing_completed",
-                                            "deterministic_automation",
-                                            "Rules baseline",
-                                            "Supported deterministic read-only check passed",
-                                            body.operation_id,
-                                            before=before,
-                                            after="Closed",
-                                        )
-                                        ws.event(
-                                            conn,
-                                            sid,
-                                            work,
-                                            "administratively_closed",
-                                            "deterministic_automation",
-                                            "Rules baseline",
-                                            "Administrative check only; no financial action authorized or executed",
-                                            body.operation_id,
-                                            before=before,
-                                            after="Closed",
-                                        )
-                                        outcome = "completed"
-                                        reason = "Evidence-validated administrative check completed"
+                                        from .human_review import prepare
+
+                                        prepare(ws, conn, sid, work, fresh, body)
+                                        outcome = "prepared"
+                                        reason = "Automated check prepared; explicit Maya verification is required before closure"
                                     else:
                                         work.update(
                                             automation_eligible=False,
@@ -402,7 +383,7 @@ def selected_operation(ws, sid, action, body):
                                     )
                                     outcome = "handoff_created"
                                     reason = "Sarah received management oversight; the required decision remains separately authorized"
-                                if outcome in ("completed", "handoff_created", "requires_review"):
+                                if outcome in ("prepared", "handoff_created", "requires_review"):
                                     ws.event(
                                         conn,
                                         sid,
@@ -415,7 +396,7 @@ def selected_operation(ws, sid, action, body):
                                         before=before,
                                         after=work["status"],
                                     )
-                            if outcome not in ("skipped", "handoff_reused"):
+                            if outcome not in ("skipped", "handoff_reused", "awaiting_review"):
                                 work.update(
                                     version=work["version"] + 1,
                                     updated_at=now(),
@@ -432,6 +413,7 @@ def selected_operation(ws, sid, action, body):
                                     outcome=outcome,
                                     reason=reason,
                                     status=work["status"],
+                                    reviewed=work.get("review", {}).get("decision") == "approve",
                                     version=work["version"],
                                     decision_owner=work.get("current_decision_owner"),
                                     oversight_id=work.get("oversight", {}).get("id"),
@@ -478,7 +460,14 @@ def selected_operation(ws, sid, action, body):
                         operation_id=body.operation_id,
                         total_examined=len(outcomes),
                         per_item=outcomes,
-                        checks_completed=sum(r["outcome"] == "completed" for r in outcomes),
+                        checks_completed=sum(r["outcome"] == "prepared" for r in outcomes),
+                        prepared_for_review=sum(r["outcome"] == "prepared" for r in outcomes),
+                        already_reviewed_closed=sum(
+                            r.get("status") == "Closed" and r.get("reviewed") for r in outcomes
+                        ),
+                        legacy_closures_excluded=sum(
+                            r.get("status") == "Closed" and not r.get("reviewed") for r in outcomes
+                        ),
                         requires_review=sum(r["outcome"] == "requires_review" for r in outcomes),
                         handoffs_created=sum(r["outcome"] == "handoff_created" for r in outcomes),
                         handoffs_reused=sum(r["outcome"] == "handoff_reused" for r in outcomes),
@@ -502,7 +491,7 @@ def selected_operation(ws, sid, action, body):
                         duration_seconds=round(perf_counter() - started, 6),
                     )
                     result.update(
-                        automatically_closed=result["checks_completed"],
+                        automatically_closed=0,
                         escalated_to_sarah=result["handoffs_created"],
                         human_queue_remaining=sum(w["status"] != "Closed" for w in all_work),
                         items_requiring_review=sum(

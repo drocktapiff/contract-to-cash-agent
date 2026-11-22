@@ -8,6 +8,7 @@ import tempfile
 import time
 from playwright.sync_api import sync_playwright, expect
 from scripts.smoke_web import ready
+from scripts.review_browser import review_prepared
 
 
 def main():
@@ -43,7 +44,8 @@ def main():
                     page = browser.new_page(
                         base_url="http://127.0.0.1:8131",
                         viewport={"width": 1440, "height": 1050},
-                        locale="en-CA", timezone_id="America/Toronto",
+                        locale="en-CA",
+                        timezone_id="America/Toronto",
                     )
                     errors = []
                     writes = []
@@ -86,7 +88,7 @@ def main():
                     page.get_by_role("button", name="Load Sample Documents", exact=True).click()
                     loaded = confirm("Load Sample Documents", "/load")
                     sid = loaded["session_id"]
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("0")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("0")
                     capture("01-business-home.png")
                     page.get_by_role("button", name="Show Me the Work", exact=True).click()
                     walk = page.get_by_role("dialog", name="Show Me the Work", exact=True)
@@ -112,16 +114,17 @@ def main():
                     expect(walk).to_contain_text("Actual recorded workflow")
                     capture("04-genuine-processing-evidence.png")
                     walk.get_by_role("button", name="Business outcome", exact=False).click()
-                    expect(walk).to_contain_text("Verified administrative check completed")
+                    expect(walk).to_contain_text("Awaiting Maya Review")
                     capture("05-verified-administrative-outcome.png")
                     # Reopen the recorded case: no mutation may be triggered by replay or manual clicks.
                     walk.get_by_role("button", name="Close walkthrough", exact=True).click()
+                    review_prepared(page, 1)
                     before = len(writes)
                     event_count = page.request.get("/api/document-workspace").json()["telemetry"][
                         "event_count"
                     ]
                     # Select the same specific item through the detail replay entry.
-                    page.get_by_role("button", name="Completed", exact=True).click()
+                    page.get_by_role("button", name="Reviewed & Closed", exact=True).click()
                     page.locator(".mw-item-link").first.click()
                     detail = page.get_by_role("dialog").filter(
                         has=page.get_by_role("heading", name="Supporting evidence", exact=True)
@@ -168,7 +171,8 @@ def main():
                             "heading", name="Here's What Ledgerline Accomplished", exact=True
                         )
                     ).to_be_visible()
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("73")
+                    review_prepared(page, 72)
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("73")
                     capture("07-real-queue-outcomes.png")
                     summary = page.get_by_role("region", name="Revenue operations work queue")
                     page.get_by_role("button", name="Awaiting Finance", exact=False).click()
@@ -180,11 +184,11 @@ def main():
                     fresh = confirm("Restart Demo", "/restart")
                     assert fresh["session_id"] != sid
                     page.reload(wait_until="networkidle")
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("0")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("0")
                     assert (
                         page.request.get(f"/api/document-workspace/sessions/{sid}").json()[
                             "metrics"
-                        ]["automatically_completed"]
+                        ]["automated_checks_prepared"]
                         == 73
                     )
                     page.set_viewport_size({"width": 390, "height": 844})

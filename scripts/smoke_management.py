@@ -8,6 +8,7 @@ import tempfile
 import time
 from playwright.sync_api import sync_playwright, expect
 from scripts.smoke_web import ready
+from scripts.review_browser import review_prepared
 
 
 def main():
@@ -84,6 +85,7 @@ def main():
                     page.get_by_role("button", name="AI Powered Close", exact=True).click()
                     closed = confirm("AI Powered Close", "/selected/close")
                     assert closed["checks_completed"] == 73
+                    review_prepared(page, 73)
                     page.get_by_role("button", name="Select All Remaining Work", exact=True).click()
                     page.get_by_role("button", name="Escalate to Sarah", exact=True).click()
                     handoff = confirm("Escalate Selected to Sarah", "/selected/escalate")
@@ -100,7 +102,7 @@ def main():
                     capture("02-management-overview.png")
                     center.get_by_role(
                         "button",
-                        name="Workload distribution: Automatic administrative completion, 73. View supporting work",
+                        name="Workload distribution: Human-reviewed closure, 73. View supporting work",
                         exact=True,
                     ).click()
                     expect(center).to_contain_text("73 matching cases")

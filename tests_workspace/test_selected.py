@@ -57,19 +57,22 @@ class SelectedTests(unittest.TestCase):
         self.assertEqual(result["requires_review"], 29)
         self.assertEqual(result["financial_actions_executed"], 0)
         self.assertEqual(len(result["per_item"]), 102)
-        count = self.event_count("administratively_closed")
+        count = self.event_count("automated_check_prepared")
         self.assertEqual(self.perform("close", body), result)
-        self.assertEqual(self.event_count("administratively_closed"), count)
+        self.assertEqual(self.event_count("automated_check_prepared"), count)
         self.assertEqual(self.ws.snapshot()["last_bulk_operation"]["result"], result)
 
     def test_subset_does_not_process_other_rows(self):
         selected = [w for w in self.snap["items"] if w["automation_eligible"]][:2]
         result = self.perform("close", self.body(selected))
         self.assertEqual(result["checks_completed"], 2)
-        self.assertEqual(self.ws.snapshot()["metrics"]["automatically_completed"], 2)
+        self.assertEqual(self.ws.snapshot()["metrics"]["automated_checks_prepared"], 2)
 
     def test_all_remaining_handoffs_preserve_finance_and_evidence(self):
         self.perform("close")
+        from tests_workspace.test_human_review_activity import approve_pending
+
+        approve_pending(self.ws, self.sid)
         remaining = self.remaining()
         result = self.perform("escalate", self.body(remaining))
         self.assertEqual(len(remaining), 29)
@@ -138,7 +141,7 @@ class SelectedTests(unittest.TestCase):
         self.assertTrue(result["partial"])
         self.assertEqual(result["checks_completed"], 1)
         self.assertEqual(result["blocked"], 3)
-        self.assertEqual(self.ws.snapshot()["metrics"]["automatically_completed"], 2)
+        self.assertEqual(self.ws.snapshot()["metrics"]["automated_checks_prepared"], 2)
         self.assertEqual(self.perform("close", body), result)
 
     def test_item_failure_does_not_block_other_valid_handoffs(self):
@@ -184,7 +187,7 @@ class SelectedTests(unittest.TestCase):
         self.ws.initialize()
         result = self.perform("close", body)
         self.assertEqual(result["checks_completed"], 73)
-        self.assertEqual(self.event_count("administratively_closed"), 73)
+        self.assertEqual(self.event_count("automated_check_prepared"), 73)
 
     def test_changed_source_blocks_only_affected_selected_items(self):
         items = [w for w in self.snap["items"] if w["automation_eligible"]]

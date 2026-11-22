@@ -63,7 +63,20 @@ def financial_referral_supported(work):
 
 def recommendation(work):
     category = work["category"]
-    if work.get("recommendation_rejected"):
+    suggested = None
+    if work["status"] == "Closed" and work.get("evidence_current") is not False:
+        disposition = "review"
+        why = (
+            "Maya explicitly approved this administrative result after human verification."
+            if work.get("review", {}).get("decision") == "approve"
+            else "Legacy automated closure; no recorded human review exists."
+        )
+        suggested = "No further administrative action; financial authorization remains separate"
+    elif work["status"] == "Awaiting Maya Review" and work.get("evidence_current") is not False:
+        disposition = "review"
+        why = "The deterministic check passed. Maya must verify the prepared result and current evidence before closure."
+        suggested = "Review the prepared result and supporting evidence"
+    elif work.get("recommendation_rejected"):
         disposition, why = (
             "review",
             "Maya rejected the previous recommendation; human review remains required.",
@@ -104,7 +117,7 @@ def recommendation(work):
     return {
         "source": "Deterministic rules — not fresh LLM reasoning",
         "disposition": disposition,
-        "suggested_action": labels[disposition],
+        "suggested_action": suggested or labels[disposition],
         "why": why,
         "supporting_documents": work["source_documents"],
         "human_judgment": "No invoice changes, credit issuance, real cash allocation or contractual approval. A human must authorize any subsequent financial or legal decision.",
@@ -186,6 +199,9 @@ class DocumentWorkspace:
                     }
                     if "workflow_operations" not in tables:
                         continue
+                    from .human_review import tables as review_tables
+
+                    review_tables(self, conn)
                     for op in self.rows(
                         conn, "SELECT id FROM workflow_operations WHERE status='running'"
                     ):
@@ -364,6 +380,14 @@ class DocumentWorkspace:
                     self.execute(
                         conn, "INSERT INTO workflow_meta VALUES (?,?)", ("created_at", now())
                     )
+                    self.execute(
+                        conn,
+                        "INSERT INTO workflow_meta VALUES (?,?)",
+                        ("completion_policy", "mandatory_human_review_v1"),
+                    )
+                    from .human_review import tables
+
+                    tables(self, conn)
                     self.event(
                         conn,
                         sid,
@@ -519,7 +543,11 @@ class DocumentWorkspace:
             intake = self.rows(
                 conn, "SELECT value FROM workflow_meta WHERE key='intake_duration_seconds'"
             )
+        from .human_review import label
+
         for item in items:
+            item["lifecycle_label"] = label(item)
+            item["recommendation"] = recommendation(item)
             item["business"] = business(item)
         counts = Counter(w["status"] for w in items)
         completions = {
@@ -538,7 +566,11 @@ class DocumentWorkspace:
             event_count=len(events),
             intake_duration_seconds=float(intake[0][0]) if intake else None,
             throughput=closed,
-            routine_completion_rate=len(completions) / initial_routine if initial_routine else 0,
+            routine_completion_rate=(
+                sum(bool(w.get("automated_result")) for w in items) / initial_routine
+                if initial_routine
+                else 0
+            ),
             human_exception_rate=(
                 sum(w["human_review_required"] for w in items) / len(items) if items else 0
             ),
@@ -550,6 +582,9 @@ class DocumentWorkspace:
                 if e["type"]
                 in (
                     "administratively_closed",
+                    "automated_check_prepared",
+                    "human_review_approved",
+                    "human_review_rejected",
                     "escalated",
                     "awaiting_evidence",
                     "human_review_requested",
@@ -558,7 +593,9 @@ class DocumentWorkspace:
                 and e["after"]
             ],
             human_interaction_count=sum(
-                e["type"] == "human_command_requested" and e["actor_kind"] == "human"
+                e["type"] in ("human_command_requested", "human_review_requested")
+                and e["actor_kind"] == "human"
+                and e.get("item_id") is None
                 for e in events
             ),
             error_count=sum(e["type"] == "processing_failed" for e in events),
@@ -617,10 +654,23 @@ class DocumentWorkspace:
             metrics=dict(
                 total=len(items),
                 automatically_completed=len(completions),
+                automated_checks_prepared=sum(bool(w.get("automated_result")) for w in items),
+                awaiting_review=sum(w["status"] == "Awaiting Maya Review" for w in items),
+                reviewed_closed=sum(
+                    w["status"] == "Closed" and w.get("review", {}).get("decision") == "approve"
+                    for w in items
+                ),
+                review_rejected=sum(w.get("review", {}).get("decision") == "reject" for w in items),
+                legacy_closed=sum(w["status"] == "Closed" and not w.get("review") for w in items),
                 awaiting_maya=len(items) - closed - escalated,
                 escalated=escalated,
                 routine_eligible=sum(w["automation_eligible"] for w in items),
-                exceptions=sum(not w["automation_eligible"] for w in items),
+                exceptions=sum(
+                    not w["automation_eligible"]
+                    and not w.get("automated_result")
+                    or w.get("review", {}).get("decision") == "reject"
+                    for w in items
+                ),
             ),
             telemetry=telemetry,
             business_counts=queue_counts(items),
@@ -652,6 +702,10 @@ class DocumentWorkspace:
                     eligibility_reason="Original source PDF is missing or changed. Saved extracted facts are historical; obtain and revalidate authoritative evidence.",
                 )
                 work["recommendation"] = recommendation(work)
+        from .human_review import label
+
+        work["lifecycle_label"] = label(work)
+        work["recommendation"] = recommendation(work)
         work["business"] = business(work)
         return dict(
             item=work,
@@ -661,6 +715,10 @@ class DocumentWorkspace:
         )
 
     def allowed(self, work):
+        if work["status"] == "Awaiting Maya Review":
+            return []
+        if work["status"] == "Review Rejected — Needs Investigation":
+            return ["request_evidence", "escalate", "review"]
         if work.get("management", {}).get("review_status") == "Returned to Maya":
             return ["request_evidence"]
         if work.get("oversight") or work["status"] in ("Closed", "Escalated"):
@@ -791,6 +849,7 @@ class DocumentWorkspace:
                     current = self.revalidate(sid)
                     result = dict(
                         automatically_closed=0,
+                        prepared_for_review=0,
                         routed_to_maya=0,
                         escalated_to_sarah=0,
                         awaiting_evidence_or_authority=0,
@@ -826,6 +885,13 @@ class DocumentWorkspace:
                             ):
                                 raise StoreError(422, "Evidence must belong to this work item")
                         for work in works:
+                            if (
+                                work["status"]
+                                in ("Awaiting Maya Review", "Review Rejected — Needs Investigation")
+                                and not wid
+                            ):
+                                result["unchanged_due_to_safeguards"] += 1
+                                continue
                             fresh = current.get(work["work_item_id"])
                             if (
                                 wid
@@ -1026,10 +1092,13 @@ class DocumentWorkspace:
                                 before=before,
                             )
                             if disposition == "routine" and eligible:
-                                after = "Closed"
+                                from .human_review import prepare
+
+                                prepare(self, conn, sid, work, fresh, body)
+                                after = "Awaiting Maya Review"
                                 owner = "Maya Tremblay"
-                                key = "automatically_closed"
-                                event = "administratively_closed"
+                                key = "prepared_for_review"
+                                event = "automated_result_recorded"
                                 self.event(
                                     conn,
                                     sid,
@@ -1135,7 +1204,7 @@ class DocumentWorkspace:
                             )
                         all_work = self.works(conn)
                         result.update(
-                            checks_completed=result["automatically_closed"],
+                            checks_completed=result["prepared_for_review"],
                             items_requiring_review=sum(
                                 w["status"] != "Closed" and w["human_review_required"]
                                 for w in all_work

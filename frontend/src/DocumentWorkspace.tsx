@@ -3,6 +3,8 @@ import { api, bootstrapSession, setCsrf } from './api';
 import './document-workspace.css';
 import WorkWalkthrough from './WorkWalkthrough';
 import ManagementInbox from './ManagementInbox';
+import HumanReviewPanel, { type ReviewChoice } from './HumanReviewPanel';
+import './human-review-activity.css';
 
 type Evidence = {
   file_hash: string;
@@ -50,6 +52,9 @@ type Work = {
   priority: string;
   assigned_owner: string;
   status: string;
+  lifecycle_label?: string;
+  automated_result?: { event_id: string; finding: string };
+  review?: { decision: string; attestation: string; actor: string; at: string; rationale: string };
   version: number;
   automation_eligible: boolean;
   human_review_required: boolean;
@@ -122,6 +127,8 @@ type BulkResult = {
   partial: boolean;
   total_examined: number;
   checks_completed: number;
+  already_reviewed_closed: number;
+  legacy_closures_excluded: number;
   requires_review: number;
   handoffs_created: number;
   handoffs_reused: number;
@@ -143,7 +150,7 @@ type Action = {
 };
 const labels: Record<string, string> = {
   auto: 'Auto Complete',
-  routine: 'Complete routine check',
+  routine: 'Prepare routine check',
   request_evidence: 'Request more evidence',
   escalate: 'Escalate to Sarah',
   financial_review: 'Mark for authorized financial review',
@@ -155,7 +162,8 @@ const labels: Record<string, string> = {
   restart: 'Restart Demo',
 };
 const statuses: Record<string, string> = {
-  Closed: 'Completed — administrative check',
+  Closed: 'Reviewed & Closed / retained legacy closure',
+  'Awaiting Maya Review': 'Automated Check Complete — Awaiting Review',
   'Ready for Processing': 'Ready for processing',
 };
 const title = (s: string) => s.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase());
@@ -164,6 +172,11 @@ export default function DocumentWorkspace() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [detail, setDetail] = useState<Detail | null>(null);
   const [viewSarah, setViewSarah] = useState(false);
+  const [humanReview, setHumanReview] = useState<{
+    sid: string;
+    choices: ReviewChoice[];
+    bulk: boolean;
+  } | null>(null);
   const [selection, setSelection] = useState<{ sid: string | null; items: Record<string, number> }>(
     { sid: null, items: {} },
   );
@@ -385,6 +398,10 @@ export default function DocumentWorkspace() {
     (w) =>
       (filter === 'All Work' ||
         w.business.view === filter ||
+        (filter === 'Review Rejected' && w.review?.decision === 'reject') ||
+        (filter === 'Reviewed & Closed' &&
+          w.status === 'Closed' &&
+          w.review?.decision === 'approve') ||
         ((filter === 'Sarah' || filter === 'Escalated to Sarah') &&
           (w.oversight || w.status === 'Escalated')) ||
         (filter === 'Finance' && w.status === 'Awaiting Financial Review') ||
@@ -552,10 +569,12 @@ export default function DocumentWorkspace() {
                 {[
                   ['Work received', 'total', snapshot.business_counts.total],
                   [
-                    'Verified checks completed',
-                    'automatically_completed',
-                    snapshot.metrics.automatically_completed,
+                    'Automated checks prepared',
+                    'automated_checks_prepared',
+                    snapshot.metrics.automated_checks_prepared,
                   ],
+                  ['Awaiting My Review', 'awaiting_review', snapshot.metrics.awaiting_review],
+                  ['Reviewed & Closed', 'reviewed_closed', snapshot.metrics.reviewed_closed],
                   ['Needs My Attention', 'needs_maya', snapshot.business_counts.needs_maya],
                   ['Awaiting Others', 'awaiting_others', snapshot.business_counts.awaiting_others],
                 ].map(([label, key, value]) => (
@@ -565,8 +584,8 @@ export default function DocumentWorkspace() {
                     <small>
                       {key === 'total'
                         ? `${snapshot.metrics.routine_eligible} routine-eligible · ${snapshot.metrics.exceptions} exceptions`
-                        : key === 'automatically_completed'
-                          ? 'Administrative checks, not financial corrections'
+                        : key === 'automated_checks_prepared'
+                          ? 'Prepared results require explicit human review'
                           : key === 'awaiting_others'
                             ? 'Sarah, Finance or missing documentation'
                             : 'Ready checks and decisions for Maya'}
@@ -589,6 +608,34 @@ export default function DocumentWorkspace() {
               />
             ) : (
               <section className="mw-queue" aria-label="Revenue operations work queue">
+                <section className="hr-next" aria-label="Human review queue">
+                  <div>
+                    <strong>
+                      {snapshot.metrics.awaiting_review} results awaiting Maya’s verification
+                    </strong>
+                    <p>
+                      Automation prepares. Maya reviews. Only explicit approval closes low-risk
+                      administrative work.
+                    </p>
+                  </div>
+                  <button
+                    className="mw-primary"
+                    disabled={disabled || !snapshot.metrics.awaiting_review}
+                    onClick={() =>
+                      setHumanReview({
+                        sid: snapshot!.session_id!,
+                        bulk: true,
+                        choices: selectedCount
+                          ? Object.entries(selected).map(([id, version]) => ({ id, version }))
+                          : snapshot.items
+                              .filter((w) => w.status === 'Awaiting Maya Review')
+                              .map((w) => ({ id: w.work_item_id, version: w.version })),
+                      })
+                    }
+                  >
+                    Review All
+                  </button>
+                </section>
                 <div className="mw-queue-heading">
                   <div>
                     <h2>Your work queue</h2>
@@ -650,7 +697,8 @@ export default function DocumentWorkspace() {
                     </div>
                     <p id="mw-automated-scope">
                       Automated evidence validation and financial rules. No live AI model used in
-                      this demonstration.
+                      this demonstration. Eligible results await explicit Maya review; processing
+                      does not close them.
                     </p>
                   </section>
                 )}
@@ -669,8 +717,10 @@ export default function DocumentWorkspace() {
                     <dl>
                       {[
                         ['Items examined', 'total_examined'],
-                        ['Routine checks completed', 'checks_completed'],
-                        ['Requiring review', 'requires_review'],
+                        ['Automated checks prepared for review', 'checks_completed'],
+                        ['Already reviewed & closed', 'already_reviewed_closed'],
+                        ['Legacy closures excluded', 'legacy_closures_excluded'],
+                        ['Exceptions requiring investigation', 'requires_review'],
                         ['Handoffs created', 'handoffs_created'],
                         ['Existing handoffs reused', 'handoffs_reused'],
                         ['Awaiting Finance', 'awaiting_finance'],
@@ -747,7 +797,7 @@ export default function DocumentWorkspace() {
                     <dl>
                       {[
                         ['Total work examined', 'total_examined'],
-                        ['Routine checks completed', 'checks_completed'],
+                        ['Automated checks prepared for review', 'checks_completed'],
                         ['Items skipped', 'skipped'],
                         ['Blocked or unchanged', 'unchanged_due_to_safeguards'],
                         ['Processing failures', 'failed'],
@@ -803,8 +853,10 @@ export default function DocumentWorkspace() {
                   <div role="group" aria-label="Work queue filters">
                     {[
                       'Needs My Attention',
+                      'Awaiting My Review',
+                      'Review Rejected',
                       'Awaiting Others',
-                      'Completed',
+                      'Reviewed & Closed',
                       'All Work',
                       'Escalated to Sarah',
                     ].map((f) => (
@@ -959,7 +1011,7 @@ export default function DocumentWorkspace() {
                             <span
                               className={`mw-status ${w.status === 'Closed' ? 'closed' : w.status === 'Escalated' ? 'escalated' : ''}`}
                             >
-                              {statuses[w.status] ?? w.status}
+                              {w.lifecycle_label ?? statuses[w.status] ?? w.status}
                             </span>
                           </td>
                           <td>{w.business.next_action}</td>
@@ -1112,7 +1164,8 @@ export default function DocumentWorkspace() {
                 <strong>Management oversight: Sarah Chen</strong>
                 <p>
                   Decision required from: {detail.item.business.current_decision_owner}. Status:{' '}
-                  {detail.item.status}. No financial approval authority has transferred.
+                  {detail.item.lifecycle_label ?? detail.item.status}. No financial approval
+                  authority has transferred.
                 </p>
                 {detail.item.oversight && (
                   <p>
@@ -1131,6 +1184,43 @@ export default function DocumentWorkspace() {
             >
               Show Me the Work
             </button>
+            {detail.item.status === 'Awaiting Maya Review' && (
+              <section className="hr-next">
+                <h3>Automated finding · awaiting human verification</h3>
+                <p>{detail.item.automated_result?.finding}</p>
+                <button
+                  className="mw-primary"
+                  disabled={disabled}
+                  onClick={() =>
+                    setHumanReview({
+                      sid: snapshot!.session_id!,
+                      bulk: false,
+                      choices: [{ id: detail.item.work_item_id, version: detail.item.version }],
+                    })
+                  }
+                >
+                  Review Automated Result
+                </button>
+              </section>
+            )}
+            {detail.item.review && (
+              <section className="hr-record">
+                <h3>Maya’s recorded review</h3>
+                <p>
+                  {detail.item.review.decision} ·{' '}
+                  {detail.item.review.attestation === 'bulk_attested'
+                    ? 'Bulk-attested review — not individual inspection'
+                    : 'Individual review'}
+                </p>
+                <p>
+                  {detail.item.review.actor} · {new Date(detail.item.review.at).toLocaleString()} ·{' '}
+                  {detail.item.review.rationale}
+                </p>
+              </section>
+            )}
+            {detail.item.status === 'Closed' && !detail.item.review && (
+              <p className="mw-alert">Legacy automated closure — no recorded human review</p>
+            )}
             <section>
               <h3>What's happening?</h3>
               <p>
@@ -1176,7 +1266,7 @@ export default function DocumentWorkspace() {
                   {
                     (
                       {
-                        routine: 'Complete Verified Check',
+                        routine: 'Prepare Verified Check',
                         financial_review: 'Refer to Financial Review',
                         escalate: 'Escalate to Sarah',
                         request_evidence: 'Request Missing Documentation',
@@ -1374,7 +1464,7 @@ export default function DocumentWorkspace() {
                 {action.mode === 'selected_close' && (
                   <p>
                     Automated evidence validation and financial rules. No live AI model used in this
-                    demonstration.
+                    demonstration. Prepared results require explicit human review before closure.
                   </p>
                 )}
                 <details>
@@ -1462,6 +1552,27 @@ export default function DocumentWorkspace() {
           </form>
         )}
       </dialog>
+      {humanReview && (
+        <HumanReviewPanel
+          key={humanReview.sid + humanReview.choices.map((x) => x.id).join()}
+          sid={humanReview.sid}
+          choices={humanReview.choices}
+          bulk={humanReview.bulk}
+          reviewer={actor}
+          readOnly={readOnly || !!snapshot?.read_only}
+          onClose={() => setHumanReview(null)}
+          onComplete={async () => {
+            await refresh();
+            setSelection({ sid: humanReview.sid, items: {} });
+            if (detail) {
+              const updated = await api<Detail>(
+                `/document-workspace/sessions/${humanReview.sid}/items/${detail.item.work_item_id}`,
+              );
+              setDetail(updated);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -307,8 +307,15 @@ class ManagementCenter:
                 total=len(works),
                 completed=closed,
                 automatically_completed=auto,
-                human_completed=closed - auto,
-                automation_rate=auto / len(works) if works else 0,
+                human_completed=snap["metrics"]["reviewed_closed"],
+                automated_checks_prepared=snap["metrics"]["automated_checks_prepared"],
+                awaiting_maya_review=snap["metrics"]["awaiting_review"],
+                review_rejected=snap["metrics"]["review_rejected"],
+                reviewed_closed=snap["metrics"]["reviewed_closed"],
+                legacy_closed=snap["metrics"]["legacy_closed"],
+                automation_rate=(
+                    snap["metrics"]["automated_checks_prepared"] / len(works) if works else 0
+                ),
                 outstanding=len(works) - closed,
                 handoffs=len(cases),
                 sarah_direct=sum(
@@ -327,8 +334,8 @@ class ManagementCenter:
                 categories=dict(bycat),
                 decision_owners=dict(owners),
                 workload={
-                    "Automatic administrative completion": auto,
-                    "Human completion": closed - auto,
+                    "Legacy automatic closure": snap["metrics"]["legacy_closed"],
+                    "Human-reviewed closure": snap["metrics"]["reviewed_closed"],
                     "Outstanding": len(works) - closed,
                 },
                 flow={
