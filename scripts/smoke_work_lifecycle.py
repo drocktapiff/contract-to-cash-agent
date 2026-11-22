@@ -149,6 +149,12 @@ def main():
                     capture("04-lifecycle-overview.png")
 
                     def inspect(node, count):
+                        # Keyboard focus cannot move behind a still-modal dialog.
+                        expect(
+                            page.get_by_role(
+                                "dialog", name="Lifecycle evidence drill-down", exact=True
+                            )
+                        ).not_to_be_visible()
                         button = graph.locator(f'[data-node="{node}"]')
                         expect(button).to_contain_text(str(count))
                         button.focus()
@@ -170,6 +176,11 @@ def main():
                     expect(d.locator("article")).to_have_count(1)
                     d.get_by_role("button", name="Close lifecycle details", exact=True).click()
                     d = inspect("prepared", 73)
+                    # A close notification from the previous native modal can be
+                    # queued until this one is open. It must not dismiss new work.
+                    d.evaluate("el => el.dispatchEvent(new Event('close'))")
+                    expect(d).to_be_visible()
+                    expect(d).to_contain_text("73 distinct work items")
                     capture("05-prepared-drilldown.png")
                     d.get_by_text("Supporting source documents", exact=False).first.click()
                     link = d.get_by_role("link", name="Open original PDF", exact=False).first

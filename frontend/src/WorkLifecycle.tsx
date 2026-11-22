@@ -418,8 +418,12 @@ export default function WorkLifecycle({
         ref={dialog}
         className="wl-drawer"
         aria-label="Lifecycle evidence drill-down"
-        onCancel={() => setSelected(null)}
-        onClose={() => setSelected(null)}
+        onCancel={(event) => {
+          // React owns visibility. Native close notifications are queued and may
+          // arrive after another case set opens; they must not clear that selection.
+          event.preventDefault();
+          setSelected(null);
+        }}
       >
         {selected && data && (
           <>
