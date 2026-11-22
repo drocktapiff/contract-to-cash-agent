@@ -8,6 +8,7 @@ import tempfile
 import time
 from playwright.sync_api import sync_playwright, expect
 from scripts.smoke_web import ready
+from scripts.review_browser import review_prepared
 
 
 def main():
@@ -104,9 +105,13 @@ def main():
                     page.get_by_role("button", name="Select All Matching", exact=True).click()
                     expect(toolbar).to_contain_text("102 Work Items Selected")
                     expect(toolbar).to_contain_text("No live AI model used")
-                    page.evaluate("window.scrollTo(0,document.querySelector('.mw-table-scroll').getBoundingClientRect().top+scrollY+300)")
+                    page.evaluate(
+                        "window.scrollTo(0,document.querySelector('.mw-table-scroll').getBoundingClientRect().top+scrollY+300)"
+                    )
                     expect(toolbar).to_be_in_viewport()
-                    assert abs(toolbar.bounding_box()['y'])<3,'Selected toolbar did not stick to viewport'
+                    assert (
+                        abs(toolbar.bounding_box()["y"]) < 3
+                    ), "Selected toolbar did not stick to viewport"
                     capture("01-select-all-real-work.png")
                     toolbar.get_by_role("button", name="AI Powered Close", exact=True).click()
                     closed = confirm("AI Powered Close", "/selected/close")
@@ -115,7 +120,8 @@ def main():
                         and closed["requires_review"] == 29
                         and closed["financial_actions_executed"] == 0
                     )
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("73")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("73")
+                    review_prepared(page, 73)
                     capture("02-actual-close-outcome.png")
                     page.reload(wait_until="networkidle")
                     outcome = page.get_by_role("region", name="Selected work outcome", exact=True)
@@ -132,7 +138,9 @@ def main():
                     )
                     assert escalated["awaiting_finance"] > 0 and escalated["awaiting_evidence"] > 0
                     capture("04-persisted-management-handoffs.png")
-                    page.get_by_role("button", name="Sarah — Management Command Center", exact=True).click()
+                    page.get_by_role(
+                        "button", name="Sarah — Management Command Center", exact=True
+                    ).click()
                     inbox = page.get_by_role("region", name="Sarah’s management inbox", exact=True)
                     expect(inbox).to_contain_text("29 oversight cases")
                     expect(inbox).to_contain_text("Finance")
@@ -182,7 +190,7 @@ def main():
                     fresh = confirm("Restart Demo", "/restart")
                     assert fresh["session_id"] != sid
                     expect(toolbar).to_have_count(0)
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("0")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("0")
                     page.set_viewport_size({"width": 390, "height": 844})
                     page.get_by_role("button", name="Select All Matching", exact=True).click()
                     expect(toolbar).to_contain_text("102 Work Items Selected")

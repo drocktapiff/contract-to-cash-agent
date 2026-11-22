@@ -8,7 +8,7 @@
   gap: 1.5rem;
   margin: 1.25rem 0;
 }
-.mc-heading h2 {
+.mc-heading h1 {
   font-size: clamp(1.65rem, 3vw, 2.4rem);
   letter-spacing: -0.04em;
   margin: 0.35rem 0;

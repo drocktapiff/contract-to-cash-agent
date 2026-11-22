@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import './management-center.css';
+import OperationalActivity from './OperationalActivity';
 type Case = {
+  review?: { decision: string };
   work_item_id: string;
   customer_id: string;
   customer_name?: string;
@@ -576,7 +578,7 @@ export default function ManagementInbox({
       <div className="mc-heading">
         <div>
           <span className="mw-eyebrow">SARAH CHEN · DIRECTOR OF REVENUE OPERATIONS</span>
-          <h2>Management Command Center</h2>
+          <h1>Management Command Center</h1>
           <p>Team performance, evidence-backed priorities and accountable follow-through.</p>
         </div>
         <span className="mc-session">Shared session · {sid.slice(0, 8)}</span>
@@ -612,11 +614,17 @@ export default function ManagementInbox({
           )}
           {tab === 'Overview' && (
             <>
+              <OperationalActivity
+                sid={sid}
+                revision={revision}
+                onOpen={onOpen}
+                onCases={selectChart}
+              />
               <section className="mc-metrics" aria-label="Management performance metrics">
                 {[
                   ['Total work items', 'total'],
                   ['Completed work items', 'completed'],
-                  ['Automatically completed', 'automatically_completed'],
+                  ['Legacy automated closures', 'legacy_closed'],
                   ['Outstanding work', 'outstanding'],
                   ['Management handoffs', 'handoffs'],
                   ['Sarah’s direct attention', 'sarah_direct'],
@@ -630,14 +638,14 @@ export default function ManagementInbox({
                   </article>
                 ))}
                 <article>
-                  <span>Automation completion rate</span>
+                  <span>Automation preparation rate</span>
                   <strong>
                     {new Intl.NumberFormat('en-CA', {
                       style: 'percent',
                       maximumFractionDigits: 1,
                     }).format(data.metrics.automation_rate)}
                   </strong>
-                  <small>Automatic completions / all work</small>
+                  <small>Prepared checks / all work; review remains separate</small>
                 </article>
               </section>
               <div className="mc-charts">
@@ -649,21 +657,9 @@ export default function ManagementInbox({
                       .filter((w) =>
                         key === 'Outstanding'
                           ? w.status !== 'Closed'
-                          : key === 'Automatic administrative completion'
-                            ? w.status === 'Closed' &&
-                              w.event_history.some(
-                                (e) =>
-                                  e.type === 'administratively_closed' &&
-                                  (e as { actor_kind?: string }).actor_kind ===
-                                    'deterministic_automation',
-                              )
-                            : w.status === 'Closed' &&
-                              !w.event_history.some(
-                                (e) =>
-                                  e.type === 'administratively_closed' &&
-                                  (e as { actor_kind?: string }).actor_kind ===
-                                    'deterministic_automation',
-                              ),
+                          : key === 'Legacy automatic closure'
+                            ? w.status === 'Closed' && !w.review
+                            : w.status === 'Closed' && w.review?.decision === 'approve',
                       )
                       .map((w) => w.work_item_id);
                     selectChart(ids);

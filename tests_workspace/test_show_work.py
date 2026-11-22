@@ -67,16 +67,16 @@ class ShowWorkTests(unittest.TestCase):
         wid = self.selected("routine")
         with patch("socket.create_connection", side_effect=AssertionError("No paid requests")):
             result = self.apply(wid)
-        self.assertEqual(result["automatically_closed"], 1)
+        self.assertEqual(result["prepared_for_review"], 1)
         first = self.ws.snapshot()["telemetry"]["event_count"]
         for _ in range(3):
             story = self.ws.walkthrough(self.sid, wid)
             self.assertTrue(story["recorded"])
             self.assertFalse(story["can_process"])
             self.assertTrue(story["validation"]["details"]["evidence_current"])
-            self.assertTrue(story["outcome"]["administratively_completed"])
+            self.assertFalse(story["outcome"]["administratively_completed"])
             self.assertTrue(
-                any(e["type"] == "administratively_closed" for e in story["processing_events"])
+                any(e["type"] == "automated_check_prepared" for e in story["processing_events"])
             )
         self.assertEqual(self.ws.snapshot()["telemetry"]["event_count"], first)
 
@@ -109,12 +109,14 @@ class ShowWorkTests(unittest.TestCase):
         self.assertEqual(result["total_examined"], 102)
         self.assertEqual(result["checks_completed"], 72)
         counts = result["queue_outcome"]
-        self.assertEqual(counts["completed"], 73)
+        self.assertEqual(counts["completed"], 0)
+        self.assertEqual(counts["awaiting_review"], 73)
         self.assertEqual(
             sum(
                 counts[k]
                 for k in (
                     "completed",
+                    "awaiting_review",
                     "needs_maya",
                     "awaiting_sarah",
                     "awaiting_finance",

@@ -8,6 +8,7 @@ import tempfile
 import time
 from playwright.sync_api import sync_playwright, expect
 from scripts.smoke_web import ready
+from scripts.review_browser import review_prepared
 
 
 def main():
@@ -105,7 +106,7 @@ def main():
                     page.get_by_role("button", name="Load Sample Documents", exact=True).click()
                     imported = confirm("Load Sample Documents", "/load")
                     expect(page.get_by_test_id("total")).to_have_text("102")
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("0")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("0")
                     expect(page.locator(".mw-session")).to_contain_text("149 source PDFs")
                     first_session = imported["session_id"]
                     capture("02-unprocessed-real-queue.png")
@@ -129,9 +130,10 @@ def main():
                     outcome = confirm("Process Routine Work", "/process/routine")
                     assert (
                         outcome["checks_completed"] == 73
-                        and outcome["items_requiring_review"] == 29
+                        and outcome["items_requiring_review"] == 102
                     )
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("73")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("73")
+                    review_prepared(page, 73)
                     current = page.request.get("/api/document-workspace").json()
                     assert (
                         current["business_counts"]["needs_maya"]
@@ -139,7 +141,7 @@ def main():
                         == 29
                     )
                     capture("04-routine-processing-outcome.png")
-                    page.get_by_role("button", name="Completed", exact=True).click()
+                    page.get_by_role("button", name="Reviewed & Closed", exact=True).click()
                     expect(page.locator(".mw-table-footer")).to_contain_text(
                         "of 73 matching work items"
                     )
@@ -180,24 +182,24 @@ def main():
                         result["automatically_closed"] == 0
                         and result["human_queue_remaining"] == 29
                     )
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("73")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("73")
                     page.reload(wait_until="networkidle")
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("73")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("73")
                     page.get_by_role("button", name="Restart Demo", exact=True).click()
                     fresh = confirm("Restart Demo", "/restart")
                     assert fresh["session_id"] != first_session
-                    expect(page.get_by_test_id("automatically_completed")).to_have_text("0")
+                    expect(page.get_by_test_id("automated_checks_prepared")).to_have_text("0")
                     page.reload(wait_until="networkidle")
                     active = page.request.get("/api/document-workspace").json()
                     assert (
                         active["session_id"] == fresh["session_id"]
-                        and active["metrics"]["automatically_completed"] == 0
+                        and active["metrics"]["automated_checks_prepared"] == 0
                     )
                     retained = page.request.get(
                         f"/api/document-workspace/sessions/{first_session}"
                     ).json()
                     assert (
-                        retained["metrics"]["automatically_completed"] == 73
+                        retained["metrics"]["automated_checks_prepared"] == 73
                         and retained["read_only"]
                     )
                     page.set_viewport_size({"width": 390, "height": 844})

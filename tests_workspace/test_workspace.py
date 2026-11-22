@@ -66,6 +66,11 @@ class WorkspaceTests(unittest.TestCase):
             dict(
                 total=102,
                 automatically_completed=0,
+                automated_checks_prepared=0,
+                awaiting_review=0,
+                reviewed_closed=0,
+                review_rejected=0,
+                legacy_closed=0,
                 awaiting_maya=102,
                 escalated=0,
                 routine_eligible=73,
@@ -124,8 +129,8 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(self.ws.perform(self.sid, "routine", body), result)
         self.assertEqual(len(self.events()), count)
         snap = self.ws.snapshot()
-        self.assertEqual(snap["metrics"]["automatically_completed"], 73)
-        self.assertEqual(snap["metrics"]["awaiting_maya"], 29)
+        self.assertEqual(snap["metrics"]["automated_checks_prepared"], 73)
+        self.assertEqual(snap["metrics"]["awaiting_maya"], 102)
         self.assertEqual(snap["telemetry"]["routine_completion_rate"], 1)
         self.assertEqual(len(snap["telemetry"]["status_transitions"]), 73)
         self.assertIsNone(snap["telemetry"]["human_labor_seconds"])
@@ -148,7 +153,9 @@ class WorkspaceTests(unittest.TestCase):
             self.ws.pdf(self.sid, digest)
         source.write_bytes(original)
         self.ws.perform(self.sid, "routine", command())
-        self.assertEqual(self.ws.detail(self.sid, work["work_item_id"])["item"]["status"], "Closed")
+        self.assertEqual(
+            self.ws.detail(self.sid, work["work_item_id"])["item"]["status"], "Awaiting Maya Review"
+        )
 
     def test_individual_auto_is_disposition_not_unconditional_closure(self):
         work = self.work("contract_conflict")
@@ -171,10 +178,10 @@ class WorkspaceTests(unittest.TestCase):
     def test_bulk_auto_routes_uncertainty_and_is_repeatable(self):
         result = self.ws.perform(self.sid, "auto_all", command())
         snap = self.ws.snapshot()
-        self.assertEqual(result["automatically_closed"], 73)
+        self.assertEqual(result["prepared_for_review"], 73)
         self.assertGreater(result["escalated_to_sarah"], 0)
         self.assertEqual(snap["metrics"]["total"], 102)
-        self.assertEqual(snap["metrics"]["automatically_completed"], 73)
+        self.assertEqual(snap["metrics"]["automated_checks_prepared"], 73)
         for work in snap["items"]:
             if work["category"] in (
                 "contract_conflict",
@@ -222,7 +229,9 @@ class WorkspaceTests(unittest.TestCase):
         self.assertNotEqual(fresh["status"], "Closed")
         self.assertTrue(fresh["human_review_required"])
         self.ws.perform(self.sid, "accept", self.item_command(fresh), fresh["work_item_id"])
-        self.assertEqual(self.ws.detail(self.sid, work["work_item_id"])["item"]["status"], "Closed")
+        self.assertEqual(
+            self.ws.detail(self.sid, work["work_item_id"])["item"]["status"], "Awaiting Maya Review"
+        )
 
     def test_restart_fresh_active_session_retains_history_and_idempotency(self):
         self.ws.perform(self.sid, "routine", command())
@@ -290,7 +299,7 @@ class WorkspaceTests(unittest.TestCase):
         self.assertFalse(self.ws.snapshot()["processing_active"])
         self.assertTrue(any(e["type"] == "processing_failed" for e in self.events()))
         # Existing closed work is not duplicated or reopened by recovery.
-        self.assertEqual(self.ws.snapshot()["metrics"]["automatically_completed"], 73)
+        self.assertEqual(self.ws.snapshot()["metrics"]["automated_checks_prepared"], 73)
 
     def test_concurrent_worker_and_workspace_operations_are_blocked(self):
         with self.ws.guard():
@@ -357,7 +366,7 @@ class WorkspaceTests(unittest.TestCase):
         imported = self.ws.load(command=command())
         self.assertEqual(imported["session_id"], self.sid)
         self.assertEqual(imported["metrics"], current["metrics"])
-        self.assertEqual(imported["metrics"]["automatically_completed"], 73)
+        self.assertEqual(imported["metrics"]["automated_checks_prepared"], 73)
 
 
 if __name__ == "__main__":

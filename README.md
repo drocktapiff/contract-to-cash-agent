@@ -24,6 +24,13 @@ Sarah’s persisted inbox. [Windows setup, demo flow, safeguards and screenshots
 The original Phase 6.1 application remains at `/legacy`; existing history is preserved.
 No OpenAI calls are needed for the document workflow.
 
+## Ledgerline 2.0 — Mandatory Human Review and Operational Activity
+
+Automation now prepares checks for Maya’s explicit individual or bulk-attested review.
+Sarah’s interactive event-backed graph distinguishes preparation, human verification
+and management oversight, with case/evidence drill-down and separate closure counts.
+[Windows setup, presenter flow, migration and browser evidence](docs/LEDGERLINE2_STAGE31.md).
+
 ## Ledgerline 2.0 — Management Command Center
 
 Sarah now coordinates Maya’s persisted handoffs with interactive performance charts,

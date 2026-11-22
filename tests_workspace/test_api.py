@@ -82,7 +82,7 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
             json=command().model_dump(),
         )
         self.assertEqual(result.status_code, 200, result.text)
-        self.assertEqual(result.json()["automatically_closed"], 73)
+        self.assertEqual(result.json()["prepared_for_review"], 73)
         snapshot = (await self.client.get("/api/document-workspace")).json()
         self.assertEqual(snapshot["metrics"]["escalated"], 1)
         self.assertEqual(snapshot["telemetry"]["api_requests"], 0)
@@ -294,6 +294,10 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(replay.json(), closed.json())
         snapshot = (await self.client.get("/api/document-workspace")).json()
         self.assertEqual(snapshot["last_bulk_operation"]["result"], closed.json())
+        from tests_workspace.test_human_review_activity import approve_pending
+
+        approve_pending(self.app.state.document_workspace, sid)
+        snapshot = self.app.state.document_workspace.snapshot(sid)
         remaining = [w for w in snapshot["items"] if w["status"] != "Closed"]
         body = command(expected_session=sid).model_dump()
         body["selected"] = [dict(id=w["work_item_id"], version=w["version"]) for w in remaining] + [
@@ -342,6 +346,9 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
             )
 
         selected_operation(ws, sid, "close", selected(data["items"]))
+        from tests_workspace.test_human_review_activity import approve_pending
+
+        approve_pending(ws, sid)
         selected_operation(
             ws,
             sid,
@@ -393,6 +400,76 @@ class WorkspaceApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             (await self.client.post(path + "/analyses", headers=self.headers, json={})).status_code,
             422,
+        )
+
+    async def test_human_review_api_csrf_source_versions_and_read_only_activity(self):
+        data = await self.load()
+        sid = data["session_id"]
+        prefix = f"/api/document-workspace/sessions/{sid}"
+        request = command(expected_session=sid).model_dump()
+        request["selected"] = [
+            dict(id=w["work_item_id"], version=w["version"]) for w in data["items"]
+        ]
+        prepared = await self.client.post(
+            prefix + "/selected/close", headers=self.headers, json=request
+        )
+        self.assertEqual(prepared.json()["prepared_for_review"], 73)
+        self.assertEqual(prepared.json()["automatically_closed"], 0)
+        snapshot = (await self.client.get("/api/document-workspace")).json()
+        self.assertEqual(snapshot["metrics"]["reviewed_closed"], 0)
+        w = next(w for w in snapshot["items"] if w["status"] == "Awaiting Maya Review")
+        body = command(expected_session=sid).model_dump()
+        body.update(
+            selected=[
+                dict(
+                    id=w["work_item_id"],
+                    version=w["version"],
+                    evidence_hashes=list(w["supporting_facts"]),
+                )
+            ],
+            decision="approve",
+            attestation="individual",
+            acknowledge_review=True,
+        )
+        self.assertEqual(
+            (await self.client.post(prefix + "/human-reviews", json=body)).status_code, 403
+        )
+        self.assertEqual(
+            (
+                await self.client.post(
+                    prefix + "/human-reviews",
+                    headers={**self.headers, "origin": "https://attacker.invalid"},
+                    json=body,
+                )
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            (
+                await self.client.post(
+                    prefix + "/human-reviews",
+                    headers=self.headers,
+                    json={**body, "acknowledge_review": False},
+                )
+            ).status_code,
+            422,
+        )
+        approved = await self.client.post(
+            prefix + "/human-reviews", headers=self.headers, json=body
+        )
+        self.assertEqual(approved.status_code, 200, approved.text)
+        self.assertEqual(approved.json()["approved"], 1)
+        before = (await self.client.get(prefix + "/events")).json()
+        for query in (
+            "",
+            "?series=maya&outcome=approved_individual",
+            "?group=second&mode=interval",
+        ):
+            response = await self.client.get(prefix + "/activity" + query)
+            self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual((await self.client.get(prefix + "/events")).json(), before)
+        self.assertEqual(
+            (await self.client.get(prefix + "/activity?group=invented")).status_code, 422
         )
 
 

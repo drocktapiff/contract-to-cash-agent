@@ -43,7 +43,12 @@ type Story = {
     rationale: string;
     after: string | null;
   }[];
-  outcome: { status: string; administratively_completed: boolean; waiting_on: string | null };
+  outcome: {
+    lifecycle_label?: string;
+    status: string;
+    administratively_completed: boolean;
+    waiting_on: string | null;
+  };
 };
 export default function WorkWalkthrough({
   sid,
@@ -418,7 +423,8 @@ export default function WorkWalkthrough({
                   <div className="mw-outcome">
                     <strong>
                       {story.outcome.administratively_completed
-                        ? 'Verified administrative check completed'
+                        ? (story.outcome.lifecycle_label ??
+                          'Legacy automated closure — no recorded human review')
                         : `Work remains open: ${story.outcome.status}`}
                     </strong>
                     <p>

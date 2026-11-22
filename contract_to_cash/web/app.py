@@ -49,6 +49,8 @@ from .management import ActionInput, save_action
 from .guided_demo import SarahDemo, complete_sarah
 from .document_workspace import DocumentWorkspace, WorkspaceCommand
 from .selected_workflow import SelectedCommand, selected_operation
+from .human_review import ReviewCommand, review as human_review, preview as review_preview
+from .operational_activity import activity
 from .management_center import ManagementCenter, ManagementCommand, CorrectiveCommand
 from .document_advisor import DocumentAdvisor, AdvisorRequest, AdvisorScope
 
@@ -599,6 +601,33 @@ def create_app(settings=None, runner=None):
     @app.get("/api/document-workspace/sessions/{sid}/management", dependencies=[Depends(reader)])
     async def management_overview(sid: str):
         return await asyncio.to_thread(management.overview, sid)
+
+    @app.get("/api/document-workspace/sessions/{sid}/activity", dependencies=[Depends(reader)])
+    async def operational_activity(
+        sid: str,
+        mode: str = "cumulative",
+        group: str = "operation",
+        outcome: str = "all",
+        series: str = "automation,maya,sarah",
+        start: str | None = None,
+        end: str | None = None,
+        operation: str | None = None,
+    ):
+        return await asyncio.to_thread(
+            activity, documents, sid, mode, group, outcome, series, start, end, operation
+        )
+
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/review-preview", dependencies=[Depends(writer)]
+    )
+    async def preview_human_reviews(sid: str, body: SelectedCommand):
+        return await asyncio.to_thread(review_preview, documents, sid, body)
+
+    @app.post(
+        "/api/document-workspace/sessions/{sid}/human-reviews", dependencies=[Depends(writer)]
+    )
+    async def save_human_reviews(sid: str, body: ReviewCommand):
+        return await asyncio.to_thread(human_review, documents, sid, body)
 
     @app.post(
         "/api/document-workspace/sessions/{sid}/management/commands", dependencies=[Depends(writer)]
